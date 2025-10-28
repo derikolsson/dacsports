@@ -1,0 +1,126 @@
+<h1 class="mb-4">Analytics Dashboard</h1>
+
+<div class="row mb-4">
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Active Viewers</h5>
+        <p class="display-6"><%= @active_sessions %></p>
+        <small class="text-muted">Last 3 minutes</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Total Views (24h)</h5>
+        <p class="display-6"><%= @total_views[:last_24h] %></p>
+        <small class="text-muted">Last 24 hours</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Total Views (All Time)</h5>
+        <p class="display-6"><%= @total_views[:all_time] %></p>
+        <small class="text-muted">Since launch</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Currently Watching</h5>
+  </div>
+  <div class="card-body">
+    <% if @active_viewers_by_event.empty? %>
+      <p class="text-muted">No active viewers</p>
+    <% else %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Event</th>
+            <th>Type</th>
+            <th>Viewers</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @active_viewers_by_event.each do |(event_id, status), count| %>
+            <% event = Event.find_by(id: event_id) %>
+            <% next unless event %>
+            <tr>
+              <td><%= event.title %> (<code><%= event.slug %></code>)</td>
+              <td>
+                <span class="badge bg-<%= status == 'live' ? 'success' : 'primary' %>">
+                  <%= status.titleize %>
+                </span>
+              </td>
+              <td><%= count %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Top Browsers</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tbody>
+            <% @browser_breakdown.each do |browser, count| %>
+              <tr>
+                <td><%= browser || 'Unknown' %></td>
+                <td class="text-end"><%= count %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Top Operating Systems</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tbody>
+            <% @os_breakdown.each do |os, count| %>
+              <tr>
+                <td><%= os || 'Unknown' %></td>
+                <td class="text-end"><%= count %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Device Types</h5>
+  </div>
+  <div class="card-body">
+    <table class="table table-sm">
+      <tbody>
+        <% @device_breakdown.each do |device, count| %>
+          <tr>
+            <td><%= device || 'Unknown' %></td>
+            <td class="text-end"><%= count %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>DAC Sports Network - Admin</title>
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+  </head>
+
+  <body>
+    <nav class="navbar navbar-dark bg-dark mb-4">
+      <div class="container-fluid">
+        <span class="navbar-brand">DAC Sports Network - Admin</span>
+        <div class="navbar-nav flex-row">
+          <%= link_to 'Dashboard', internal_root_path, class: 'nav-link px-2' %>
+          <%= link_to 'Events', internal_events_path, class: 'nav-link px-2' %>
+          <%= link_to 'Jobs', internal_sidekiq_path, class: 'nav-link px-2' %>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <% if flash[:notice] %>
+        <div class="alert alert-success"><%= flash[:notice] %></div>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="alert alert-danger"><%= flash[:alert] %></div>
+      <% end %>
+
+      <%= yield %>
+    </div>
+  </body>
+</html>
