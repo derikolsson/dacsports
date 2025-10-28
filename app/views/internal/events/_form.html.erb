@@ -30,7 +30,7 @@
 
     <div class="col-md-4 mb-3">
       <%= f.label :time_zone, class: 'form-label' %>
-      <%= f.time_zone_select :time_zone, ActiveSupport::TimeZone.us_zones, {}, class: 'form-select' %>
+      <%= f.time_zone_select :time_zone, ActiveSupport::TimeZone.us_zones, { default: 'Central Time (US & Canada)' }, class: 'form-select' %>
     </div>
   </div>
 
