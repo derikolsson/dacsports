@@ -1,0 +1,75 @@
+<div class="container py-5">
+  <div class="mb-4">
+    <%= link_to '← Back to Schedule', events_path, class: 'btn btn-outline-secondary' %>
+  </div>
+
+  <div class="row">
+    <div class="col-12">
+      <h1><%= @event.title %></h1>
+      <% if @event.subtitle.present? %>
+        <h5 class="text-muted"><%= @event.subtitle %></h5>
+      <% end %>
+      <p class="text-muted">
+        <%= @event.event_date.strftime('%A, %B %-d') %>
+        <% if @event.start_at.present? %>
+          at <%= @event.start_at.in_time_zone(@event.time_zone).strftime('%I:%M %p') %> CT
+        <% end %>
+      </p>
+
+      <div class="video-container mt-4">
+        <% case @event.status %>
+        <% when 'upcoming' %>
+          <div class="alert alert-info">
+            <h4>Event begins <%= @event.event_date.strftime('%A, %B %-d') %>
+            <% if @event.start_at.present? %>
+              at <%= @event.start_at.in_time_zone(@event.time_zone).strftime('%I:%M %p') %> CT
+            <% end %>
+            </h4>
+          </div>
+
+        <% when 'live' %>
+          <div class="ratio ratio-16x9">
+            <%= @event.live_embed_code.html_safe %>
+          </div>
+
+        <% when 'ended' %>
+          <div class="alert alert-secondary">
+            <h4>Event Ended</h4>
+            <p>This event has concluded. No replay is available.</p>
+          </div>
+
+        <% when 'replay_pending' %>
+          <div class="alert alert-warning">
+            <h4>Replay Coming Soon</h4>
+            <p>This event has ended. The replay will be available shortly.</p>
+          </div>
+
+        <% when 'vod' %>
+          <div class="ratio ratio-16x9">
+            <%= @event.replay_embed_code.html_safe %>
+          </div>
+        <% end %>
+      </div>
+
+      <% if @event.description.present? %>
+        <div class="mt-4">
+          <%= simple_format(@event.description) %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<% if @event.live? || @event.vod? %>
+  <script type="module">
+    import { initializePolling } from 'polling';
+
+    initializePolling({
+      eventSlug: '<%= @event.slug %>',
+      eventId: '<%= @event.id %>',
+      eventStatus: '<%= @event.status %>',
+      forceReloadVersion: <%= @event.force_reload_count %>,
+      sessionId: '<%= Current.session.id %>'
+    });
+  </script>
+<% end %>
