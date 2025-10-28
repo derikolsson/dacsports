@@ -19,6 +19,18 @@ gem "cssbundling-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
 
+# Background jobs
+gem "sidekiq", "~> 8.0.8"
+gem "sidekiq-cron"
+gem "redis", ">= 5.0"
+
+# Browser/OS tracking
+gem "device_detector"
+
+# Error tracking
+gem "sentry-ruby"
+gem "sentry-rails"
+
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"
 
@@ -53,6 +65,13 @@ end
 group :development do
   # Use console on exceptions pages [https://github.com/rails/web-console]
   gem "web-console"
+
+  # Deployment
+  gem "capistrano", "~> 3.19"
+  gem "capistrano-rails", "~> 1.6"
+  gem "capistrano-bundler", "~> 2.1"
+  gem "capistrano-rbenv", "~> 2.2"
+  gem "capistrano-sidekiq", "~> 2.3"
 end
 
 group :test do
