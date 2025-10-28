@@ -1,82 +1,82 @@
-<div class="container py-5">
-  <div class="mb-4">
-    <%= link_to events_path, class: 'back-button text-decoration-none' do %>
-      ← Back to Schedule
-    <% end %>
-  </div>
+<div class="watch-page">
+  <div class="watch-page-container">
+    <%# Video Player Section %>
+    <div class="watch-video-section">
+      <% case @event.status %>
+      <% when 'upcoming' %>
+        <div class="watch-video-placeholder">
+          <p>Stream will begin at scheduled time</p>
+        </div>
 
-  <div class="row">
-    <div class="col-12">
-      <div class="d-flex align-items-center gap-3 mb-2">
-        <h1 class="mb-0"><%= @event.title %></h1>
+      <% when 'live' %>
+        <div class="watch-video-player">
+          <%= @event.live_embed_code.html_safe %>
+        </div>
+
+      <% when 'ended' %>
+        <div class="watch-video-placeholder">
+          <i class="bi bi-stop-circle"></i>
+          <p>Event has concluded</p>
+        </div>
+
+      <% when 'replay_pending' %>
+        <div class="watch-video-placeholder">
+          <i class="bi bi-clock-history"></i>
+          <p>Replay will be available shortly</p>
+        </div>
+
+      <% when 'vod' %>
+        <div class="watch-video-player">
+          <%= @event.replay_embed_code.html_safe %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Event Information Section %>
+    <div class="watch-event-info">
+      <%# Event Title %>
+      <h1 class="watch-event-title"><%= @event.title %></h1>
+
+      <%# Status Badge and Sport Line %>
+      <div class="watch-event-meta">
         <% if @event.live? %>
-          <span class="live-badge">LIVE</span>
+          <span class="watch-live-badge">LIVE</span>
+        <% elsif @event.vod? %>
+          <span class="watch-replay-badge">REPLAY</span>
         <% end %>
-      </div>
-
-      <div class="mt-2">
         <% if @event.sport.present? %>
-          <span class="fw-semibold text-dark">
-            <%= @event.sport_emoji %>
+          <span class="watch-sport-info">
             <%= @event.sport %>
+            <% if @event.subtitle.present? %>
+              <span class="watch-separator">•</span>
+              <%= @event.subtitle %>
+            <% end %>
           </span>
         <% end %>
-        <% if @event.sport.present? && @event.subtitle.present? %>
-          <span class="text-muted mx-2">•</span>
-        <% end %>
-        <% if @event.subtitle.present? %>
-          <span class="text-muted"><%= @event.subtitle %></span>
-        <% end %>
       </div>
 
-      <p class="meta-text mt-2">
-        <%= @event.event_date.strftime('%A, %B %-d') %>
-        <% if @event.start_at.present? %>
-          at <%= @event.start_at.in_time_zone(@event.time_zone).strftime('%I:%M %p') %> CT
-        <% end %>
-        <% if @event.location.present? %>
-          <span class="mx-2">•</span>
-          <%= @event.location %>
-        <% end %>
-      </p>
-
-      <div class="video-container mt-4">
-        <% case @event.status %>
-        <% when 'upcoming' %>
-          <div class="alert alert-info">
-            <h4>Event begins <%= @event.event_date.strftime('%A, %B %-d') %>
-            <% if @event.start_at.present? %>
-              at <%= @event.start_at.in_time_zone(@event.time_zone).strftime('%I:%M %p') %> CT
-            <% end %>
-            </h4>
+      <%# Event Details Card %>
+      <div class="watch-details-card">
+        <div class="watch-details-grid">
+          <div class="watch-detail-item">
+            <div class="watch-detail-label">Date & Time</div>
+            <div class="watch-detail-value">
+              <%= @event.event_date.strftime('%B %-d, %Y') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %>
+            </div>
           </div>
 
-        <% when 'live' %>
-          <div class="ratio ratio-16x9">
-            <%= @event.live_embed_code.html_safe %>
-          </div>
-
-        <% when 'ended' %>
-          <div class="alert alert-secondary">
-            <h4>Event Ended</h4>
-            <p>This event has concluded. No replay is available.</p>
-          </div>
-
-        <% when 'replay_pending' %>
-          <div class="alert alert-warning">
-            <h4>Replay Coming Soon</h4>
-            <p>This event has ended. The replay will be available shortly.</p>
-          </div>
-
-        <% when 'vod' %>
-          <div class="ratio ratio-16x9">
-            <%= @event.replay_embed_code.html_safe %>
-          </div>
-        <% end %>
+          <% if @event.location.present? %>
+            <div class="watch-detail-item">
+              <div class="watch-detail-label">Location</div>
+              <div class="watch-detail-value"><%= @event.location %></div>
+            </div>
+          <% end %>
+        </div>
       </div>
 
+      <%# Description %>
       <% if @event.description.present? %>
-        <div class="mt-4">
+        <div class="watch-event-description">
           <%= simple_format(@event.description) %>
         </div>
       <% end %>

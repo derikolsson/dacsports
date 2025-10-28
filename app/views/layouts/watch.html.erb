@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= @title ? "#{@title} - DAC Sports Network" : "DAC Sports Network" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="DAC Sports Network live streaming platform - Watch live games and replays from the Dallas Athletic Conference">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <!-- OpenGraph -->
+    <meta property="og:title" content="<%= @title || 'DAC Sports Network' %>">
+    <meta property="og:description" content="Watch live games and replays from the Dallas Athletic Conference">
+    <meta property="og:type" content="website">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- Session ID for polling -->
+    <meta name="session-id" content="<%= Current.session&.id %>">
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= yield :head %>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+    <% if Rails.application.credentials.fathom_site_id.present? %>
+      <script src="https://cdn.usefathom.com/script.js"
+              data-site="<%= Rails.application.credentials.fathom_site_id %>"
+              defer></script>
+    <% end %>
+
+    <%# Includes all stylesheet files in app/assets/stylesheets %>
+    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="watch-layout">
+    <header class="watch-header">
+      <div class="watch-header-content">
+        <div class="watch-header-back">
+          <%= link_to events_path, class: 'watch-header-back-link' do %>
+            <i class="bi bi-arrow-left"></i>
+            <span>Back to Schedule</span>
+          <% end %>
+        </div>
+
+        <div class="watch-header-logo">
+          <%= link_to root_path do %>
+            <%= image_tag "logo.png", alt: "DAC Sports Network", class: "logo-watch" %>
+          <% end %>
+        </div>
+      </div>
+    </header>
+
+    <%= yield %>
+
+    <footer class="mt-auto py-4 text-center">
+      <div class="container">
+        <p class="campus-list mb-2">
+          <span>Brookhaven</span>
+          <span class="campus-separator">•</span>
+          <span>Cedar Valley</span>
+          <span class="campus-separator">•</span>
+          <span>Eastfield</span>
+          <span class="campus-separator">•</span>
+          <span>El Centro</span>
+          <span class="campus-separator">•</span>
+          <span>Mountain View</span>
+          <span class="campus-separator">•</span>
+          <span>North Lake</span>
+          <span class="campus-separator">•</span>
+          <span>Richland</span>
+        </p>
+        <p class="mb-0 text-muted small">&copy; <%= Time.current.year %> DAC Sports Network. All rights reserved.</p>
+      </div>
+    </footer>
+  </body>
+</html>

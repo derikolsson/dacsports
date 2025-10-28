@@ -15,6 +15,8 @@ class EventsController < ApplicationController
     when "vod" then "Replay: #{@event.title}"
     else @event.title
     end
+
+    render layout: "watch"
   end
 
   def status

@@ -38,18 +38,18 @@ body {
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
-  background: linear-gradient(135deg, $dac-light-blue 0%, #F9FAFB 100%);
+  background: linear-gradient(to bottom right, $dac-royal-blue, $background, rgba($dac-royal-blue, 0.05));
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-// Header
+// Header - Default (Schedule page)
 .site-header {
   background: transparent;
 }
 
-// Logo styling
+// Logo styling - Default (Schedule page)
 .logo-main {
   height: 150px;
   width: 150px;
@@ -59,6 +59,68 @@ body {
     height: 200px;
     width: 200px;
   }
+}
+
+// ============================================
+// WATCH LAYOUT HEADER STYLES
+// ============================================
+
+// Watch Header - Translucent with backdrop blur
+.watch-header {
+  position: relative;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+  padding: 16px 0;
+  z-index: 1000;
+}
+
+.watch-header-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+}
+
+.watch-header-back {
+  position: absolute;
+  left: 16px;
+}
+
+.watch-header-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  text-decoration: none;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $dac-royal-blue;
+  }
+
+  i {
+    font-size: 20px;
+  }
+}
+
+.watch-header-logo {
+  // Centered with flexbox parent
+}
+
+// Watch Logo - Small centered version
+.logo-watch {
+  height: 60px;
+  width: 60px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .btn-primary {
@@ -189,14 +251,192 @@ small {
   color: #6B7280;
 }
 
-// Video container
-.video-container {
-  .ratio {
-    background-color: #000;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
-                0 10px 15px rgba(0, 0, 0, 0.1);
+// ============================================
+// WATCH PAGE STYLES
+// ============================================
+
+.watch-page {
+  min-height: calc(100vh - 200px);
+  padding: 32px 0;
+}
+
+.watch-page-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+// Video Section
+.watch-video-section {
+  margin-bottom: 32px;
+}
+
+.watch-video-player {
+  aspect-ratio: 16 / 9;
+  background: #000;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}
+
+.watch-video-placeholder {
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, rgba($dac-royal-blue, 0.9), rgba($dac-crimson-red, 0.7)), #000;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  color: $dac-white;
+
+  i {
+    font-size: 80px;
+    margin-bottom: 16px;
+    opacity: 0.9;
+  }
+
+  p {
+    font-family: var(--font-body);
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
+  }
+}
+
+// Event Info Section
+.watch-event-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+// Event Meta (Badge + Sport)
+.watch-event-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.watch-live-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba($dac-crimson-red, 0.1);
+  color: $dac-crimson-red;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.watch-replay-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  background: rgba($dac-royal-blue, 0.1);
+  color: $dac-royal-blue;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.watch-sport-info {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: inherit;
+
+  .watch-separator {
+    margin: 0 8px;
+  }
+}
+
+// Event Title
+.watch-event-title {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+  margin: 0;
+
+  @media (min-width: 768px) {
+    font-size: 48px;
+  }
+}
+
+// Details Card
+.watch-details-card {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.watch-details-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.watch-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.watch-detail-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 500;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.watch-detail-value {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+// Event Description
+.watch-event-description {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  color: #374151;
+
+  p {
+    margin-bottom: 16px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 }
 
