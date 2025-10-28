@@ -1,2 +1,84 @@
+// DAC Sports Network Color Palette
+$dac-blue: #1e3a8a;  // Primary blue
+$dac-red: #dc2626;   // Secondary red
+$dac-blue-rgb: 30, 58, 138;
+$background: #f3f4f6;
+
+// Override Bootstrap variables before importing
+$primary: $dac-blue;
+$secondary: $dac-red;
+
+// Import Bootstrap
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons';
+
+// Custom styles
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(to bottom, $dac-blue 0%, $background 50%, rgba($dac-blue-rgb, 0.05) 100%);
+  min-height: 100vh;
+}
+
+.navbar {
+  background-color: $dac-blue !important;
+}
+
+.btn-primary {
+  background-color: $dac-blue;
+  border-color: $dac-blue;
+
+  &:hover {
+    background-color: darken($dac-blue, 10%);
+    border-color: darken($dac-blue, 10%);
+  }
+}
+
+.btn-outline-primary {
+  color: $dac-blue;
+  border-color: $dac-blue;
+
+  &:hover {
+    background-color: $dac-blue;
+    border-color: $dac-blue;
+  }
+}
+
+.table {
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  thead {
+    background-color: rgba($dac-blue-rgb, 0.1);
+  }
+
+  tbody tr:hover {
+    background-color: rgba($dac-blue-rgb, 0.05);
+  }
+}
+
+// Typography
+h1 {
+  font-size: 2rem;
+
+  @media (min-width: 768px) {
+    font-size: 3rem;
+  }
+}
+
+.display-4 {
+  font-size: 2.5rem;
+
+  @media (min-width: 768px) {
+    font-size: 3.5rem;
+  }
+}
+
+// Video container
+.video-container {
+  .ratio {
+    background-color: #000;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+}
