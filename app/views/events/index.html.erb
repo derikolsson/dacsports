@@ -14,17 +14,27 @@
       <tbody>
         <%# Live events first %>
         <% @live_events.each do |event| %>
-          <tr>
+          <tr class="event-row--live">
             <td>
-              <strong class="fw-bold"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <div>
+                <% if event.sport.present? %>
+                  <span class="sport-badge sport-badge--<%= event.sport.downcase %>">
+                    <%= event.sport_emoji %>
+                    <%= event.sport %>
+                  </span>
+                <% end %>
+                <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              </div>
               <% if event.subtitle.present? %>
-                <br><small class="text-muted"><%= event.subtitle %></small>
+                <small class="text-muted d-block mt-1"><%= event.subtitle %></small>
               <% end %>
             </td>
-            <td><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
             <td>
-              <%= link_to 'Watch Now', event_path(event), class: 'btn btn-primary', style: 'font-size: 0.75rem; padding: 0.25rem 0.5rem;' %>
+              <%= link_to event_path(event), class: 'btn btn-live text-decoration-none' do %>
+                🔴 LIVE
+              <% end %>
             </td>
           </tr>
         <% end %>
@@ -33,14 +43,24 @@
         <% @upcoming_events.each do |event| %>
           <tr>
             <td>
-              <strong class="fw-bold"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <div>
+                <% if event.sport.present? %>
+                  <span class="sport-badge sport-badge--<%= event.sport.downcase %>">
+                    <%= event.sport_emoji %>
+                    <%= event.sport %>
+                  </span>
+                <% end %>
+                <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              </div>
               <% if event.subtitle.present? %>
-                <br><small class="text-muted"><%= event.subtitle %></small>
+                <small class="text-muted d-block mt-1"><%= event.subtitle %></small>
               <% end %>
             </td>
-            <td><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
-            <td><span class="text-muted">Upcoming</span></td>
+            <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td>
+              <span class="btn btn-upcoming">UPCOMING</span>
+            </td>
           </tr>
         <% end %>
 
@@ -48,16 +68,26 @@
         <% @past_events.each do |event| %>
           <tr>
             <td>
-              <strong class="fw-bold"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <div>
+                <% if event.sport.present? %>
+                  <span class="sport-badge sport-badge--<%= event.sport.downcase %>">
+                    <%= event.sport_emoji %>
+                    <%= event.sport %>
+                  </span>
+                <% end %>
+                <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              </div>
               <% if event.subtitle.present? %>
-                <br><small class="text-muted"><%= event.subtitle %></small>
+                <small class="text-muted d-block mt-1"><%= event.subtitle %></small>
               <% end %>
             </td>
-            <td><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
             <td>
               <% if event.vod? %>
-                <%= link_to 'Watch Replay', event_path(event), class: 'btn btn-outline-primary', style: 'font-size: 0.75rem; padding: 0.25rem 0.5rem;' %>
+                <%= link_to event_path(event), class: 'btn btn-replay text-decoration-none' do %>
+                  WATCH REPLAY
+                <% end %>
               <% elsif event.ended? %>
                 <span class="text-muted">Event Ended</span>
               <% elsif event.replay_pending? %>
