@@ -345,3 +345,45 @@ footer {
   border-left: 4px solid $dac-crimson-red;
   padding-left: 16px;
 }
+
+// Live Badge (Video Player Page)
+.live-badge {
+  font-family: var(--font-display);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: $dac-crimson-red;
+  color: $dac-white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
+
+  &::before {
+    content: "🔴";
+  }
+}
+
+// Back Button
+.back-button {
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #F3F4F6;
+  color: #374151;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $dac-royal-blue;
+    color: $dac-white;
+    transform: translateX(-4px);
+  }
+}

@@ -1,15 +1,35 @@
 <div class="container py-5">
   <div class="mb-4">
-    <%= link_to '← Back to Schedule', events_path, class: 'btn btn-outline-secondary' %>
+    <%= link_to events_path, class: 'back-button text-decoration-none' do %>
+      ← Back to Schedule
+    <% end %>
   </div>
 
   <div class="row">
     <div class="col-12">
-      <h1><%= @event.title %></h1>
-      <% if @event.subtitle.present? %>
-        <h5 class="text-muted"><%= @event.subtitle %></h5>
-      <% end %>
-      <p class="text-muted">
+      <div class="d-flex align-items-center gap-3 mb-2">
+        <h1 class="mb-0"><%= @event.title %></h1>
+        <% if @event.live? %>
+          <span class="live-badge">LIVE</span>
+        <% end %>
+      </div>
+
+      <div class="mt-2">
+        <% if @event.sport.present? %>
+          <span class="fw-semibold text-dark">
+            <%= @event.sport_emoji %>
+            <%= @event.sport %>
+          </span>
+        <% end %>
+        <% if @event.sport.present? && @event.subtitle.present? %>
+          <span class="text-muted mx-2">•</span>
+        <% end %>
+        <% if @event.subtitle.present? %>
+          <span class="text-muted"><%= @event.subtitle %></span>
+        <% end %>
+      </div>
+
+      <p class="meta-text mt-2">
         <%= @event.event_date.strftime('%A, %B %-d') %>
         <% if @event.start_at.present? %>
           at <%= @event.start_at.in_time_zone(@event.time_zone).strftime('%I:%M %p') %> CT
