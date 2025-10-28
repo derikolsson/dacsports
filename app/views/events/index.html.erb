@@ -16,18 +16,21 @@
         <% @live_events.each do |event| %>
           <tr class="event-row--live">
             <td>
-              <div>
+              <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <div class="mt-1">
                 <% if event.sport.present? %>
-                  <span class="sport-badge sport-badge--<%= event.sport.downcase %>">
+                  <small class="fw-semibold text-dark">
                     <%= event.sport_emoji %>
                     <%= event.sport %>
-                  </span>
+                  </small>
                 <% end %>
-                <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+                <% if event.sport.present? && event.subtitle.present? %>
+                  <small class="text-muted mx-2">•</small>
+                <% end %>
+                <% if event.subtitle.present? %>
+                  <small class="text-muted"><%= event.subtitle %></small>
+                <% end %>
               </div>
-              <% if event.subtitle.present? %>
-                <small class="text-muted d-block mt-1"><%= event.subtitle %></small>
-              <% end %>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
             <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
@@ -43,18 +46,21 @@
         <% @upcoming_events.each do |event| %>
           <tr>
             <td>
-              <div>
+              <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <div class="mt-1">
                 <% if event.sport.present? %>
-                  <span class="sport-badge sport-badge--<%= event.sport.downcase %>">
+                  <small class="fw-semibold text-dark">
                     <%= event.sport_emoji %>
                     <%= event.sport %>
-                  </span>
+                  </small>
                 <% end %>
-                <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+                <% if event.sport.present? && event.subtitle.present? %>
+                  <small class="text-muted mx-2">•</small>
+                <% end %>
+                <% if event.subtitle.present? %>
+                  <small class="text-muted"><%= event.subtitle %></small>
+                <% end %>
               </div>
-              <% if event.subtitle.present? %>
-                <small class="text-muted d-block mt-1"><%= event.subtitle %></small>
-              <% end %>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
             <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
@@ -68,18 +74,21 @@
         <% @past_events.each do |event| %>
           <tr>
             <td>
-              <div>
+              <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <div class="mt-1">
                 <% if event.sport.present? %>
-                  <span class="sport-badge sport-badge--<%= event.sport.downcase %>">
+                  <small class="fw-semibold text-dark">
                     <%= event.sport_emoji %>
                     <%= event.sport %>
-                  </span>
+                  </small>
                 <% end %>
-                <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+                <% if event.sport.present? && event.subtitle.present? %>
+                  <small class="text-muted mx-2">•</small>
+                <% end %>
+                <% if event.subtitle.present? %>
+                  <small class="text-muted"><%= event.subtitle %></small>
+                <% end %>
               </div>
-              <% if event.subtitle.present? %>
-                <small class="text-muted d-block mt-1"><%= event.subtitle %></small>
-              <% end %>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
             <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
