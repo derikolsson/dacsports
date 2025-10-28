@@ -111,12 +111,6 @@ body {
 
   tbody tr {
     min-height: 80px;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background-color: $dac-blue-light;
-      transform: translateX(4px);
-    }
   }
 }
 
@@ -385,5 +379,41 @@ footer {
     background: $dac-royal-blue;
     color: $dac-white;
     transform: translateX(-4px);
+  }
+}
+
+// Global Enhancements - Spacing System
+.container {
+  padding: 40px;
+  max-width: 1400px;
+
+  @media (max-width: 767px) {
+    padding: 20px;
+  }
+}
+
+// Global Enhancements - Micro-interactions
+button, a, .clickable {
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba($dac-royal-blue, 0.2);
+}
+
+// Page fade-in animation
+.page-content {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
