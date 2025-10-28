@@ -9,12 +9,19 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
+  root "events#index"
+
+  resources :events, only: [ :index, :show ], param: :slug do
+    member do
+      post :status
+    end
+  end
+
+  post "sessions/keepalive", to: "sessions/keepalive#create"
+
   # Internal admin routes
   namespace :internal do
     root "home#index"
     mount Sidekiq::Web => "/sidekiq"
   end
-
-  # Defines the root path route ("/")
-  # root "posts#index"
 end
