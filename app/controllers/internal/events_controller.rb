@@ -81,7 +81,7 @@ class Internal::EventsController < Internal::ApplicationController
     params.require(:event).permit(
       :title, :subtitle, :start_at, :time_zone,
       :live_embed_code, :replay_embed_code, :status, :visible,
-      :short_name, :description, :sport
+      :short_name, :description, :sport, :location
     )
   end
 end

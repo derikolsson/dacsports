@@ -34,6 +34,10 @@
         <% if @event.start_at.present? %>
           at <%= @event.start_at.in_time_zone(@event.time_zone).strftime('%I:%M %p') %> CT
         <% end %>
+        <% if @event.location.present? %>
+          <span class="mx-2">•</span>
+          <%= @event.location %>
+        <% end %>
       </p>
 
       <div class="video-container mt-4">

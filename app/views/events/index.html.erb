@@ -8,6 +8,7 @@
           <th>Event</th>
           <th>Date</th>
           <th>Time (CT)</th>
+          <th>Location</th>
           <th>Status</th>
         </tr>
       </thead>
@@ -34,6 +35,7 @@
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
             <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <%= link_to event_path(event), class: 'btn btn-live text-decoration-none' do %>
                 🔴 LIVE
@@ -64,6 +66,7 @@
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
             <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <span class="btn btn-upcoming">UPCOMING</span>
             </td>
@@ -92,6 +95,7 @@
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
             <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <% if event.vod? %>
                 <%= link_to event_path(event), class: 'btn btn-replay text-decoration-none' do %>

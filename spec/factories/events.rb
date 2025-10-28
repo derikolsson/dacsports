@@ -3,6 +3,7 @@ FactoryBot.define do
     sequence(:title) { |n| "Basketball Game #{n}" }
     subtitle { "Championship Finals" }
     sport { "Men's Volleyball" }
+    location { "Main Arena" }
     start_at { 1.week.from_now }
     time_zone { "America/Chicago" }
     status { :upcoming }
