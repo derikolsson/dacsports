@@ -25,7 +25,7 @@ Rails.application.configure do
     config.action_controller.perform_caching = false
   end
 
-  # Change to :null_store to avoid any caching.
+  # Use memory store for simpler dev setup (production uses Redis)
   config.cache_store = :memory_store
 
   # Don't care if the mailer can't send.
