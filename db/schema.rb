@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_28_054211) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_28_060631) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "event_visits", force: :cascade do |t|
+    t.uuid "session_id", null: false
+    t.bigint "event_id", null: false
+    t.string "event_status", null: false
+    t.datetime "started_at", precision: nil
+    t.datetime "last_seen_at", precision: nil
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_visits_on_event_id"
+    t.index ["session_id"], name: "index_event_visits_on_session_id"
+  end
 
   create_table "events", force: :cascade do |t|
     t.string "title", null: false
@@ -31,5 +43,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_28_054211) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_events_on_slug", unique: true
+  end
+
+  create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.uuid "visitor_id", null: false
+    t.datetime "last_seen_at", precision: nil
+    t.string "user_agent"
+    t.string "browser_name"
+    t.string "os_name"
+    t.string "device_type"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["visitor_id"], name: "index_sessions_on_visitor_id"
   end
 end

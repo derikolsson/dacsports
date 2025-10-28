@@ -1,4 +1,7 @@
 class Event < ApplicationRecord
+  # Associations
+  has_many :event_visits, dependent: :destroy
+
   # Enum for status
   enum :status, {
     upcoming: "upcoming",
