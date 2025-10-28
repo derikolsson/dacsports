@@ -23,5 +23,14 @@ Rails.application.routes.draw do
   namespace :internal do
     root "home#index"
     mount Sidekiq::Web => "/sidekiq"
+
+    resources :events do
+      member do
+        post :go_live
+        post :end_event
+        post :mark_replay_pending
+        post :publish_replay
+      end
+    end
   end
 end
