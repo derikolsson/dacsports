@@ -26,6 +26,12 @@
 
     <%= yield :head %>
 
+    <% if Rails.application.credentials.fathom_site_id.present? %>
+      <script src="https://cdn.usefathom.com/script.js"
+              data-site="<%= Rails.application.credentials.fathom_site_id %>"
+              defer></script>
+    <% end %>
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
