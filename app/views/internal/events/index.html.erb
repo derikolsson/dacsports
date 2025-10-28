@@ -26,10 +26,8 @@
         </td>
         <td>
           <% if event.sport.present? %>
-            <span class="badge bg-<%= event.sport.downcase == 'volleyball' ? 'info' : 'danger' %>">
-              <%= event.sport_emoji %>
-              <%= event.sport %>
-            </span>
+            <%= event.sport_emoji %>
+            <%= event.sport %>
           <% else %>
             <span class="text-muted">—</span>
           <% end %>

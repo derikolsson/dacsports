@@ -153,24 +153,39 @@ RSpec.describe Event, type: :model do
   end
 
   describe '#sport_emoji' do
-    it 'returns soccer emoji for soccer sport' do
-      event = build(:event, sport: 'Soccer')
+    it "returns soccer emoji for Men's Soccer" do
+      event = build(:event, sport: "Men's Soccer")
       expect(event.sport_emoji).to eq('⚽')
     end
 
-    it 'returns volleyball emoji for volleyball sport' do
-      event = build(:event, sport: 'Volleyball')
+    it "returns soccer emoji for Women's Soccer" do
+      event = build(:event, sport: "Women's Soccer")
+      expect(event.sport_emoji).to eq('⚽')
+    end
+
+    it "returns volleyball emoji for Men's Volleyball" do
+      event = build(:event, sport: "Men's Volleyball")
       expect(event.sport_emoji).to eq('🏐')
     end
 
-    it 'returns basketball emoji for basketball sport' do
-      event = build(:event, sport: 'Basketball')
+    it "returns volleyball emoji for Women's Volleyball" do
+      event = build(:event, sport: "Women's Volleyball")
+      expect(event.sport_emoji).to eq('🏐')
+    end
+
+    it "returns basketball emoji for Men's Basketball" do
+      event = build(:event, sport: "Men's Basketball")
       expect(event.sport_emoji).to eq('🏀')
     end
 
-    it 'returns football emoji for football sport' do
-      event = build(:event, sport: 'Football')
+    it "returns football emoji for Women's Football" do
+      event = build(:event, sport: "Women's Football")
       expect(event.sport_emoji).to eq('🏈')
+    end
+
+    it 'matches sport keywords using inclusion' do
+      event = build(:event, sport: 'Soccer Tournament')
+      expect(event.sport_emoji).to eq('⚽')
     end
 
     it 'returns empty string for unknown sport' do
@@ -184,7 +199,7 @@ RSpec.describe Event, type: :model do
     end
 
     it 'is case insensitive' do
-      event = build(:event, sport: 'SOCCER')
+      event = build(:event, sport: 'SOCCER MATCH')
       expect(event.sport_emoji).to eq('⚽')
     end
   end

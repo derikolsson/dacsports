@@ -312,13 +312,31 @@ footer {
   margin-right: 12px;
 }
 
-.sport-badge--volleyball {
+.sport-badge--volleyball,
+.sport-badge--men-s-volleyball,
+.sport-badge--women-s-volleyball {
   background: $dac-light-blue;
   color: $dac-royal-blue;
 }
 
-.sport-badge--soccer {
+.sport-badge--soccer,
+.sport-badge--men-s-soccer,
+.sport-badge--women-s-soccer {
   background: $dac-crimson-red;
+  color: $dac-white;
+}
+
+.sport-badge--basketball,
+.sport-badge--men-s-basketball,
+.sport-badge--women-s-basketball {
+  background: $dac-royal-blue;
+  color: $dac-white;
+}
+
+.sport-badge--football,
+.sport-badge--men-s-football,
+.sport-badge--women-s-football {
+  background: #10B981;
   color: $dac-white;
 }
 

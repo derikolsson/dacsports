@@ -7,7 +7,16 @@ class Event < ApplicationRecord
   has_many :event_visits, dependent: :destroy
 
   # Available sports
-  SPORTS = %w[Volleyball Soccer Basketball Football].freeze
+  SPORTS = [
+    "Men's Soccer",
+    "Women's Soccer",
+    "Men's Volleyball",
+    "Women's Volleyball",
+    "Men's Basketball",
+    "Women's Basketball",
+    "Men's Football",
+    "Women's Football"
+  ].freeze
 
   # Enum for status
   enum :status, {
@@ -37,14 +46,17 @@ class Event < ApplicationRecord
 
   # Sport emoji helper
   def sport_emoji
-    case sport&.downcase
-    when "soccer"
+    return "" if sport.blank?
+
+    sport_lower = sport.downcase
+
+    if sport_lower.include?("soccer")
       "⚽"
-    when "volleyball"
+    elsif sport_lower.include?("volleyball")
       "🏐"
-    when "basketball"
+    elsif sport_lower.include?("basketball")
       "🏀"
-    when "football"
+    elsif sport_lower.include?("football")
       "🏈"
     else
       ""
