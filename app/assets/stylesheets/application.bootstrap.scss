@@ -1,20 +1,44 @@
-// DAC Sports Network Color Palette
-$dac-blue: #1e3a8a;  // Primary blue
-$dac-red: #dc2626;   // Secondary red
+// DAC Sports Network Brand Color Palette
+$dac-royal-blue: #0032A1;
+$dac-crimson-red: #DC0028;
+$dac-light-blue: #C8DEF2;
+$dac-white: #FFFFFF;
+$dac-blue-dark: #002580;
+$dac-red-dark: #B00020;
+$dac-blue-light: rgba(0, 50, 161, 0.05);
 $background: #f3f4f6;
 
 // Override Bootstrap variables before importing
-$primary: $dac-blue;
-$secondary: $dac-red;
+$primary: $dac-royal-blue;
+$secondary: $dac-crimson-red;
 
 // Import Bootstrap
 @import 'bootstrap/scss/bootstrap';
 @import 'bootstrap-icons/font/bootstrap-icons';
 
+// CSS Custom Properties
+:root {
+  // Typography
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  // Brand Colors
+  --dac-royal-blue: #{$dac-royal-blue};
+  --dac-crimson-red: #{$dac-crimson-red};
+  --dac-light-blue: #{$dac-light-blue};
+  --dac-white: #{$dac-white};
+  --dac-blue-dark: #{$dac-blue-dark};
+  --dac-red-dark: #{$dac-red-dark};
+  --dac-blue-light: #{$dac-blue-light};
+}
+
 // Custom styles
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(to bottom, $dac-blue 0%, $background 50%, rgba($dac-blue, 0.05) 100%);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  background: linear-gradient(135deg, $dac-light-blue 0%, #F9FAFB 100%);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -38,98 +62,171 @@ body {
 }
 
 .btn-primary {
-  background-color: $dac-blue;
-  border-color: $dac-blue;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: $dac-royal-blue;
+  border-color: $dac-royal-blue;
 
   &:hover {
-    background-color: darken($dac-blue, 10%);
-    border-color: darken($dac-blue, 10%);
+    background-color: $dac-blue-dark;
+    border-color: $dac-blue-dark;
   }
 }
 
 .btn-outline-primary {
-  color: $dac-blue;
-  border-color: $dac-blue;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $dac-royal-blue;
+  border-color: $dac-royal-blue;
 
   &:hover {
-    background-color: $dac-blue;
-    border-color: $dac-blue;
+    background-color: $dac-royal-blue;
+    border-color: $dac-royal-blue;
   }
 }
 
 .table {
   background-color: white;
-  border-radius: 0.75rem;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 
   thead {
-    background-color: rgba($dac-blue, 0.1);
+    background-color: $dac-blue-light;
 
     th {
+      font-family: var(--font-display);
       font-weight: 600;
       text-transform: uppercase;
       font-size: 0.875rem;
       letter-spacing: 0.025em;
-      color: $dac-blue;
-      border-bottom: 2px solid rgba($dac-blue, 0.2);
+      color: $dac-royal-blue;
+      border-bottom: 2px solid rgba($dac-royal-blue, 0.2);
     }
   }
 
   tbody tr {
+    min-height: 80px;
     transition: all 0.2s ease;
 
     &:hover {
-      background-color: rgba($dac-blue, 0.05);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      background-color: $dac-blue-light;
+      transform: translateX(4px);
     }
   }
 }
 
 // Typography
+h1, h2, h3 {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
 h1 {
-  font-size: 2rem;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
 
   @media (min-width: 768px) {
-    font-size: 3rem;
+    font-size: 48px;
+    line-height: 1.1;
   }
 }
 
-.display-4 {
-  font-size: 2.5rem;
+h2 {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.3;
 
   @media (min-width: 768px) {
-    font-size: 3.5rem;
+    font-size: 36px;
+    line-height: 1.2;
   }
+}
+
+h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  @media (min-width: 768px) {
+    font-size: 24px;
+    line-height: 1.3;
+  }
+}
+
+p {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+small {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 48px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 40px;
+  color: #111827;
+}
+
+.event-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.meta-text {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 400;
+  color: #6B7280;
 }
 
 // Video container
 .video-container {
   .ratio {
     background-color: #000;
-    border-radius: 0.5rem;
+    border-radius: 8px;
     overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1),
+                0 10px 15px rgba(0, 0, 0, 0.1);
   }
 }
 
 // Footer
 footer {
+  font-family: var(--font-body);
+  text-align: center;
+  padding: 40px 20px;
   background: transparent;
   margin-top: auto;
 }
 
 .campus-list {
   color: #6b7280;
-  font-size: 0.875rem;
+  font-size: 14px;
 
   span:not(.campus-separator) {
     display: inline;
+    transition: color 0.2s ease;
   }
 
   .campus-separator {
-    color: $dac-red;
-    font-weight: bold;
-    margin: 0 0.5rem;
+    color: #D1D5DB;
+    margin: 0 8px;
   }
 
   @media (max-width: 767px) {
