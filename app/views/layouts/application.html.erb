@@ -38,19 +38,34 @@
   </head>
 
   <body>
-    <nav class="navbar navbar-dark mb-5">
+    <header class="site-header text-center py-4">
       <div class="container">
-        <%= link_to root_path, class: "navbar-brand d-flex align-items-center" do %>
-          <span class="fw-bold">DAC Sports Network</span>
+        <%= link_to root_path, class: "d-inline-block" do %>
+          <%= image_tag "logo.png", alt: "DAC Sports Network", class: "logo-main" %>
         <% end %>
       </div>
-    </nav>
+    </header>
 
     <%= yield %>
 
-    <footer class="mt-5 py-4 text-center text-muted">
+    <footer class="mt-auto py-4 text-center">
       <div class="container">
-        <p class="mb-0">&copy; <%= Time.current.year %> DAC Sports Network. All rights reserved.</p>
+        <p class="campus-list mb-2">
+          <span>Brookhaven</span>
+          <span class="campus-separator">•</span>
+          <span>Cedar Valley</span>
+          <span class="campus-separator">•</span>
+          <span>Eastfield</span>
+          <span class="campus-separator">•</span>
+          <span>El Centro</span>
+          <span class="campus-separator">•</span>
+          <span>Mountain View</span>
+          <span class="campus-separator">•</span>
+          <span>North Lake</span>
+          <span class="campus-separator">•</span>
+          <span>Richland</span>
+        </p>
+        <p class="mb-0 text-muted small">&copy; <%= Time.current.year %> DAC Sports Network. All rights reserved.</p>
       </div>
     </footer>
   </body>
