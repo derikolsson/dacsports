@@ -12,8 +12,8 @@
     "sass": "^1.93.2"
   },
   "scripts": {
-    "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css --no-source-map --load-path=node_modules",
-    "build:css:prefix": "postcss ./app/assets/builds/application.css --use=autoprefixer --output=./app/assets/builds/application.css",
+    "build:css:compile": "sass ./app/assets/stylesheets/application.bootstrap.scss:./app/assets/builds/application.css ./app/assets/stylesheets/internal.bootstrap.scss:./app/assets/builds/internal.css --no-source-map --load-path=node_modules",
+    "build:css:prefix": "postcss ./app/assets/builds/*.css --use=autoprefixer --dir=./app/assets/builds/",
     "build:css": "yarn build:css:compile && yarn build:css:prefix",
     "watch:css": "nodemon --watch ./app/assets/stylesheets/ --ext scss --exec \"yarn build:css\""
   },

@@ -1,0 +1,21 @@
+@import 'bootstrap/scss/bootstrap';
+@import "bootstrap-icons/font/bootstrap-icons";
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  .logo {
+    height: 5.625rem;
+    width: 5.625rem;
+    margin-right: 0.5rem;
+  }
+
+  a.title-link, a.title-link:hover {
+    color: black;
+    font-weight: 900;
+    text-decoration: none;
+  }
+}
