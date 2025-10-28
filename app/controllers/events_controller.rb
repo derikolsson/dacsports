@@ -3,8 +3,8 @@ class EventsController < ApplicationController
 
   def index
     @live_events = Event.visible.live.order(start_at: :asc)
-    @upcoming_events = Event.visible.upcoming.where("event_date >= ?", Date.current).order(event_date: :asc, start_at: :asc)
-    @past_events = Event.visible.where(status: [ :ended, :replay_pending, :vod ]).order(event_date: :desc, start_at: :desc)
+    @upcoming_events = Event.visible.upcoming.where("start_at >= ?", Date.current).order(start_at: :asc)
+    @past_events = Event.visible.where(status: [ :ended, :replay_pending, :vod ]).order(start_at: :desc)
     @title = "Schedule"
   end
 

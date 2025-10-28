@@ -36,35 +36,37 @@
         </td>
         <td><code><%= event.slug %></code></td>
         <td>
-          <%= link_to 'Edit', edit_internal_event_path(event), class: 'btn btn-sm btn-secondary' %>
+          <div class="d-flex gap-2">
+            <%= link_to 'Edit', edit_internal_event_path(event), class: 'btn btn-sm btn-secondary' %>
 
-          <% if event.can_go_live? %>
-            <%= button_to 'Go Live', go_live_internal_event_path(event),
-                method: :post, class: 'btn btn-sm btn-success',
-                data: { confirm: 'Start this event now?' } %>
-          <% end %>
+            <% if event.can_go_live? %>
+              <%= button_to 'Go Live', go_live_internal_event_path(event),
+                  method: :post, class: 'btn btn-sm btn-success',
+                  data: { confirm: 'Start this event now?' } %>
+            <% end %>
 
-          <% if event.can_end? %>
-            <%= button_to 'End Event', end_event_internal_event_path(event),
-                method: :post, class: 'btn btn-sm btn-dark',
-                data: { confirm: 'End this event (no replay)?' } %>
-          <% end %>
+            <% if event.can_end? %>
+              <%= button_to 'End Event', end_event_internal_event_path(event),
+                  method: :post, class: 'btn btn-sm btn-dark',
+                  data: { confirm: 'End this event (no replay)?' } %>
+            <% end %>
 
-          <% if event.can_mark_replay_pending? %>
-            <%= button_to 'Mark Replay Pending', mark_replay_pending_internal_event_path(event),
-                method: :post, class: 'btn btn-sm btn-warning',
-                data: { confirm: 'Mark this event for replay?' } %>
-          <% end %>
+            <% if event.can_mark_replay_pending? %>
+              <%= button_to 'Mark Replay Pending', mark_replay_pending_internal_event_path(event),
+                  method: :post, class: 'btn btn-sm btn-warning',
+                  data: { confirm: 'Mark this event for replay?' } %>
+            <% end %>
 
-          <% if event.can_publish_replay? %>
-            <%= button_to 'Publish Replay', publish_replay_internal_event_path(event),
-                method: :post, class: 'btn btn-sm btn-primary',
-                data: { confirm: 'Make replay available?' } %>
-          <% end %>
+            <% if event.can_publish_replay? %>
+              <%= button_to 'Publish Replay', publish_replay_internal_event_path(event),
+                  method: :post, class: 'btn btn-sm btn-primary',
+                  data: { confirm: 'Make replay available?' } %>
+            <% end %>
 
-          <%= button_to 'Delete', internal_event_path(event),
-              method: :delete, class: 'btn btn-sm btn-danger',
-              data: { confirm: 'Are you sure?' } %>
+            <%= button_to 'Delete', internal_event_path(event),
+                method: :delete, class: 'btn btn-sm btn-danger',
+                data: { confirm: 'Are you sure?' } %>
+          </div>
         </td>
       </tr>
     <% end %>
