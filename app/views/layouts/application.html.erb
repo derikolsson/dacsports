@@ -18,6 +18,9 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <!-- Session ID for polling -->
+    <meta name="session-id" content="<%= Current.session&.id %>">
+
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
