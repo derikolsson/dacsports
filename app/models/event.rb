@@ -6,6 +6,9 @@ class Event < ApplicationRecord
   # Associations
   has_many :event_visits, dependent: :destroy
 
+  # Available sports
+  SPORTS = %w[Volleyball Soccer Basketball Football].freeze
+
   # Enum for status
   enum :status, {
     upcoming: "upcoming",
@@ -19,6 +22,7 @@ class Event < ApplicationRecord
   validates :title, :start_at, :time_zone, presence: true
   validates :live_embed_code, presence: true, if: -> { live? }
   validates :replay_embed_code, presence: true, if: -> { replay_available? }
+  validates :sport, inclusion: { in: SPORTS, allow_blank: true }
 
   # Scopes
   scope :visible, -> { where(visible: true) }
@@ -29,6 +33,22 @@ class Event < ApplicationRecord
   # Helper method for date display
   def event_date
     start_at&.in_time_zone(time_zone)&.to_date
+  end
+
+  # Sport emoji helper
+  def sport_emoji
+    case sport&.downcase
+    when "soccer"
+      "⚽"
+    when "volleyball"
+      "🏐"
+    when "basketball"
+      "🏀"
+    when "football"
+      "🏈"
+    else
+      ""
+    end
   end
 
   # Display helpers

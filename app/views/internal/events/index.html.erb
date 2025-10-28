@@ -8,6 +8,7 @@
     <tr>
       <th>Date</th>
       <th>Title</th>
+      <th>Sport</th>
       <th>Status</th>
       <th>Slug</th>
       <th>Actions</th>
@@ -21,6 +22,16 @@
           <%= event.title %>
           <% if event.subtitle.present? %>
             <br><small class="text-muted"><%= event.subtitle %></small>
+          <% end %>
+        </td>
+        <td>
+          <% if event.sport.present? %>
+            <span class="badge bg-<%= event.sport.downcase == 'volleyball' ? 'info' : 'danger' %>">
+              <%= event.sport_emoji %>
+              <%= event.sport %>
+            </span>
+          <% else %>
+            <span class="text-muted">—</span>
           <% end %>
         </td>
         <td>

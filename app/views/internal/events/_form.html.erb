@@ -21,6 +21,12 @@
     <%= f.text_field :subtitle, class: 'form-control' %>
   </div>
 
+  <div class="mb-3">
+    <%= f.label :sport, class: 'form-label' %>
+    <%= f.select :sport, Event::SPORTS, { include_blank: 'Select a sport' }, class: 'form-select' %>
+    <small class="form-text text-muted">Sport type for badge display</small>
+  </div>
+
   <div class="row">
     <div class="col-md-8 mb-3">
       <%= f.label :start_at, "Event Date & Time", class: 'form-label' %>

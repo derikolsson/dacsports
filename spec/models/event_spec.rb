@@ -8,6 +8,24 @@ RSpec.describe Event, type: :model do
     it { should validate_presence_of(:start_at) }
     it { should validate_presence_of(:time_zone) }
 
+    it 'validates sport is in the allowed list' do
+      event = build(:event, sport: 'InvalidSport')
+      expect(event).not_to be_valid
+      expect(event.errors[:sport]).to include('is not included in the list')
+    end
+
+    it 'allows blank sport' do
+      event = build(:event, sport: nil)
+      expect(event).to be_valid
+    end
+
+    it 'allows valid sports' do
+      Event::SPORTS.each do |sport|
+        event = build(:event, sport: sport)
+        expect(event).to be_valid
+      end
+    end
+
     context 'when status is live' do
       subject { build(:event, :live) }
       it { should validate_presence_of(:live_embed_code) }
@@ -131,6 +149,43 @@ RSpec.describe Event, type: :model do
         expect(event.publish_replay!).to be false
         expect(event.reload.status).to eq('replay_pending')
       end
+    end
+  end
+
+  describe '#sport_emoji' do
+    it 'returns soccer emoji for soccer sport' do
+      event = build(:event, sport: 'Soccer')
+      expect(event.sport_emoji).to eq('⚽')
+    end
+
+    it 'returns volleyball emoji for volleyball sport' do
+      event = build(:event, sport: 'Volleyball')
+      expect(event.sport_emoji).to eq('🏐')
+    end
+
+    it 'returns basketball emoji for basketball sport' do
+      event = build(:event, sport: 'Basketball')
+      expect(event.sport_emoji).to eq('🏀')
+    end
+
+    it 'returns football emoji for football sport' do
+      event = build(:event, sport: 'Football')
+      expect(event.sport_emoji).to eq('🏈')
+    end
+
+    it 'returns empty string for unknown sport' do
+      event = build(:event, sport: 'Tennis')
+      expect(event.sport_emoji).to eq('')
+    end
+
+    it 'returns empty string when sport is nil' do
+      event = build(:event, sport: nil)
+      expect(event.sport_emoji).to eq('')
+    end
+
+    it 'is case insensitive' do
+      event = build(:event, sport: 'SOCCER')
+      expect(event.sport_emoji).to eq('⚽')
     end
   end
 
