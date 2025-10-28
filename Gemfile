@@ -27,6 +27,9 @@ gem "redis", ">= 5.0"
 # Browser/OS tracking
 gem "device_detector"
 
+# Friendly slugs
+gem "friendly_id", "~> 5.5"
+
 # Error tracking
 gem "sentry-ruby"
 gem "sentry-rails"

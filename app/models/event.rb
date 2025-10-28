@@ -1,4 +1,8 @@
 class Event < ApplicationRecord
+  # Friendly ID - simple slugged approach without history
+  extend FriendlyId
+  friendly_id :title, use: :slugged
+
   # Associations
   has_many :event_visits, dependent: :destroy
 
@@ -13,7 +17,6 @@ class Event < ApplicationRecord
 
   # Validations
   validates :title, :start_at, :time_zone, presence: true
-  validates :slug, presence: true, uniqueness: true
   validates :live_embed_code, presence: true, if: -> { live? }
   validates :replay_embed_code, presence: true, if: -> { replay_available? }
 

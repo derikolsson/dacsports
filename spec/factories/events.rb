@@ -1,7 +1,6 @@
 FactoryBot.define do
   factory :event do
-    title { "Basketball Game" }
-    sequence(:slug) { |n| "event-slug-#{n}" }
+    sequence(:title) { |n| "Basketball Game #{n}" }
     subtitle { "Championship Finals" }
     start_at { 1.week.from_now }
     time_zone { "America/Chicago" }

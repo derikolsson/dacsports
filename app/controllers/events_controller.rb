@@ -9,7 +9,7 @@ class EventsController < ApplicationController
   end
 
   def show
-    @event = Event.visible.find_by!(slug: params[:slug])
+    @event = Event.visible.friendly.find(params[:slug])
     @title = case @event.status
     when "live" then "Live: #{@event.title}"
     when "vod" then "Replay: #{@event.title}"
@@ -31,8 +31,8 @@ class EventsController < ApplicationController
 
     # Return cached status
     status = Rails.cache.fetch("event_status/#{params[:slug]}", expires_in: 30.seconds) do
-      event = Event.find_by(slug: params[:slug])
-      return head 404 if event.nil?
+      event = Event.friendly.find(params[:slug])
+      return head 404 unless event
 
       {
         status: event.status,

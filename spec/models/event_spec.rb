@@ -5,10 +5,8 @@ RSpec.describe Event, type: :model do
     subject { build(:event) }
 
     it { should validate_presence_of(:title) }
-    it { should validate_presence_of(:slug) }
     it { should validate_presence_of(:start_at) }
     it { should validate_presence_of(:time_zone) }
-    it { should validate_uniqueness_of(:slug) }
 
     context 'when status is live' do
       subject { build(:event, :live) }
