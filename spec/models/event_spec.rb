@@ -6,7 +6,7 @@ RSpec.describe Event, type: :model do
 
     it { should validate_presence_of(:title) }
     it { should validate_presence_of(:slug) }
-    it { should validate_presence_of(:event_date) }
+    it { should validate_presence_of(:start_at) }
     it { should validate_presence_of(:time_zone) }
     it { should validate_uniqueness_of(:slug) }
 
@@ -34,8 +34,8 @@ RSpec.describe Event, type: :model do
   describe 'scopes' do
     let!(:visible_event) { create(:event, visible: true) }
     let!(:hidden_event) { create(:event, :hidden) }
-    let!(:upcoming_event) { create(:event, :upcoming, event_date: 1.week.from_now) }
-    let!(:past_upcoming_event) { create(:event, :upcoming, event_date: 1.week.ago) }
+    let!(:upcoming_event) { create(:event, :upcoming, start_at: 1.week.from_now) }
+    let!(:past_upcoming_event) { create(:event, :upcoming, start_at: 1.week.ago) }
     let!(:live_event) { create(:event, :live) }
     let!(:ended_event) { create(:event, :ended) }
     let!(:replay_event) { create(:event, :replay_available) }

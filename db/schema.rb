@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_28_060631) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_28_151351) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -30,8 +30,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_28_060631) do
     t.string "title", null: false
     t.string "slug", null: false
     t.string "subtitle"
-    t.date "event_date", null: false
-    t.datetime "start_at"
+    t.datetime "start_at", null: false
     t.string "time_zone", default: "America/Chicago", null: false
     t.text "live_embed_code"
     t.text "replay_embed_code"

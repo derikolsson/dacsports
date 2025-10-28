@@ -31,15 +31,10 @@
   </div>
 
   <div class="row">
-    <div class="col-md-4 mb-3">
-      <%= f.label :event_date, class: 'form-label' %>
-      <%= f.date_field :event_date, class: 'form-control', required: true %>
-    </div>
-
-    <div class="col-md-4 mb-3">
-      <%= f.label :start_at, "Start Time", class: 'form-label' %>
-      <%= f.datetime_local_field :start_at, class: 'form-control' %>
-      <small class="form-text text-muted">For auto-start via cron job</small>
+    <div class="col-md-8 mb-3">
+      <%= f.label :start_at, "Event Date & Time", class: 'form-label' %>
+      <%= f.datetime_local_field :start_at, class: 'form-control', required: true %>
+      <small class="form-text text-muted">Event start time (for auto-start via cron job)</small>
     </div>
 
     <div class="col-md-4 mb-3">

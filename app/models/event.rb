@@ -12,16 +12,21 @@ class Event < ApplicationRecord
   }, default: :upcoming
 
   # Validations
-  validates :title, :event_date, :time_zone, presence: true
+  validates :title, :start_at, :time_zone, presence: true
   validates :slug, presence: true, uniqueness: true
   validates :live_embed_code, presence: true, if: -> { live? }
   validates :replay_embed_code, presence: true, if: -> { replay_available? }
 
   # Scopes
   scope :visible, -> { where(visible: true) }
-  scope :upcoming_events, -> { upcoming.where("event_date >= ?", Date.current) }
+  scope :upcoming_events, -> { upcoming.where("start_at >= ?", Time.current.beginning_of_day) }
   scope :past, -> { where(status: [ "ended", "replay_pending", "replay_available" ]) }
   scope :by_date, -> { order(start_at: :desc) }
+
+  # Helper method for date display
+  def event_date
+    start_at&.in_time_zone(time_zone)&.to_date
+  end
 
   # Display helpers
   def current_embed_code

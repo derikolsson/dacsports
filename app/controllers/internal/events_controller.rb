@@ -2,7 +2,7 @@ class Internal::EventsController < Internal::ApplicationController
   before_action :set_event, only: [ :edit, :update, :destroy, :go_live, :end_event, :mark_replay_pending, :publish_replay ]
 
   def index
-    @events = Event.order(event_date: :desc, start_at: :desc)
+    @events = Event.order(start_at: :desc)
   end
 
   def new
@@ -79,7 +79,7 @@ class Internal::EventsController < Internal::ApplicationController
 
   def event_params
     params.require(:event).permit(
-      :title, :slug, :subtitle, :event_date, :start_at, :time_zone,
+      :title, :slug, :subtitle, :start_at, :time_zone,
       :live_embed_code, :replay_embed_code, :status, :visible,
       :short_name, :description
     )
