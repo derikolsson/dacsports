@@ -11,7 +11,6 @@ class Internal::EventsController < Internal::ApplicationController
 
   def new
     @event = Event.new(
-      time_zone: "America/Chicago",
       status: "upcoming",
       visible: true
     )

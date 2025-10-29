@@ -1,11 +1,13 @@
 require "sidekiq/web"
 
 Sidekiq.configure_server do |config|
-  config.redis = { url: ENV.fetch("REDIS_URL", "redis://localhost:6379/1") }
+  redis_host = ENV.fetch("REDIS_HOST", "localhost:6379")
+  config.redis = { url: "redis://#{redis_host}/1" }
 end
 
 Sidekiq.configure_client do |config|
-  config.redis = { url: ENV.fetch("REDIS_URL", "redis://localhost:6379/1") }
+  redis_host = ENV.fetch("REDIS_HOST", "localhost:6379")
+  config.redis = { url: "redis://#{redis_host}/1" }
 end
 
 # Load sidekiq-cron schedule

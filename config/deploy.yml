@@ -58,6 +58,8 @@ env:
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
 
+    REDIS_HOST: dacsports-redis:6379
+
 # Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
 # "bin/kamal logs -r job" will tail logs from the first server in the job section.
 aliases:
@@ -109,4 +111,3 @@ accessories:
     host: 162.243.216.209
     directories:
       - data:/data
-
