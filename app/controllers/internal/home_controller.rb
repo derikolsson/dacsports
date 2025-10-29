@@ -1,7 +1,7 @@
 class Internal::HomeController < Internal::ApplicationController
   def index
-    @active_sessions = Rails.cache.fetch("active_sessions", expires_in: 10.seconds) do
-      Session.where("last_seen_at > ?", 3.minutes.ago).count
+    @active_viewers = Rails.cache.fetch("active_viewers", expires_in: 10.seconds) do
+      EventVisit.where("last_seen_at > ?", 3.minutes.ago).distinct.count(:session_id)
     end
 
     @active_viewers_by_event = Rails.cache.fetch("active_viewers_by_event", expires_in: 10.seconds) do
@@ -19,16 +19,32 @@ class Internal::HomeController < Internal::ApplicationController
       }
     end
 
+    # Only show device analytics for sessions that have actually watched events
+    # Use joins instead of WHERE IN to avoid query size issues with large datasets
     @browser_breakdown = Rails.cache.fetch("browser_breakdown", expires_in: 10.seconds) do
-      Session.group(:browser_name).count.sort_by { |_k, v| -v }.first(10)
+      Session.joins(:event_visits)
+             .distinct
+             .group(:browser_name)
+             .count
+             .sort_by { |_k, v| -v }
+             .first(10)
     end
 
     @os_breakdown = Rails.cache.fetch("os_breakdown", expires_in: 10.seconds) do
-      Session.group(:os_name).count.sort_by { |_k, v| -v }.first(10)
+      Session.joins(:event_visits)
+             .distinct
+             .group(:os_name)
+             .count
+             .sort_by { |_k, v| -v }
+             .first(10)
     end
 
     @device_breakdown = Rails.cache.fetch("device_breakdown", expires_in: 10.seconds) do
-      Session.group(:device_type).count.sort_by { |_k, v| -v }
+      Session.joins(:event_visits)
+             .distinct
+             .group(:device_type)
+             .count
+             .sort_by { |_k, v| -v }
     end
   end
 end
