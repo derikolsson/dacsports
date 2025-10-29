@@ -2,7 +2,11 @@ class Internal::EventsController < Internal::ApplicationController
   before_action :set_event, only: [ :edit, :update, :destroy, :go_live, :end_event, :mark_replay_pending, :publish_replay ]
 
   def index
-    @events = Event.order(start_at: :desc)
+    today = Date.current
+    @events = Event.order(
+      Arel.sql("CASE WHEN start_at >= '#{today}' THEN 0 ELSE 1 END"),
+      :start_at
+    )
   end
 
   def new

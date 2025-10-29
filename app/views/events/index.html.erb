@@ -20,7 +20,7 @@
         <% @live_events.each do |event| %>
           <tr class="event-row--live">
             <td>
-              <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <strong class="event-name"><%= link_to event.title, event_path(event.slug), class: 'text-decoration-none' %></strong>
               <div class="mt-1">
                 <% if event.sport.present? %>
                   <small class="fw-semibold text-dark">
@@ -40,7 +40,7 @@
             <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%-I:%M %p') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
-              <%= link_to event_path(event), class: 'badge-live text-decoration-none' do %>
+              <%= link_to event_path(event.slug), class: 'badge-live text-decoration-none' do %>
                 LIVE
               <% end %>
             </td>
@@ -51,7 +51,7 @@
         <% @upcoming_events.each do |event| %>
           <tr>
             <td>
-              <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <strong class="event-name"><%= link_to event.title, event_path(event.slug), class: 'text-decoration-none' %></strong>
               <div class="mt-1">
                 <% if event.sport.present? %>
                   <small class="fw-semibold text-dark">
@@ -80,7 +80,7 @@
         <% @past_events.each do |event| %>
           <tr>
             <td>
-              <strong class="event-name"><%= link_to event.title, event_path(event), class: 'text-decoration-none' %></strong>
+              <strong class="event-name"><%= link_to event.title, event_path(event.slug), class: 'text-decoration-none' %></strong>
               <div class="mt-1">
                 <% if event.sport.present? %>
                   <small class="fw-semibold text-dark">
@@ -101,7 +101,7 @@
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <% if event.replay_available? %>
-                <%= link_to event_path(event), class: 'badge-replay text-decoration-none' do %>
+                <%= link_to event_path(event.slug), class: 'badge-replay text-decoration-none' do %>
                   REPLAY
                 <% end %>
               <% elsif event.ended? %>

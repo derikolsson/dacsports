@@ -87,7 +87,7 @@
           <h2 class="watch-related-games-title">Related Games</h2>
           <div class="watch-related-games-list">
             <% @event.related_games.each do |game| %>
-              <%= link_to event_path(game), class: "watch-related-game-card" do %>
+              <%= link_to event_path(game.slug), class: "watch-related-game-card" do %>
                 <div class="watch-related-game-header">
                   <div class="watch-related-game-title">
                     <%= game.title %>
