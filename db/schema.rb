@@ -10,11 +10,11 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_29_003145) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_29_221951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
-  create_table "event_visits", force: :cascade do |t|
+  create_table "event_visits", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "session_id", null: false
     t.bigint "event_id", null: false
     t.string "event_status", null: false

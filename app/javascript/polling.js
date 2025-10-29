@@ -1,4 +1,5 @@
-export function initializePolling({ eventSlug, eventId, eventStatus, forceReloadVersion, sessionId, initialTtl }) {
+export function initializePolling({ eventSlug, eventId, eventStatus, forceReloadVersion, sessionId, enabled, initialTtl }) {
+  const visitId = crypto.randomUUID();
   const startedAt = new Date().toISOString();
   const pageLoadedAt = Date.now();
 
@@ -11,11 +12,12 @@ export function initializePolling({ eventSlug, eventId, eventStatus, forceReload
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        visit_id: visitId,
         session_id: sessionId,
         event_id: eventId,
         event_status: eventStatus,
         started_at: startedAt,  // Tracks when viewer first started watching (for duration analytics)
-        enabled: 'true'
+        enabled: enabled ? 'true' : 'false'
       })
     };
 
