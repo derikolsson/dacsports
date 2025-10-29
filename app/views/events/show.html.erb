@@ -46,7 +46,8 @@
         <% end %>
         <% if @event.sport.present? %>
           <span class="watch-sport-info">
-            <%= @event.sport %>
+            <%= @event.sport_emoji %>
+            <strong><%= @event.sport %></strong>
             <% if @event.subtitle.present? %>
               <span class="watch-separator">•</span>
               <%= @event.subtitle %>

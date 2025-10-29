@@ -364,6 +364,15 @@ small {
   }
 }
 
+// Event Title Row (title + badge)
+.watch-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 // Event Title
 .watch-event-title {
   font-family: var(--font-display);
@@ -475,56 +484,54 @@ footer {
   }
 }
 
-// Status Buttons
-.btn-live {
-  font-family: var(--font-display);
-  background: $dac-crimson-red;
-  color: $dac-white;
-  font-weight: 600;
-  padding: 10px 24px;
-  border-radius: 6px;
+// Status Badges (matching show page style)
+.badge-live {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba($dac-crimson-red, 0.1);
+  color: $dac-crimson-red;
+  border-radius: 4px;
+  font-family: var(--font-body);
   font-size: 14px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border: none;
-  animation: pulse 2s infinite;
 
   &:hover {
-    background: $dac-red-dark;
-    color: $dac-white;
+    background: rgba($dac-crimson-red, 0.15);
+    color: $dac-crimson-red;
   }
 }
 
-.btn-upcoming {
-  font-family: var(--font-display);
-  background: #9CA3AF;
-  color: $dac-white;
-  font-weight: 600;
-  padding: 10px 24px;
-  border-radius: 6px;
+.badge-upcoming {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(#9CA3AF, 0.1);
+  color: #6B7280;
+  border-radius: 4px;
+  font-family: var(--font-body);
   font-size: 14px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border: none;
-  cursor: not-allowed;
-  opacity: 0.6;
+  cursor: default;
 }
 
-.btn-replay {
-  font-family: var(--font-display);
-  background: $dac-royal-blue;
-  color: $dac-white;
-  font-weight: 600;
-  padding: 10px 24px;
-  border-radius: 6px;
+.badge-replay {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba($dac-royal-blue, 0.1);
+  color: $dac-royal-blue;
+  border-radius: 4px;
+  font-family: var(--font-body);
   font-size: 14px;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border: none;
 
   &:hover {
-    background: $dac-blue-dark;
-    color: $dac-white;
+    background: rgba($dac-royal-blue, 0.15);
+    color: $dac-royal-blue;
   }
 }
 

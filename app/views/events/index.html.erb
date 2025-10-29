@@ -34,11 +34,11 @@
               </div>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
-              <%= link_to event_path(event), class: 'btn btn-live text-decoration-none' do %>
-                🔴 LIVE
+              <%= link_to event_path(event), class: 'badge-live text-decoration-none' do %>
+                LIVE
               <% end %>
             </td>
           </tr>
@@ -65,10 +65,10 @@
               </div>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
-              <span class="btn btn-upcoming">UPCOMING</span>
+              <span class="badge-upcoming">UPCOMING</span>
             </td>
           </tr>
         <% end %>
@@ -81,7 +81,6 @@
               <div class="mt-1">
                 <% if event.sport.present? %>
                   <small class="fw-semibold text-dark">
-                    <%= event.sport_emoji %>
                     <%= event.sport %>
                   </small>
                 <% end %>
@@ -94,12 +93,12 @@
               </div>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td class="meta-text"><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p %Z') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <% if event.vod? %>
-                <%= link_to event_path(event), class: 'btn btn-replay text-decoration-none' do %>
-                  WATCH REPLAY
+                <%= link_to event_path(event), class: 'badge-replay text-decoration-none' do %>
+                  REPLAY
                 <% end %>
               <% elsif event.ended? %>
                 <span class="text-muted">Event Ended</span>
