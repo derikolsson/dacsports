@@ -48,9 +48,9 @@
           <span class="watch-sport-info">
             <%= @event.sport_emoji %>
             <strong><%= @event.sport %></strong>
-            <% if @event.subtitle.present? %>
+            <% if @event.round.present? %>
               <span class="watch-separator">•</span>
-              <%= @event.subtitle %>
+              <%= @event.round %>
             <% end %>
           </span>
         <% end %>
@@ -79,6 +79,33 @@
       <% if @event.description.present? %>
         <div class="watch-event-description">
           <%= simple_format(@event.description) %>
+        </div>
+      <% end %>
+
+      <%# Related Games %>
+      <% if @event.related_games.any? %>
+        <div class="watch-related-games">
+          <h2 class="watch-related-games-title">Related Games</h2>
+          <div class="watch-related-games-list">
+            <% @event.related_games.each do |game| %>
+              <%= link_to event_path(game), class: "watch-related-game-card" do %>
+                <div class="watch-related-game-header">
+                  <div class="watch-related-game-title">
+                    <%= game.title %>
+                  </div>
+                  <% if game.round.present? %>
+                    <span class="watch-related-game-round <%= game.round.downcase.include?('championship') ? 'championship' : 'preliminary' %>">
+                      <%= game.round %>
+                    </span>
+                  <% end %>
+                </div>
+                <div class="watch-related-game-meta">
+                  <%= game.event_date.strftime('%A, %B %-d') %> •
+                  <%= game.start_at&.in_time_zone(game.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>

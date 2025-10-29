@@ -20,8 +20,8 @@
         <td><%= event.event_date.strftime('%Y-%m-%d') %></td>
         <td>
           <%= event.title %>
-          <% if event.subtitle.present? %>
-            <br><small class="text-muted"><%= event.subtitle %></small>
+          <% if event.round.present? %>
+            <br><small class="text-muted"><%= event.round %></small>
           <% end %>
         </td>
         <td>

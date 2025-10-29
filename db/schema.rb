@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_28_231659) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_29_003145) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -29,7 +29,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_28_231659) do
   create_table "events", force: :cascade do |t|
     t.string "title", null: false
     t.string "slug", null: false
-    t.string "subtitle"
     t.datetime "start_at", null: false
     t.string "time_zone", default: "America/Chicago", null: false
     t.text "live_embed_code"
@@ -43,6 +42,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_28_231659) do
     t.datetime "updated_at", null: false
     t.string "sport"
     t.string "location"
+    t.string "round"
     t.index ["slug"], name: "index_events_on_slug", unique: true
   end
 

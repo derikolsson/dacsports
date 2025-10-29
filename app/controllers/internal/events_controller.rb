@@ -79,9 +79,9 @@ class Internal::EventsController < Internal::ApplicationController
 
   def event_params
     params.require(:event).permit(
-      :title, :subtitle, :start_at, :time_zone,
+      :title, :start_at, :time_zone,
       :live_embed_code, :replay_embed_code, :status, :visible,
-      :short_name, :description, :sport, :location
+      :short_name, :description, :sport, :location, :round
     )
   end
 end

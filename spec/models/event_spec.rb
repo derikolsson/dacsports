@@ -232,4 +232,70 @@ RSpec.describe Event, type: :model do
       }.not_to change { event.force_reload_count }
     end
   end
+
+  describe '#related_games' do
+    let(:base_event) { create(:event, sport: "Women's Volleyball", start_at: Time.zone.now) }
+
+    context 'when there are related games in the same sport' do
+      let!(:related_game_1) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 1.day) }
+      let!(:related_game_2) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at - 2.days) }
+      let!(:related_game_3) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 3.days) }
+
+      it 'returns games in the same sport within +/- 3 days' do
+        related = base_event.related_games
+        expect(related).to include(related_game_1, related_game_2, related_game_3)
+        expect(related).not_to include(base_event)
+      end
+
+      it 'orders related games chronologically' do
+        related = base_event.related_games
+        expect(related.first).to eq(related_game_2)
+        expect(related.last).to eq(related_game_3)
+      end
+    end
+
+    context 'when there are games outside the 3-day window' do
+      let!(:too_early) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at - 4.days) }
+      let!(:too_late) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 4.days) }
+
+      it 'does not include them' do
+        related = base_event.related_games
+        expect(related).not_to include(too_early, too_late)
+      end
+    end
+
+    context 'when there are games in different sports' do
+      let!(:different_sport) { create(:event, sport: "Men's Basketball", start_at: base_event.start_at + 1.day) }
+
+      it 'does not include them' do
+        related = base_event.related_games
+        expect(related).not_to include(different_sport)
+      end
+    end
+
+    context 'when there are hidden games' do
+      let!(:hidden_game) { create(:event, :hidden, sport: "Women's Volleyball", start_at: base_event.start_at + 1.day) }
+
+      it 'does not include them' do
+        related = base_event.related_games
+        expect(related).not_to include(hidden_game)
+      end
+    end
+
+    context 'when sport is blank' do
+      let(:no_sport_event) { create(:event, sport: nil, start_at: Time.zone.now) }
+
+      it 'returns an empty relation' do
+        expect(no_sport_event.related_games).to eq(Event.none)
+      end
+    end
+
+    context 'when start_at is blank' do
+      let(:no_start_event) { build(:event, sport: "Women's Volleyball", start_at: nil) }
+
+      it 'returns an empty relation' do
+        expect(no_start_event.related_games).to eq(Event.none)
+      end
+    end
+  end
 end

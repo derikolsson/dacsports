@@ -118,8 +118,8 @@ body {
 
 // Watch Logo - Small centered version
 .logo-watch {
-  height: 60px;
-  width: 60px;
+  height: 90px;
+  width: 90px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
@@ -447,6 +447,88 @@ small {
       margin-bottom: 0;
     }
   }
+}
+
+// Related Games Section
+.watch-related-games {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.watch-related-games-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 16px 0;
+}
+
+.watch-related-games-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.watch-related-game-card {
+  padding: 16px;
+  background: rgba(#F3F4F6, 0.3);
+  border-radius: 8px;
+  display: block;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(#F3F4F6, 0.5);
+    transform: translateX(4px);
+  }
+}
+
+.watch-related-game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.watch-related-game-title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  flex: 1;
+}
+
+.watch-related-game-round {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+
+  &.preliminary {
+    background: rgba($dac-royal-blue, 0.1);
+    color: $dac-royal-blue;
+  }
+
+  &.championship {
+    background: rgba($dac-crimson-red, 0.1);
+    color: $dac-crimson-red;
+  }
+}
+
+.watch-related-game-meta {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #6B7280;
 }
 
 // Footer

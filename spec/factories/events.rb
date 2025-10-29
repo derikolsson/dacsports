@@ -1,9 +1,9 @@
 FactoryBot.define do
   factory :event do
     sequence(:title) { |n| "Basketball Game #{n}" }
-    subtitle { "Championship Finals" }
     sport { "Men's Volleyball" }
     location { "Main Arena" }
+    round { nil }
     start_at { 1.week.from_now }
     time_zone { "America/Chicago" }
     status { :upcoming }
@@ -39,6 +39,18 @@ FactoryBot.define do
 
     trait :hidden do
       visible { false }
+    end
+
+    trait :quarterfinal do
+      round { "Quarterfinal" }
+    end
+
+    trait :semifinal do
+      round { "Semifinal" }
+    end
+
+    trait :championship do
+      round { "Championship" }
     end
   end
 end

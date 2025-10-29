@@ -112,6 +112,19 @@ class Event < ApplicationRecord
     update!(status: :replay_available)
   end
 
+  # Related games - same sport within +/- 3 days
+  def related_games
+    return Event.none if sport.blank? || start_at.blank?
+
+    Event.visible
+         .where(sport: sport)
+         .where.not(id: id)
+         .where("start_at BETWEEN ? AND ?",
+                start_at - 3.days,
+                start_at + 3.days)
+         .order(:start_at)
+  end
+
   # Cache busting
   before_save :bump_force_reload_count
 
