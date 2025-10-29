@@ -84,6 +84,7 @@ production:
     database: dacsports_production
     username: dacsports
     password: <%= ENV["DACSPORTS_DATABASE_PASSWORD"] %>
+    host: <%= ENV["DB_HOST"] %>
   cache:
     <<: *primary_production
     database: dacsports_production_cache

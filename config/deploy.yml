@@ -2,16 +2,16 @@
 service: dacsports
 
 # Name of the container image.
-image: your-user/dacsports
+image: dko/dacsports
 
 # Deploy to these servers.
 servers:
   web:
-    - 192.168.0.1
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
+    - 162.243.216.209
+  job:
+    hosts:
+      - 162.243.216.209
+    cmd: bundle exec sidekiq -q default -q critical
 
 # Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
 # Remove this section when using multiple web servers and ensure you terminate SSL at your load balancer.
@@ -19,13 +19,17 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
-  host: app.example.com
+  hosts:
+    - dacsports.net
+    - www.dacsports.net
+    - dacsportsnetwork.com
+    - www.dacsportsnetwork.com
 
 # Credentials for your image host.
 registry:
   # Specify the registry server, if you're not using Docker Hub
-  # server: registry.digitalocean.com / ghcr.io / ...
-  username: your-user
+  server: registry.digitalocean.com
+  username: "do@derik.co"
 
   # Always use an access token rather than real password when possible.
   password:
@@ -35,10 +39,11 @@ registry:
 env:
   secret:
     - RAILS_MASTER_KEY
+    - DACSPORTS_DATABASE_PASSWORD
   clear:
     # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
-    SOLID_QUEUE_IN_PUMA: true
+    # SOLID_QUEUE_IN_PUMA: true
 
     # Set number of processes dedicated to Solid Queue (default: 1)
     # JOB_CONCURRENCY: 3
@@ -48,7 +53,7 @@ env:
 
     # Match this to any external database server to configure Active Record correctly
     # Use dacsports-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
+    DB_HOST: dacsports-db
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
@@ -86,25 +91,22 @@ builder:
 #   user: app
 
 # Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: redis:7.0
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+accessories:
+  db:
+    image: postgres:17
+    host: 162.243.216.209
+    port: 5432:5432
+    env:
+      clear:
+        POSTGRES_USER: dacsports
+        POSTGRES_DB: dacsports_production
+      secret:
+        - DACSPORTS_DATABASE_PASSWORD
+    directories:
+      - data:/var/lib/postgresql/data
+  redis:
+    image: redis:7
+    host: 162.243.216.209
+    directories:
+      - data:/data
+
