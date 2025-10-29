@@ -5,7 +5,7 @@
       <% case @event.status %>
       <% when 'upcoming' %>
         <div class="watch-video-placeholder">
-          <p>Stream will begin at scheduled time</p>
+          <p>Stream will begin <%= @event.event_date.strftime('%A, %B %-d') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %></p>
         </div>
 
       <% when 'live' %>
@@ -25,7 +25,7 @@
           <p>Replay will be available shortly</p>
         </div>
 
-      <% when 'vod' %>
+      <% when 'replay_available' %>
         <div class="watch-video-player">
           <%= @event.replay_embed_code.html_safe %>
         </div>
@@ -41,7 +41,7 @@
       <div class="watch-event-meta">
         <% if @event.live? %>
           <span class="watch-live-badge">LIVE</span>
-        <% elsif @event.vod? %>
+        <% elsif @event.replay_available? %>
           <span class="watch-replay-badge">REPLAY</span>
         <% end %>
         <% if @event.sport.present? %>
@@ -62,7 +62,7 @@
           <div class="watch-detail-item">
             <div class="watch-detail-label">Date & Time</div>
             <div class="watch-detail-value">
-              <%= @event.event_date.strftime('%B %-d, %Y') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %>
+              <%= @event.event_date.strftime('%A, %B %-d') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %>
             </div>
           </div>
 
@@ -73,14 +73,13 @@
             </div>
           <% end %>
         </div>
-      </div>
 
-      <%# Description %>
-      <% if @event.description.present? %>
-        <div class="watch-event-description">
-          <%= simple_format(@event.description) %>
-        </div>
-      <% end %>
+        <% if @event.description.present? %>
+          <div class="watch-detail-description">
+            <%= simple_format(@event.description) %>
+          </div>
+        <% end %>
+      </div>
 
       <%# Related Games %>
       <% if @event.related_games.any? %>
@@ -100,8 +99,10 @@
                   <% end %>
                 </div>
                 <div class="watch-related-game-meta">
-                  <%= game.event_date.strftime('%A, %B %-d') %> •
-                  <%= game.start_at&.in_time_zone(game.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %>
+                  <% if game.sport.present? %>
+                    <%= game.sport_emoji %> <%= game.sport %> •
+                  <% end %>
+                  <%= game.event_date.strftime('%A, %B %-d') %>
                 </div>
               <% end %>
             <% end %>
@@ -112,7 +113,7 @@
   </div>
 </div>
 
-<% if @event.live? || @event.vod? %>
+<% if @event.live? || @event.replay_available? %>
   <script type="module">
     import { initializePolling } from 'polling';
 

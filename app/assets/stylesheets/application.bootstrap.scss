@@ -155,7 +155,7 @@ body {
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 
   thead {
     background-color: $dac-blue-light;
@@ -428,13 +428,10 @@ small {
   color: #111827;
 }
 
-// Event Description
-.watch-event-description {
-  background: white;
-  border: 1px solid #E5E7EB;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+.watch-detail-description {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #E5E7EB;
   font-family: var(--font-body);
   font-size: 16px;
   line-height: 1.6;
@@ -478,12 +475,11 @@ small {
   border-radius: 8px;
   display: block;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease;
   cursor: pointer;
 
   &:hover {
-    background: rgba(#F3F4F6, 0.5);
-    transform: translateX(4px);
+    background: rgba(#E5E7EB, 0.8);
   }
 }
 

@@ -4,7 +4,7 @@ class EventsController < ApplicationController
   def index
     @live_events = Event.visible.live.order(start_at: :asc)
     @upcoming_events = Event.visible.upcoming.where("start_at >= ?", Date.current).order(start_at: :asc)
-    @past_events = Event.visible.where(status: [ :ended, :replay_pending, :vod ]).order(start_at: :desc)
+    @past_events = Event.visible.where(status: [ :ended, :replay_pending, :replay_available ]).order(start_at: :desc)
     @title = "Schedule"
   end
 
@@ -12,7 +12,7 @@ class EventsController < ApplicationController
     @event = Event.visible.friendly.find(params[:slug])
     @title = case @event.status
     when "live" then "Live: #{@event.title}"
-    when "vod" then "Replay: #{@event.title}"
+    when "replay_available" then "Replay: #{@event.title}"
     else @event.title
     end
 

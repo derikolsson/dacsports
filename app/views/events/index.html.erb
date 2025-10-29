@@ -34,7 +34,7 @@
               </div>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%-I:%M %p') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <%= link_to event_path(event), class: 'badge-live text-decoration-none' do %>
@@ -65,7 +65,7 @@
               </div>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p') || 'TBD' %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%-I:%M %p') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <span class="badge-upcoming">UPCOMING</span>
@@ -96,7 +96,7 @@
             <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p %Z') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
-              <% if event.vod? %>
+              <% if event.replay_available? %>
                 <%= link_to event_path(event), class: 'badge-replay text-decoration-none' do %>
                   REPLAY
                 <% end %>
