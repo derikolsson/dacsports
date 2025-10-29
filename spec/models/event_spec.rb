@@ -8,6 +8,13 @@ RSpec.describe Event, type: :model do
     it { should validate_presence_of(:start_at) }
     it { should validate_presence_of(:time_zone) }
 
+    it 'validates slug uniqueness' do
+      event1 = create(:event)
+      event2 = build(:event, slug: event1.slug)
+      expect(event2).not_to be_valid
+      expect(event2.errors[:slug]).to include('has already been taken')
+    end
+
     it 'validates sport is in the allowed list' do
       event = build(:event, sport: 'InvalidSport')
       expect(event).not_to be_valid

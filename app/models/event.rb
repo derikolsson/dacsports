@@ -1,8 +1,4 @@
 class Event < ApplicationRecord
-  # Friendly ID - simple slugged approach without history
-  extend FriendlyId
-  friendly_id :year_sport_matchup, use: :slugged
-
   # Associations
   has_many :event_visits, dependent: :destroy
 
@@ -32,6 +28,7 @@ class Event < ApplicationRecord
   validates :live_embed_code, presence: true, if: -> { live? }
   validates :replay_embed_code, presence: true, if: -> { replay_available? }
   validates :sport, inclusion: { in: SPORTS, allow_blank: true }
+  validates :slug, presence: true, uniqueness: true
 
   # Scopes
   scope :visible, -> { where(visible: true) }
@@ -134,9 +131,5 @@ class Event < ApplicationRecord
     if title_changed? || live_embed_code_changed? || replay_embed_code_changed? || status_changed?
       self.force_reload_count += 1
     end
-  end
-
-  def year_sport_matchup
-    "#{start_at&.year} #{sport} - #{title}"
   end
 end

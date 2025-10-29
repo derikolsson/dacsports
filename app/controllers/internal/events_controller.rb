@@ -74,12 +74,12 @@ class Internal::EventsController < Internal::ApplicationController
   private
 
   def set_event
-    @event = Event.friendly.find(params[:id])
+    @event = Event.find(params[:id])
   end
 
   def event_params
     params.require(:event).permit(
-      :title, :start_at, :time_zone,
+      :title, :slug, :start_at, :time_zone,
       :live_embed_code, :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round
     )

@@ -1,6 +1,7 @@
 FactoryBot.define do
   factory :event do
     sequence(:title) { |n| "Basketball Game #{n}" }
+    sequence(:slug) { |n| "basketball-game-#{n}" }
     sport { "Men's Volleyball" }
     location { "Main Arena" }
     round { nil }

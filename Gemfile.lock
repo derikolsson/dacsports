@@ -141,8 +141,6 @@ GEM
     factory_bot_rails (6.5.1)
       factory_bot (~> 6.5)
       railties (>= 6.1.0)
-    friendly_id (5.5.1)
-      activerecord (>= 4.0.0)
     fugit (1.12.1)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -459,7 +457,6 @@ DEPENDENCIES
   debug
   device_detector
   factory_bot_rails (~> 6.4)
-  friendly_id (~> 5.5)
   importmap-rails
   jbuilder
   kamal
