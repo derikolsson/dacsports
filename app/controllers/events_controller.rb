@@ -5,7 +5,6 @@ class EventsController < ApplicationController
     @live_events = Event.visible.live.order(start_at: :asc)
     @upcoming_events = Event.visible.upcoming.where("start_at >= ?", Date.current).order(start_at: :asc)
     @past_events = Event.visible.where(status: [ :ended, :replay_pending, :replay_available ]).order(start_at: :desc)
-    @title = "Schedule"
   end
 
   def show

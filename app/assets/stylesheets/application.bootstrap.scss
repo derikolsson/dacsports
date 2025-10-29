@@ -527,6 +527,22 @@ small {
   color: #6B7280;
 }
 
+.watch-related-games-link {
+  display: block;
+  margin-top: 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: $dac-royal-blue;
+  text-decoration: none;
+  text-align: center;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $dac-blue-dark;
+  }
+}
+
 // Footer
 footer {
   font-family: var(--font-body);

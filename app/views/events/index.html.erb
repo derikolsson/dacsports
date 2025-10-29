@@ -1,5 +1,8 @@
-<div class="container py-5">
-  <h1 class="mb-4">Broadcast Schedule</h1>
+<div class="container pt-3 pb-5">
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold mb-2">DAC Sports Network</h1>
+    <p class="lead text-muted">Your home for live broadcasts of Dallas College athletics</p>
+  </div>
 
   <div class="table-responsive">
     <table class="table table-hover">
@@ -81,6 +84,7 @@
               <div class="mt-1">
                 <% if event.sport.present? %>
                   <small class="fw-semibold text-dark">
+                    <%= event.sport_emoji %>
                     <%= event.sport %>
                   </small>
                 <% end %>
@@ -93,7 +97,7 @@
               </div>
             </td>
             <td class="meta-text"><%= event.event_date.strftime('%A, %B %-d') %></td>
-            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%I:%M %p %Z') || 'TBD' %></td>
+            <td class="meta-text"><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%-I:%M %p') || 'TBD' %></td>
             <td class="meta-text"><%= event.location || 'TBD' %></td>
             <td>
               <% if event.replay_available? %>
