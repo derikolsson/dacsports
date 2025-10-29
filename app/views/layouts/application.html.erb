@@ -18,9 +18,6 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
 
-    <!-- Session ID for polling -->
-    <meta name="session-id" content="<%= Current.session&.id %>">
-
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
@@ -42,7 +39,7 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body data-session-id="<%= Current.session&.id %>" data-keepalive-timeout="<%= Dacsports.redis.get('keepalive_timeout') %>">
     <header class="site-header text-center py-4">
       <div class="container">
         <%= link_to root_path, class: "d-inline-block" do %>

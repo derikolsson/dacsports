@@ -13,10 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     localStorage.setItem('dac_visitor_id', visitorId);
   }
 
-  // Get session_id from meta tag (set by server)
-  const sessionId = document.querySelector('meta[name="session-id"]')?.content;
+  // Get session_id and keepalive timeout from body data attributes
+  const sessionId = document.body.dataset.sessionId;
+  const keepaliveTimeout = parseInt(document.body.dataset.keepaliveTimeout || '60000');
 
   if (sessionId) {
-    initializeKeepalive(sessionId);
+    initializeKeepalive(sessionId, keepaliveTimeout);
   }
 });

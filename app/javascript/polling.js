@@ -1,4 +1,4 @@
-export function initializePolling({ eventSlug, eventId, eventStatus, forceReloadVersion, sessionId }) {
+export function initializePolling({ eventSlug, eventId, eventStatus, forceReloadVersion, sessionId, initialTtl }) {
   const startedAt = new Date().toISOString();
   const pageLoadedAt = Date.now();
 
@@ -38,7 +38,7 @@ export function initializePolling({ eventSlug, eventId, eventStatus, forceReload
 
         eventStatusTimeout = setTimeout(() => {
           eventStatusPoll(data.ttl, data.status, data.force_reload_version);
-        }, timeout);
+        }, data.ttl);
       })
       .catch(error => {
         console.error('Event status poll error:', error);
@@ -49,6 +49,6 @@ export function initializePolling({ eventSlug, eventId, eventStatus, forceReload
       });
   }
 
-  // Start polling
-  eventStatusPoll(30000, eventStatus, forceReloadVersion); // 30 seconds
+  // Start polling with initial TTL from Redis config
+  eventStatusPoll(initialTtl, eventStatus, forceReloadVersion);
 }

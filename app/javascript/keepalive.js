@@ -1,4 +1,4 @@
-export function initializeKeepalive(sessionId) {
+export function initializeKeepalive(sessionId, initialTimeout) {
   let keepaliveTimeout = null;
 
   function keepalive(timeout) {
@@ -32,6 +32,6 @@ export function initializeKeepalive(sessionId) {
       });
   }
 
-  // Start keepalive polling (60 seconds)
-  keepalive(60000);
+  // Start keepalive polling with initial timeout from server
+  keepalive(initialTimeout);
 }

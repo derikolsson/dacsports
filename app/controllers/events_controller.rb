@@ -38,7 +38,7 @@ class EventsController < ApplicationController
       {
         status: event.status,
         force_reload_version: event.force_reload_count,
-        ttl: 30000 # 30 seconds in milliseconds
+        ttl: Dacsports.redis.get("event_status_ttl").to_i
       }
     end
 

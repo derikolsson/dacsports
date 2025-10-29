@@ -5,8 +5,7 @@ class Internal::HomeController < Internal::ApplicationController
     end
 
     @active_viewers_by_event = Rails.cache.fetch("active_viewers_by_event", expires_in: 10.seconds) do
-      EventVisit.joins(:session)
-               .where("sessions.last_seen_at > ?", 3.minutes.ago)
+      EventVisit.where("last_seen_at > ?", 3.minutes.ago)
                .group(:event_id, :event_status)
                .distinct
                .count(:session_id)

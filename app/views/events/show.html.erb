@@ -123,7 +123,8 @@
       eventId: '<%= @event.id %>',
       eventStatus: '<%= @event.status %>',
       forceReloadVersion: <%= @event.force_reload_count %>,
-      sessionId: '<%= Current.session.id %>'
+      sessionId: '<%= Current.session.id %>',
+      initialTtl: <%= Dacsports.redis.get('event_status_ttl').to_i %>
     });
   </script>
 <% end %>

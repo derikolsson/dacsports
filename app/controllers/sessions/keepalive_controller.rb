@@ -3,6 +3,6 @@ class Sessions::KeepaliveController < ApplicationController
 
   def create
     SessionKeepaliveJob.perform_async(params[:session_id], Time.current.to_s)
-    render json: { timeout: 60000 }, status: :accepted # 60 seconds
+    render json: { timeout: Dacsports.redis.get("keepalive_timeout").to_i }, status: :accepted
   end
 end
