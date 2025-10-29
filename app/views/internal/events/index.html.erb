@@ -6,22 +6,31 @@
 <table class="table table-striped">
   <thead>
     <tr>
-      <th>Date</th>
+      <th>Date & Time</th>
       <th>Title</th>
       <th>Sport</th>
+      <th>Location</th>
       <th>Status</th>
-      <th>Slug</th>
+      <th>Visibility</th>
       <th>Actions</th>
     </tr>
   </thead>
   <tbody>
     <% @events.each do |event| %>
       <tr>
-        <td><%= event.event_date.strftime('%Y-%m-%d') %></td>
         <td>
-          <%= event.title %>
+          <div><%= event.event_date.strftime('%Y-%m-%d') %></div>
+          <small class="text-muted">
+            <%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%-I:%M %p %Z') || 'TBD' %>
+          </small>
+        </td>
+        <td>
+          <div><%= event.title %></div>
+          <small class="text-muted d-block">
+            <code><%= event.slug %></code>
+          </small>
           <% if event.round.present? %>
-            <br><small class="text-muted"><%= event.round %></small>
+            <small class="text-muted"><%= event.round %></small>
           <% end %>
         </td>
         <td>
@@ -31,6 +40,9 @@
           <% else %>
             <span class="text-muted">—</span>
           <% end %>
+        </td>
+        <td>
+          <%= event.location.presence || content_tag(:span, '—', class: 'text-muted') %>
         </td>
         <td>
           <span class="badge bg-<%= case event.status
@@ -43,38 +55,76 @@
             <%= event.status.titleize %>
           </span>
         </td>
-        <td><code><%= event.slug %></code></td>
+        <td class="text-center">
+          <% if event.visible %>
+            <span class="text-success" title="Visible to public">✓</span>
+          <% else %>
+            <span class="text-danger" title="Hidden from public">✗</span>
+          <% end %>
+        </td>
         <td>
           <div class="d-flex gap-2">
             <%= link_to 'Edit', edit_internal_event_path(event), class: 'btn btn-sm btn-secondary' %>
 
-            <% if event.can_go_live? %>
-              <%= button_to 'Go Live', go_live_internal_event_path(event),
-                  method: :post, class: 'btn btn-sm btn-success',
-                  data: { confirm: 'Start this event now?' } %>
-            <% end %>
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                Actions
+              </button>
+              <ul class="dropdown-menu">
+                <li>
+                  <%= link_to 'View Public Page', event_path(event.slug), class: 'dropdown-item', target: '_blank' %>
+                </li>
 
-            <% if event.can_end? %>
-              <%= button_to 'End Event', end_event_internal_event_path(event),
-                  method: :post, class: 'btn btn-sm btn-dark',
-                  data: { confirm: 'End this event (no replay)?' } %>
-            <% end %>
+                <% if event.can_go_live? || event.can_end? || event.can_mark_replay_pending? || event.can_publish_replay? %>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><h6 class="dropdown-header">Status Changes</h6></li>
+                <% end %>
 
-            <% if event.can_mark_replay_pending? %>
-              <%= button_to 'Mark Replay Pending', mark_replay_pending_internal_event_path(event),
-                  method: :post, class: 'btn btn-sm btn-warning',
-                  data: { confirm: 'Mark this event for replay?' } %>
-            <% end %>
+                <% if event.can_go_live? %>
+                  <li>
+                    <%= button_to 'Go Live', go_live_internal_event_path(event),
+                        method: :post, class: 'dropdown-item text-success',
+                        data: { confirm: 'Start this event now?' },
+                        form: { style: 'display: inline;' } %>
+                  </li>
+                <% end %>
 
-            <% if event.can_publish_replay? %>
-              <%= button_to 'Publish Replay', publish_replay_internal_event_path(event),
-                  method: :post, class: 'btn btn-sm btn-primary',
-                  data: { confirm: 'Make replay available?' } %>
-            <% end %>
+                <% if event.can_end? %>
+                  <li>
+                    <%= button_to 'End Event', end_event_internal_event_path(event),
+                        method: :post, class: 'dropdown-item',
+                        data: { confirm: 'End this event (no replay)?' },
+                        form: { style: 'display: inline;' } %>
+                  </li>
+                <% end %>
 
-            <%= button_to 'Delete', internal_event_path(event),
-                method: :delete, class: 'btn btn-sm btn-danger',
-                data: { confirm: 'Are you sure?' } %>
+                <% if event.can_mark_replay_pending? %>
+                  <li>
+                    <%= button_to 'Mark Replay Pending', mark_replay_pending_internal_event_path(event),
+                        method: :post, class: 'dropdown-item text-warning',
+                        data: { confirm: 'Mark this event for replay?' },
+                        form: { style: 'display: inline;' } %>
+                  </li>
+                <% end %>
+
+                <% if event.can_publish_replay? %>
+                  <li>
+                    <%= button_to 'Publish Replay', publish_replay_internal_event_path(event),
+                        method: :post, class: 'dropdown-item text-primary',
+                        data: { confirm: 'Make replay available?' },
+                        form: { style: 'display: inline;' } %>
+                  </li>
+                <% end %>
+
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <%= button_to 'Delete', internal_event_path(event),
+                      method: :delete, class: 'dropdown-item text-danger',
+                      data: { confirm: 'Are you sure? This cannot be undone.' },
+                      form: { style: 'display: inline;' } %>
+                </li>
+              </ul>
+            </div>
           </div>
         </td>
       </tr>

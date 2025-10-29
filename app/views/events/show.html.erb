@@ -5,7 +5,7 @@
       <% case @event.status %>
       <% when 'upcoming' %>
         <div class="watch-video-placeholder">
-          <p>Stream will begin <%= @event.event_date.strftime('%A, %B %-d') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %></p>
+          <p>This stream will begin <%= @event.event_date.strftime('%A, %B %-d') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%-I:%M %p %Z') || 'TBD' %></p>
         </div>
 
       <% when 'live' %>
@@ -16,13 +16,13 @@
       <% when 'ended' %>
         <div class="watch-video-placeholder">
           <i class="bi bi-stop-circle"></i>
-          <p>Event has concluded</p>
+          <p>This broadcast has concluded</p>
         </div>
 
       <% when 'replay_pending' %>
         <div class="watch-video-placeholder">
           <i class="bi bi-clock-history"></i>
-          <p>Replay will be available shortly</p>
+          <p>A replay of this broadcast will be available shortly</p>
         </div>
 
       <% when 'replay_available' %>
@@ -62,7 +62,7 @@
           <div class="watch-detail-item">
             <div class="watch-detail-label">Date & Time</div>
             <div class="watch-detail-value">
-              <%= @event.event_date.strftime('%A, %B %-d') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%I:%M %p %Z') || 'TBD' %>
+              <%= @event.event_date.strftime('%A, %B %-d') %> at <%= @event.start_at&.in_time_zone(@event.time_zone)&.strftime('%-I:%M %p %Z') || 'TBD' %>
             </div>
           </div>
 

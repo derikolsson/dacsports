@@ -48,7 +48,8 @@
 
     <div class="col-md-4 mb-3">
       <%= f.label :time_zone, class: 'form-label' %>
-      <%= f.time_zone_select :time_zone, ActiveSupport::TimeZone.us_zones, { default: 'Central Time (US & Canada)' }, class: 'form-select' %>
+      <%= f.hidden_field :time_zone, value: 'Central Time (US & Canada)' %>
+      <%= f.text_field :time_zone, value: 'Central Time (US & Canada)', disabled: true, class: 'form-control' %>
     </div>
   </div>
 
