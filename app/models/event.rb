@@ -1,7 +1,7 @@
 class Event < ApplicationRecord
   # Friendly ID - simple slugged approach without history
   extend FriendlyId
-  friendly_id :title, use: :slugged
+  friendly_id :year_sport_matchup, use: :slugged
 
   # Associations
   has_many :event_visits, dependent: :destroy
@@ -134,5 +134,9 @@ class Event < ApplicationRecord
     if title_changed? || live_embed_code_changed? || replay_embed_code_changed? || status_changed?
       self.force_reload_count += 1
     end
+  end
+
+  def year_sport_matchup
+    "#{start_at&.year} #{sport} - #{title}"
   end
 end
