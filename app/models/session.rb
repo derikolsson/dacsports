@@ -4,7 +4,7 @@ class Session < ApplicationRecord
   validates :visitor_id, presence: true
 
   def active?
-    last_seen_at && last_seen_at > 3.minutes.ago
+    last_seen_at && last_seen_at > 10.minutes.ago
   end
 
   def parse_user_agent!

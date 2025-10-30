@@ -29,9 +29,8 @@ class EventsController < ApplicationController
 
   def status
     # Track visit
-    if params[:enabled] == "true" && params[:visit_id].present? && params[:session_id].present?
+    if params[:enabled] == "true" && params[:session_id].present?
       EventVisitJob.perform_async(
-        params[:visit_id],
         params[:session_id],
         params[:event_id],
         params[:event_status],
