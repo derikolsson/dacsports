@@ -10,9 +10,18 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_29_221951) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_30_011451) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "event_slugs", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id"], name: "index_event_slugs_on_event_id"
+    t.index ["slug"], name: "index_event_slugs_on_slug", unique: true
+  end
 
   create_table "event_visits", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "session_id", null: false
@@ -57,4 +66,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_29_221951) do
     t.datetime "updated_at", null: false
     t.index ["visitor_id"], name: "index_sessions_on_visitor_id"
   end
+
+  add_foreign_key "event_slugs", "events"
 end

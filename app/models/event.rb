@@ -1,6 +1,7 @@
 class Event < ApplicationRecord
   # Associations
   has_many :event_visits, dependent: :destroy
+  has_many :event_slugs, dependent: :destroy
 
   # Available sports
   SPORTS = [
@@ -125,11 +126,20 @@ class Event < ApplicationRecord
   # Cache busting
   before_save :bump_force_reload_count
 
+  # Slug history tracking
+  before_update :archive_slug_if_changed
+
   private
 
   def bump_force_reload_count
     if title_changed? || live_embed_code_changed? || replay_embed_code_changed? || status_changed?
       self.force_reload_count += 1
+    end
+  end
+
+  def archive_slug_if_changed
+    if slug_changed?
+      event_slugs.find_or_create_by(slug: slug_was)
     end
   end
 end
