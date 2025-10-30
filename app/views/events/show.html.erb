@@ -81,28 +81,28 @@
         <% end %>
       </div>
 
-      <%# Related Games %>
-      <% if @event.related_games.any? %>
+      <%# Related Broadcasts %>
+      <% if @event.related_events.any? %>
         <div class="watch-related-games">
-          <h2 class="watch-related-games-title">Related Games</h2>
+          <h2 class="watch-related-games-title">Related Broadcasts</h2>
           <div class="watch-related-games-list">
-            <% @event.related_games.each do |game| %>
-              <%= link_to event_path(game.slug), class: "watch-related-game-card" do %>
+            <% @event.related_events.each do |event| %>
+              <%= link_to event_path(event.slug), class: "watch-related-game-card" do %>
                 <div class="watch-related-game-header">
                   <div class="watch-related-game-title">
-                    <%= game.title %>
+                    <%= event.title %>
                   </div>
-                  <% if game.round.present? %>
-                    <span class="watch-related-game-round <%= game.round.downcase.include?('championship') ? 'championship' : 'preliminary' %>">
-                      <%= game.round %>
+                  <% if event.round.present? %>
+                    <span class="watch-related-game-round <%= event.round.downcase.include?('championship') ? 'championship' : 'preliminary' %>">
+                      <%= event.round %>
                     </span>
                   <% end %>
                 </div>
                 <div class="watch-related-game-meta">
-                  <% if game.sport.present? %>
-                    <%= game.sport_emoji %> <%= game.sport %> •
+                  <% if event.sport.present? %>
+                    <%= event.sport_emoji %> <%= event.sport %> •
                   <% end %>
-                  <%= game.event_date.strftime('%A, %B %-d') %>
+                  <%= event.event_date.strftime('%A, %B %-d') %>
                 </div>
               <% end %>
             <% end %>

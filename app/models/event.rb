@@ -109,8 +109,8 @@ class Event < ApplicationRecord
     update!(status: :replay_available)
   end
 
-  # Related games - same sport within +/- 3 days
-  def related_games
+  # Related events - same sport within +/- 3 days
+  def related_events
     return Event.none if sport.blank? || start_at.blank?
 
     Event.visible

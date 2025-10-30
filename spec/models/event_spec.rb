@@ -240,52 +240,52 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe '#related_games' do
+  describe '#related_events' do
     let(:base_event) { create(:event, sport: "Women's Volleyball", start_at: Time.zone.now) }
 
-    context 'when there are related games in the same sport' do
-      let!(:related_game_1) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 1.day) }
-      let!(:related_game_2) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at - 2.days) }
-      let!(:related_game_3) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 3.days) }
+    context 'when there are related events in the same sport' do
+      let!(:related_event_1) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 1.day) }
+      let!(:related_event_2) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at - 2.days) }
+      let!(:related_event_3) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 3.days) }
 
-      it 'returns games in the same sport within +/- 3 days' do
-        related = base_event.related_games
-        expect(related).to include(related_game_1, related_game_2, related_game_3)
+      it 'returns events in the same sport within +/- 3 days' do
+        related = base_event.related_events
+        expect(related).to include(related_event_1, related_event_2, related_event_3)
         expect(related).not_to include(base_event)
       end
 
-      it 'orders related games chronologically' do
-        related = base_event.related_games
-        expect(related.first).to eq(related_game_2)
-        expect(related.last).to eq(related_game_3)
+      it 'orders related events chronologically' do
+        related = base_event.related_events
+        expect(related.first).to eq(related_event_2)
+        expect(related.last).to eq(related_event_3)
       end
     end
 
-    context 'when there are games outside the 3-day window' do
+    context 'when there are events outside the 3-day window' do
       let!(:too_early) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at - 4.days) }
       let!(:too_late) { create(:event, sport: "Women's Volleyball", start_at: base_event.start_at + 4.days) }
 
       it 'does not include them' do
-        related = base_event.related_games
+        related = base_event.related_events
         expect(related).not_to include(too_early, too_late)
       end
     end
 
-    context 'when there are games in different sports' do
+    context 'when there are events in different sports' do
       let!(:different_sport) { create(:event, sport: "Men's Basketball", start_at: base_event.start_at + 1.day) }
 
       it 'does not include them' do
-        related = base_event.related_games
+        related = base_event.related_events
         expect(related).not_to include(different_sport)
       end
     end
 
-    context 'when there are hidden games' do
-      let!(:hidden_game) { create(:event, :hidden, sport: "Women's Volleyball", start_at: base_event.start_at + 1.day) }
+    context 'when there are hidden events' do
+      let!(:hidden_event) { create(:event, :hidden, sport: "Women's Volleyball", start_at: base_event.start_at + 1.day) }
 
       it 'does not include them' do
-        related = base_event.related_games
-        expect(related).not_to include(hidden_game)
+        related = base_event.related_events
+        expect(related).not_to include(hidden_event)
       end
     end
 
@@ -293,7 +293,7 @@ RSpec.describe Event, type: :model do
       let(:no_sport_event) { create(:event, sport: nil, start_at: Time.zone.now) }
 
       it 'returns an empty relation' do
-        expect(no_sport_event.related_games).to eq(Event.none)
+        expect(no_sport_event.related_events).to eq(Event.none)
       end
     end
 
@@ -301,7 +301,7 @@ RSpec.describe Event, type: :model do
       let(:no_start_event) { build(:event, sport: "Women's Volleyball", start_at: nil) }
 
       it 'returns an empty relation' do
-        expect(no_start_event.related_games).to eq(Event.none)
+        expect(no_start_event.related_events).to eq(Event.none)
       end
     end
   end
