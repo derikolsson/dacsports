@@ -25,6 +25,9 @@ Rails.application.routes.draw do
     mount Sidekiq::Web => "/sidekiq"
 
     resources :events do
+      collection do
+        get :archive
+      end
       member do
         post :go_live
         post :end_event
