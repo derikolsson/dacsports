@@ -114,14 +114,14 @@
   </div>
 </div>
 
-<% if @event.upcoming? || @event.live? || @event.replay_pending? %>
+<% if @event.upcoming? || @event.live? || @event.replay_pending? || @event.replay_available? %>
   <script type="module">
     import { initializePolling } from 'polling';
 
     initializePolling({
       eventSlug: '<%= @event.slug %>',
       eventId: '<%= @event.id %>',
-      eventStatus: '<%= @event.status %>',
+      eventStatus: '<%= @event.replay_available? ? "vod" : @event.status %>',
       forceReloadVersion: <%= @event.force_reload_count %>,
       sessionId: '<%= Current.session.id %>',
       enabled: <%= @event.live? || @event.replay_available? %>,
