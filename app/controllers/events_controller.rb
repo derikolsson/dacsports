@@ -2,9 +2,7 @@ class EventsController < ApplicationController
   skip_forgery_protection only: :status
 
   def index
-    @live_events = Event.visible.live.order(start_at: :asc)
-    @upcoming_events = Event.visible.upcoming.where("start_at >= ?", Date.current).order(start_at: :asc)
-    @past_events = Event.visible.where(status: [ :ended, :replay_pending, :replay_available ]).order(start_at: :desc)
+    @events = Event.visible.order(start_at: :asc)
   end
 
   def show
