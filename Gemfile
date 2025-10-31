@@ -27,6 +27,9 @@ gem "redis", ">= 5.0"
 # Browser/OS tracking
 gem "device_detector"
 
+# Video streaming
+gem "mux_ruby"
+
 # Error tracking
 gem "sentry-ruby"
 gem "sentry-rails"
