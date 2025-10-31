@@ -50,9 +50,9 @@
                   REPLAY
                 <% end %>
               <% elsif event.ended? %>
-                <span class="text-muted">Event Ended</span>
+                <span class="badge-ended">ENDED</span>
               <% elsif event.replay_pending? %>
-                <span class="text-muted">Replay Pending</span>
+                <span class="badge-pending">REPLAY PENDING</span>
               <% end %>
             </td>
           </tr>

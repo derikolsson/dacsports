@@ -600,8 +600,8 @@ footer {
 .badge-upcoming {
   display: inline-block;
   padding: 4px 12px;
-  background: rgba(#9CA3AF, 0.1);
-  color: #6B7280;
+  background: rgba(0, 50, 161, 0.08);
+  color: #0032A1;
   border-radius: 4px;
   font-family: var(--font-body);
   font-size: 14px;
@@ -627,6 +627,34 @@ footer {
     background: rgba($dac-royal-blue, 0.15);
     color: $dac-royal-blue;
   }
+}
+
+.badge-pending {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(245, 158, 11, 0.1);
+  color: #D97706;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: default;
+}
+
+.badge-ended {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(107, 114, 128, 0.06);
+  color: #6B7280;
+  border-radius: 4px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: default;
 }
 
 @keyframes pulse {
