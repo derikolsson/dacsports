@@ -21,7 +21,7 @@
           <li class="nav-item"><%= link_to "Dashboard", internal_root_path, class: "nav-link #{'active' if controller_name == 'home'}" %></li>
           <li class="nav-item"><%= link_to "Events", internal_events_path, class: "nav-link #{'active' if controller_name == 'events'}" %></li>
           <li class="nav-item"><%= link_to "Uploads", internal_uploads_path, class: "nav-link #{'active' if controller_name == 'uploads'}" %></li>
-          <li class="nav-item"><%= link_to "Jobs", '/internal/sidekiq', class: "nav-link" %></li>
+          <li class="nav-item"><%= link_to "Sidekiq", '/internal/sidekiq', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
           <li class="nav-item"><%= link_to "Web Analytics", 'https://app.usefathom.com/share/bpvxynyg/dac+sports+network', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
           <li class="nav-item">
             <%= link_to root_path, class: "nav-link" do %>
