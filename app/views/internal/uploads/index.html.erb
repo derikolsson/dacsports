@@ -1,0 +1,160 @@
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card">
+      <div class="card-header">
+        <h2 class="mb-0">Video Upload</h2>
+      </div>
+      <div class="card-body">
+        <div id="uploader-container">
+          <div class="text-center py-5">
+            <div class="spinner-border" role="status">
+              <span class="visually-hidden">Loading uploader...</span>
+            </div>
+            <p class="mt-3">Initializing uploader...</p>
+          </div>
+        </div>
+
+        <div id="upload-status" class="mt-4" style="display: none;">
+          <h4>Upload Status</h4>
+          <div class="progress mb-2">
+            <div id="upload-progress" class="progress-bar" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+          </div>
+          <div id="status-message" class="alert alert-info"></div>
+        </div>
+
+        <div id="upload-success" class="mt-4" style="display: none;">
+          <div class="alert alert-success">
+            <h4 class="alert-heading">Upload Complete!</h4>
+            <p>Your video has been successfully uploaded to Mux.</p>
+            <hr>
+            <p class="mb-0">Asset ID: <code id="asset-id"></code></p>
+            <p class="mb-0">Upload ID: <code id="upload-id"></code></p>
+          </div>
+        </div>
+
+        <div id="upload-error" class="mt-4" style="display: none;">
+          <div class="alert alert-danger">
+            <h4 class="alert-heading">Upload Failed</h4>
+            <p id="error-message"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mt-4">
+      <div class="card-header">
+        <h4 class="mb-0">About Mux Uploader</h4>
+      </div>
+      <div class="card-body">
+        <p>This tool allows you to upload videos directly to Mux for processing and streaming.</p>
+        <ul>
+          <li>Videos are automatically transcoded for optimal playback</li>
+          <li>Supports all common video formats (MP4, MOV, AVI, etc.)</li>
+          <li>Direct browser upload - no server storage needed</li>
+          <li>Real-time upload progress tracking</li>
+        </ul>
+        <p class="mb-0">
+          <a href="https://www.mux.com/docs/guides/mux-uploader" target="_blank" rel="noopener noreferrer">
+            Learn more about Mux Uploader <i class="bi bi-box-arrow-up-right"></i>
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  // Import the mux-uploader web component directly from CDN (only loaded on this page)
+  import 'https://cdn.jsdelivr.net/npm/@mux/mux-uploader@latest/dist/index.js';
+</script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      // Get CSRF token
+      const csrfToken = document.querySelector('[name="csrf-token"]').content;
+
+      // Fetch upload URL from backend
+      const response = await fetch('/internal/uploads/create_upload_url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create upload URL');
+      }
+
+      const data = await response.json();
+
+      // Create mux-uploader element
+      const uploader = document.createElement('mux-uploader');
+      uploader.setAttribute('endpoint', data.upload_url);
+      uploader.style.width = '100%';
+
+      // Replace loading spinner with uploader
+      const container = document.getElementById('uploader-container');
+      container.innerHTML = '';
+      container.appendChild(uploader);
+
+      // Status elements
+      const statusDiv = document.getElementById('upload-status');
+      const progressBar = document.getElementById('upload-progress');
+      const statusMessage = document.getElementById('status-message');
+      const successDiv = document.getElementById('upload-success');
+      const errorDiv = document.getElementById('upload-error');
+      const errorMessage = document.getElementById('error-message');
+
+      // Listen for upload events
+      uploader.addEventListener('uploadstart', () => {
+        statusDiv.style.display = 'block';
+        successDiv.style.display = 'none';
+        errorDiv.style.display = 'none';
+        statusMessage.textContent = 'Upload started...';
+        console.log('Upload started');
+      });
+
+      uploader.addEventListener('progress', (e) => {
+        const percent = Math.round((e.detail / 100) * 100);
+        progressBar.style.width = percent + '%';
+        progressBar.textContent = percent + '%';
+        progressBar.setAttribute('aria-valuenow', percent);
+        statusMessage.textContent = `Uploading... ${percent}%`;
+        console.log('Upload progress:', percent + '%');
+      });
+
+      uploader.addEventListener('success', (e) => {
+        console.log('Upload success:', e.detail);
+        statusDiv.style.display = 'none';
+        successDiv.style.display = 'block';
+
+        // Display asset and upload IDs if available
+        if (e.detail) {
+          document.getElementById('upload-id').textContent = e.detail.id || 'N/A';
+          document.getElementById('asset-id').textContent = e.detail.asset_id || 'Processing...';
+        }
+      });
+
+      uploader.addEventListener('uploaderror', (e) => {
+        console.error('Upload error:', e.detail);
+        statusDiv.style.display = 'none';
+        errorDiv.style.display = 'block';
+        errorMessage.textContent = e.detail?.message || 'An unknown error occurred during upload.';
+      });
+
+    } catch (error) {
+      console.error('Error initializing uploader:', error);
+      const container = document.getElementById('uploader-container');
+      container.innerHTML = `
+        <div class="alert alert-danger">
+          <h4 class="alert-heading">Initialization Error</h4>
+          <p>Failed to initialize the uploader: ${error.message}</p>
+          <hr>
+          <p class="mb-0">Please check your Mux credentials and try again.</p>
+        </div>
+      `;
+    }
+  });
+</script>

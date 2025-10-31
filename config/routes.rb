@@ -35,5 +35,11 @@ Rails.application.routes.draw do
         post :publish_replay
       end
     end
+
+    resources :uploads, only: [:index] do
+      collection do
+        post :create_upload_url
+      end
+    end
   end
 end
