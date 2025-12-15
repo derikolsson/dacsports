@@ -24,6 +24,7 @@ Rails.application.routes.draw do
     root "home#index"
     mount Sidekiq::Web => "/sidekiq"
 
+    resources :teams
     resources :events do
       collection do
         get :archive

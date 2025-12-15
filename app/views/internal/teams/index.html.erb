@@ -1,0 +1,33 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Teams</h1>
+  <%= link_to 'New Team', new_internal_team_path, class: 'btn btn-primary' %>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Slug</th>
+      <th>Events</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @teams.each do |team| %>
+      <tr>
+        <td><%= team.name %></td>
+        <td><code><%= team.slug %></code></td>
+        <td><%= team.events.count %></td>
+        <td>
+          <div class="d-flex gap-2">
+            <%= link_to 'Edit', edit_internal_team_path(team), class: 'btn btn-sm btn-secondary' %>
+            <%= button_to 'Delete', internal_team_path(team),
+                method: :delete, class: 'btn btn-sm btn-danger',
+                data: { confirm: 'Are you sure? This cannot be undone.' },
+                disabled: team.events.any? %>
+          </div>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
