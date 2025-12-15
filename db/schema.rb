@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_30_023428) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_15_041704) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,17 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_30_023428) do
     t.datetime "updated_at", null: false
     t.index ["event_id"], name: "index_event_slugs_on_event_id"
     t.index ["slug"], name: "index_event_slugs_on_slug", unique: true
+  end
+
+  create_table "event_teams", force: :cascade do |t|
+    t.bigint "event_id", null: false
+    t.bigint "team_id", null: false
+    t.integer "seed"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "team_id"], name: "index_event_teams_on_event_id_and_team_id", unique: true
+    t.index ["event_id"], name: "index_event_teams_on_event_id"
+    t.index ["team_id"], name: "index_event_teams_on_team_id"
   end
 
   create_table "event_visits", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -68,5 +79,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_30_023428) do
     t.index ["visitor_id"], name: "index_sessions_on_visitor_id"
   end
 
+  create_table "teams", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_teams_on_slug", unique: true
+  end
+
   add_foreign_key "event_slugs", "events"
+  add_foreign_key "event_teams", "events"
+  add_foreign_key "event_teams", "teams"
 end

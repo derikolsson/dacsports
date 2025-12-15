@@ -2,6 +2,8 @@ class Event < ApplicationRecord
   # Associations
   has_many :event_visits, dependent: :destroy
   has_many :event_slugs, dependent: :destroy
+  has_many :event_teams, dependent: :destroy
+  has_many :teams, through: :event_teams
 
   # Available sports
   SPORTS = [
