@@ -16,4 +16,21 @@ class Team < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
 
   scope :alphabetical, -> { order(:name) }
+
+  # Logo helpers
+  def logo_path
+    "/team-logos/#{slug}.png"
+  end
+
+  def mini_logo_path
+    "/team-logos/mini/#{slug}.png"
+  end
+
+  def logo_exists?
+    File.exist?(Rails.root.join("public", "team-logos", "#{slug}.png"))
+  end
+
+  def mini_logo_exists?
+    File.exist?(Rails.root.join("public", "team-logos", "mini", "#{slug}.png"))
+  end
 end
