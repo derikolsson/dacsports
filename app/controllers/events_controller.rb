@@ -6,7 +6,7 @@ class EventsController < ApplicationController
   end
 
   def show
-    @event = Event.find_by(slug: params[:slug])
+    @event = Event.includes(:teams).find_by(slug: params[:slug])
 
     # If not found, check if this is an old slug and redirect
     if @event.nil?

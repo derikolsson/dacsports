@@ -17,6 +17,8 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :teams, only: [ :index, :show ], param: :slug
+
   post "sessions/keepalive", to: "sessions/keepalive#create"
 
   # Internal admin routes

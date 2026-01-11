@@ -72,6 +72,26 @@
               <div class="watch-detail-value"><%= @event.location %></div>
             </div>
           <% end %>
+
+          <% if @event.teams.any? %>
+            <div class="watch-detail-item">
+              <div class="watch-detail-label">Teams</div>
+              <div class="watch-detail-value">
+                <div class="watch-teams-list">
+                  <% @event.teams.each do |team| %>
+                    <%= link_to team_path(team.slug), class: "team-chip" do %>
+                      <% if team.mini_logo_exists? %>
+                        <%= image_tag team.mini_logo_path, alt: team.name, class: "team-chip-logo" %>
+                      <% else %>
+                        <span class="team-chip-logo-placeholder"><%= team.name.first %></span>
+                      <% end %>
+                      <span class="team-chip-name"><%= team.name %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          <% end %>
         </div>
 
         <% if @event.description.present? %>

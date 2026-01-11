@@ -1,0 +1,28 @@
+<div class="container pt-3 pb-5">
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold mb-2">Teams</h1>
+  </div>
+
+  <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+    <% @teams.each do |team| %>
+      <div class="col">
+        <%= link_to team_path(team.slug), class: "team-card text-decoration-none" do %>
+          <div class="team-card-inner">
+            <% if team.logo_exists? %>
+              <%= image_tag team.logo_path, alt: team.name, class: "team-card-logo" %>
+            <% else %>
+              <div class="team-card-logo-placeholder">
+                <span><%= team.name.first %></span>
+              </div>
+            <% end %>
+            <h3 class="team-card-name"><%= team.name %></h3>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="text-center mt-5">
+    <%= link_to "View Full Schedule", root_path, class: "btn btn-outline-primary" %>
+  </div>
+</div>

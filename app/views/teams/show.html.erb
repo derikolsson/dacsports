@@ -1,0 +1,32 @@
+<div class="container pt-3 pb-5">
+  <div class="mb-4">
+    <%= link_to "All Teams", teams_path, class: "text-decoration-none" %>
+  </div>
+
+  <div class="text-center mb-5">
+    <% if @team.logo_exists? %>
+      <%= image_tag @team.logo_path, alt: @team.name, class: "team-page-logo mb-3" %>
+    <% end %>
+    <h1 class="display-4 fw-bold mb-2"><%= @team.name %></h1>
+  </div>
+
+  <% if @upcoming_events.any? %>
+    <h2 class="h4 mb-3">Upcoming Events</h2>
+    <div class="mb-5">
+      <%= render "events/event_table", events: @upcoming_events %>
+    </div>
+  <% end %>
+
+  <% if @past_events.any? %>
+    <h2 class="h4 mb-3">Recent Events</h2>
+    <%= render "events/event_table", events: @past_events, show_time: false %>
+  <% end %>
+
+  <% if @upcoming_events.empty? && @past_events.empty? %>
+    <p class="text-center text-muted">No events found for this team.</p>
+  <% end %>
+
+  <div class="text-center mt-5">
+    <%= link_to "View Full Schedule", root_path, class: "btn btn-outline-primary" %>
+  </div>
+</div>
