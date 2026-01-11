@@ -3,13 +3,15 @@ class Internal::EventsController < Internal::ApplicationController
 
   def index
     today_start = Time.current.beginning_of_day
-    @events = Event.where("start_at >= ?", today_start)
+    @events = Event.includes(event_teams: :team)
+                   .where("start_at >= ?", today_start)
                    .order(:start_at)
   end
 
   def archive
     today_start = Time.current.beginning_of_day
-    @events = Event.where("start_at < ?", today_start)
+    @events = Event.includes(event_teams: :team)
+                   .where("start_at < ?", today_start)
                    .order(start_at: :desc)
   end
 
@@ -89,7 +91,8 @@ class Internal::EventsController < Internal::ApplicationController
     params.require(:event).permit(
       :title, :slug, :start_at, :time_zone,
       :live_embed_code, :replay_embed_code, :status, :visible,
-      :short_name, :description, :sport, :location, :round
+      :short_name, :description, :sport, :location, :round,
+      event_teams_attributes: [ :id, :team_id, :seed, :_destroy ]
     )
   end
 end

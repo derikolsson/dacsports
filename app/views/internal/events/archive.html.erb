@@ -16,6 +16,7 @@
     <tr>
       <th>Date & Time</th>
       <th>Title</th>
+      <th>Teams</th>
       <th>Sport</th>
       <th>Location</th>
       <th>Status</th>
@@ -39,6 +40,17 @@
           </small>
           <% if event.round.present? %>
             <small class="text-muted"><%= event.round %></small>
+          <% end %>
+        </td>
+        <td>
+          <% if event.event_teams.any? %>
+            <% event.event_teams.each do |et| %>
+              <div>
+                <%= et.team.name %><% if et.seed.present? %> <small class="text-muted">(#<%= et.seed %>)</small><% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <span class="text-muted">—</span>
           <% end %>
         </td>
         <td>

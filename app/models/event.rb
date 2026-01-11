@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   has_many :event_slugs, dependent: :destroy
   has_many :event_teams, dependent: :destroy
   has_many :teams, through: :event_teams
+  accepts_nested_attributes_for :event_teams, allow_destroy: true, reject_if: proc { |attrs| attrs["team_id"].blank? }
 
   # Available sports
   SPORTS = [
