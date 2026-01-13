@@ -44,16 +44,10 @@
     <% 2.times do |i| %>
       <% event_team = @event.event_teams[i] || @event.event_teams.build %>
       <%= f.fields_for :event_teams, event_team, child_index: i do |et| %>
-        <div class="row mb-2">
-          <div class="col-md-8">
-            <%= et.label :team_id, "Team #{i + 1}", class: 'form-label' %>
-            <%= et.collection_select :team_id, Team.alphabetical, :id, :name,
-                { include_blank: 'Select team' }, class: 'form-select' %>
-          </div>
-          <div class="col-md-4">
-            <%= et.label :seed, "Seed", class: 'form-label' %>
-            <%= et.number_field :seed, class: 'form-control', min: 1, placeholder: '#' %>
-          </div>
+        <div class="mb-2">
+          <%= et.label :team_id, "Team #{i + 1}", class: 'form-label' %>
+          <%= et.collection_select :team_id, Team.alphabetical, :id, :name,
+              { include_blank: 'Select team' }, class: 'form-select' %>
         </div>
       <% end %>
     <% end %>
