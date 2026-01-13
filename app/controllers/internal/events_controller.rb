@@ -90,6 +90,7 @@ class Internal::EventsController < Internal::ApplicationController
   def event_params
     params.require(:event).permit(
       :title, :slug, :start_at, :stream_starts_at, :time_zone,
+      :mux_live_playback_id, :mux_replay_playback_id,
       :live_embed_code, :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round,
       event_teams_attributes: [ :id, :team_id, :_destroy ]

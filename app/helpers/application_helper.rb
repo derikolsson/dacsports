@@ -13,4 +13,21 @@ module ApplicationHelper
       team_badge(team) + content_tag(:span, team.name, class: "team-chip-name")
     end
   end
+
+  def mux_player(playback_id:, title:, video_id:, live: false)
+    attrs = {
+      "playback-id" => playback_id,
+      "metadata-video-title" => title,
+      "metadata-video-id" => video_id,
+      "accent-color" => "#dc0028"
+    }
+    attrs["redundant-streams"] = "" if live
+
+    attr_string = attrs.map { |k, v| v.empty? ? k : "#{k}=\"#{ERB::Util.html_escape(v)}\"" }.join("\n  ")
+
+    %(<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
+<mux-player
+  #{attr_string}
+></mux-player>).html_safe
+  end
 end

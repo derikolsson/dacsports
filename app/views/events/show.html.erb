@@ -10,7 +10,11 @@
 
       <% when 'live' %>
         <div class="watch-video-player">
-          <%= @event.live_embed_code.html_safe %>
+          <% if @event.live_embed_code.present? %>
+            <%= @event.live_embed_code.html_safe %>
+          <% elsif @event.mux_live_playback_id.present? %>
+            <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true) %>
+          <% end %>
         </div>
 
       <% when 'ended' %>
@@ -27,7 +31,11 @@
 
       <% when 'replay_available' %>
         <div class="watch-video-player">
-          <%= @event.replay_embed_code.html_safe %>
+          <% if @event.replay_embed_code.present? %>
+            <%= @event.replay_embed_code.html_safe %>
+          <% elsif @event.mux_replay_playback_id.present? %>
+            <%= mux_player(playback_id: @event.mux_replay_playback_id, title: @event.title, video_id: @event.slug) %>
+          <% end %>
         </div>
       <% end %>
     </div>

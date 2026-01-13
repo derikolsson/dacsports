@@ -79,15 +79,31 @@
     <%= f.text_area :description, rows: 4, class: 'form-control' %>
   </div>
 
-  <div class="mb-3">
-    <%= f.label :live_embed_code, "Live Embed Code (HTML)", class: 'form-label' %>
-    <%= f.text_area :live_embed_code, rows: 4, class: 'form-control' %>
-  </div>
+  <fieldset class="border rounded p-3 mb-3">
+    <legend class="float-none w-auto px-2 fs-6">Live Stream</legend>
+    <div class="mb-3">
+      <%= f.label :mux_live_playback_id, "Mux Playback ID", class: 'form-label' %>
+      <%= f.text_field :mux_live_playback_id, class: 'form-control', placeholder: 'e.g. DS00Spx1CV902MCtPj5WknGlR102V5HFkDe' %>
+    </div>
+    <div class="mb-0">
+      <%= f.label :live_embed_code, "Custom Embed Code (HTML)", class: 'form-label' %>
+      <%= f.text_area :live_embed_code, rows: 3, class: 'form-control' %>
+      <small class="form-text text-muted">Use for non-Mux sources. Takes precedence over Mux playback ID.</small>
+    </div>
+  </fieldset>
 
-  <div class="mb-3">
-    <%= f.label :replay_embed_code, "Replay Embed Code (HTML)", class: 'form-label' %>
-    <%= f.text_area :replay_embed_code, rows: 4, class: 'form-control' %>
-  </div>
+  <fieldset class="border rounded p-3 mb-3">
+    <legend class="float-none w-auto px-2 fs-6">Replay</legend>
+    <div class="mb-3">
+      <%= f.label :mux_replay_playback_id, "Mux Playback ID", class: 'form-label' %>
+      <%= f.text_field :mux_replay_playback_id, class: 'form-control', placeholder: 'e.g. DS00Spx1CV902MCtPj5WknGlR102V5HFkDe' %>
+    </div>
+    <div class="mb-0">
+      <%= f.label :replay_embed_code, "Custom Embed Code (HTML)", class: 'form-label' %>
+      <%= f.text_area :replay_embed_code, rows: 3, class: 'form-control' %>
+      <small class="form-text text-muted">Use for non-Mux sources. Takes precedence over Mux playback ID.</small>
+    </div>
+  </fieldset>
 
   <div class="row">
     <div class="col-md-6 mb-3">

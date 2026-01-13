@@ -29,8 +29,8 @@ class Event < ApplicationRecord
 
   # Validations
   validates :title, :start_at, :time_zone, presence: true
-  validates :live_embed_code, presence: true, if: -> { live? }
-  validates :replay_embed_code, presence: true, if: -> { replay_available? }
+  validate :live_video_source_present, if: -> { live? }
+  validate :replay_video_source_present, if: -> { replay_available? }
   validates :sport, inclusion: { in: SPORTS, allow_blank: true }
   validates :slug, presence: true, uniqueness: true
 
@@ -77,7 +77,7 @@ class Event < ApplicationRecord
   end
 
   def can_go_live?
-    upcoming? && live_embed_code.present?
+    upcoming? && has_live_video_source?
   end
 
   def can_end?
@@ -89,7 +89,7 @@ class Event < ApplicationRecord
   end
 
   def can_publish_replay?
-    replay_pending? && replay_embed_code.present?
+    replay_pending? && has_replay_video_source?
   end
 
   # State transitions
@@ -135,8 +135,29 @@ class Event < ApplicationRecord
   private
 
   def bump_force_reload_count
-    if title_changed? || live_embed_code_changed? || replay_embed_code_changed? || status_changed?
+    if title_changed? || live_embed_code_changed? || replay_embed_code_changed? ||
+       mux_live_playback_id_changed? || mux_replay_playback_id_changed? || status_changed?
       self.force_reload_count += 1
+    end
+  end
+
+  def has_live_video_source?
+    live_embed_code.present? || mux_live_playback_id.present?
+  end
+
+  def has_replay_video_source?
+    replay_embed_code.present? || mux_replay_playback_id.present?
+  end
+
+  def live_video_source_present
+    unless has_live_video_source?
+      errors.add(:base, "Live video source required (embed code or Mux playback ID)")
+    end
+  end
+
+  def replay_video_source_present
+    unless has_replay_video_source?
+      errors.add(:base, "Replay video source required (embed code or Mux playback ID)")
     end
   end
 
