@@ -30,7 +30,6 @@ class EventsController < ApplicationController
     else @event.title
     end
 
-    render layout: "watch"
   end
 
   def status
