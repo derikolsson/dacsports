@@ -76,9 +76,7 @@
                 <% Team.alphabetical.each do |team| %>
                   <li>
                     <%= link_to team_path(team.slug), class: "dropdown-item dac-team-dropdown-item" do %>
-                      <% if team.mini_logo_exists? %>
-                        <%= image_tag team.mini_logo_path, class: "team-dropdown-logo", alt: "" %>
-                      <% elsif team.logo_exists? %>
+                      <% if team.logo_exists? %>
                         <%= image_tag team.logo_path, class: "team-dropdown-logo", alt: "" %>
                       <% end %>
                       <span><%= team.name %></span>

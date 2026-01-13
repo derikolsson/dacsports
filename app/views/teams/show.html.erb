@@ -3,7 +3,7 @@
     <% if @team.logo_exists? %>
       <%= image_tag @team.logo_path, alt: @team.name, class: "team-page-logo mb-3" %>
     <% end %>
-    <h1 class="display-4 fw-bold mb-2"><%= @team.name %></h1>
+    <h1 class="display-4 fw-bold mb-2"><%= @team.name %> <%= @team.mascot %></h1>
   </div>
 
   <% if @upcoming_events.any? %>

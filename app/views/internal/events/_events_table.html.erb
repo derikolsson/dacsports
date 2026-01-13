@@ -38,8 +38,9 @@
         <td>
           <% if event.event_teams.any? %>
             <% event.event_teams.each do |et| %>
-              <div>
-                <%= et.team.name %>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <%= team_badge(et.team) %>
+                <span><%= et.team.name %></span>
               </div>
             <% end %>
           <% else %>

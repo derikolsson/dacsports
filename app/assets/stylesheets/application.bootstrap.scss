@@ -177,7 +177,7 @@ body {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
   padding: 8px 0;
   min-width: 240px;
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
 
   .dropdown-divider {
@@ -186,7 +186,7 @@ body {
   }
 }
 
-.dac-team-dropdown-item {
+.dac-teams-dropdown .dropdown-item.dac-team-dropdown-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -213,6 +213,7 @@ body {
   height: 28px;
   object-fit: contain;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 
 // Mobile Navbar
@@ -252,24 +253,9 @@ body {
   }
 
   .dac-teams-dropdown {
-    background: rgba($dac-white, 0.05);
     box-shadow: none;
     position: static !important;
     transform: none !important;
-
-    .dropdown-item {
-      color: rgba($dac-white, 0.85);
-
-      &:hover,
-      &:focus {
-        background: rgba($dac-white, 0.1);
-        color: $dac-white;
-      }
-    }
-
-    .dropdown-divider {
-      border-color: rgba($dac-white, 0.1);
-    }
   }
 }
 
@@ -1326,13 +1312,13 @@ button:hover:not(:disabled) {
 
 // Team detail page logo
 .team-page-logo {
-  width: 120px;
-  height: 120px;
+  width: 180px;
+  height: 180px;
   object-fit: contain;
 
   @media (min-width: 768px) {
-    width: 160px;
-    height: 160px;
+    width: 240px;
+    height: 240px;
   }
 }
 
@@ -1342,13 +1328,12 @@ button:hover:not(:disabled) {
   align-items: center;
   gap: 6px;
   padding: 4px 12px 4px 4px;
-  background: $dac-light-blue;
   border-radius: 20px;
   text-decoration: none;
   transition: all 0.2s ease;
 
   &:hover {
-    background: darken($dac-light-blue, 5%);
+    filter: brightness(0.95);
     text-decoration: none;
   }
 }
@@ -1377,7 +1362,7 @@ button:hover:not(:disabled) {
 .team-chip-name {
   font-size: 14px;
   font-weight: 500;
-  color: $dac-royal-blue;
+  color: inherit;
 }
 
 // Team chips container (for watch page)
@@ -1385,4 +1370,15 @@ button:hover:not(:disabled) {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+// Team badge (colored initials)
+.team-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-align: center;
+  min-width: 2.25em;
 }
