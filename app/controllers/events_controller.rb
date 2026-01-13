@@ -2,7 +2,13 @@ class EventsController < ApplicationController
   skip_forgery_protection only: :status
 
   def index
-    @events = Event.visible.order(start_at: :asc)
+    @events = Event.visible
+                   .where("start_at >= ? OR status IN (?)", Time.current.beginning_of_day, %w[upcoming live])
+                   .order(start_at: :asc)
+  end
+
+  def archive
+    @events = Event.visible.past.order(start_at: :desc)
   end
 
   def show

@@ -38,7 +38,7 @@ body {
   font-size: 16px;
   line-height: 1.5;
   font-weight: 400;
-  background: linear-gradient(to bottom right, $dac-royal-blue, $background, rgba($dac-royal-blue, 0.05));
+  background: $background;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -58,6 +58,218 @@ body {
   @media (min-width: 768px) {
     height: 200px;
     width: 200px;
+  }
+}
+
+// ============================================
+// MAIN NAVBAR STYLES
+// ============================================
+
+.dac-navbar {
+  background-color: $dac-royal-blue;
+  padding: 0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+
+  .container {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.navbar-logo {
+  height: 55px;
+  width: 55px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+
+  @media (min-width: 768px) {
+    height: 70px;
+    width: 70px;
+  }
+
+  @media (min-width: 992px) {
+    height: 80px;
+    width: 80px;
+  }
+}
+
+.navbar-brand-text {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: $dac-white;
+
+  @media (min-width: 768px) {
+    font-size: 22px;
+  }
+
+  @media (min-width: 992px) {
+    font-size: 28px;
+  }
+}
+
+// Nav Links
+.dac-navbar .nav-link {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba($dac-white, 0.85);
+  padding: 20px 16px;
+  position: relative;
+  transition: color 0.2s ease;
+
+  @media (min-width: 992px) {
+    font-size: 18px;
+    padding: 24px 20px;
+  }
+
+  &:hover,
+  &:focus {
+    color: $dac-white;
+  }
+
+  &.active {
+    color: $dac-white;
+
+    // Underline for active non-dropdown links
+    &:not(.dropdown-toggle)::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 16px;
+      right: 16px;
+      height: 3px;
+      background-color: $dac-crimson-red;
+      border-radius: 3px 3px 0 0;
+
+      @media (min-width: 992px) {
+        left: 20px;
+        right: 20px;
+      }
+    }
+  }
+}
+
+// Dropdown Toggle
+.dac-navbar .dropdown-toggle::after {
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+// Teams Dropdown
+.dac-teams-dropdown {
+  background: $dac-white;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  padding: 8px 0;
+  min-width: 240px;
+  max-height: 400px;
+  overflow-y: auto;
+
+  .dropdown-divider {
+    margin: 8px 0;
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.dac-team-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.15s ease;
+
+  &:hover,
+  &:focus {
+    background-color: $dac-light-blue;
+    color: $dac-royal-blue;
+  }
+
+  &:active {
+    background-color: darken($dac-light-blue, 5%);
+  }
+}
+
+.team-dropdown-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+// Mobile Navbar
+.dac-navbar .navbar-toggler {
+  border-color: rgba($dac-white, 0.3);
+  padding: 8px 12px;
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba($dac-white, 0.25);
+  }
+}
+
+.dac-navbar .navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+// Mobile menu expansion
+@media (max-width: 991.98px) {
+  .dac-navbar .navbar-collapse {
+    background-color: darken($dac-royal-blue, 5%);
+    margin: 0 -12px;
+    padding: 16px;
+  }
+
+  .dac-navbar .nav-link {
+    padding: 12px 0;
+    border-bottom: 1px solid rgba($dac-white, 0.1);
+
+    &.active::before {
+      display: none;
+    }
+
+    &.active {
+      border-left: 3px solid $dac-crimson-red;
+      padding-left: 12px;
+    }
+  }
+
+  .dac-teams-dropdown {
+    background: rgba($dac-white, 0.05);
+    box-shadow: none;
+    position: static !important;
+    transform: none !important;
+
+    .dropdown-item {
+      color: rgba($dac-white, 0.85);
+
+      &:hover,
+      &:focus {
+        background: rgba($dac-white, 0.1);
+        color: $dac-white;
+      }
+    }
+
+    .dropdown-divider {
+      border-color: rgba($dac-white, 0.1);
+    }
   }
 }
 
@@ -155,7 +367,8 @@ body {
   background-color: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #d1d5db;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 
   thead {
     background-color: $dac-blue-light;
@@ -174,6 +387,238 @@ body {
   tbody tr {
     min-height: 80px;
   }
+}
+
+// ============================================
+// EVENT CARDS
+// ============================================
+
+.event-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.event-card {
+  display: flex;
+  align-items: stretch;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  position: relative;
+
+  &:hover {
+    border-color: $dac-royal-blue;
+    box-shadow: 0 8px 24px rgba($dac-royal-blue, 0.15);
+    transform: translateY(-2px);
+  }
+
+  // Status accent bar on left
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #9ca3af;
+  }
+
+  &.event-card--live::before {
+    background: $dac-crimson-red;
+  }
+
+  &.event-card--upcoming::before {
+    background: $dac-royal-blue;
+  }
+
+  &.event-card--replay_available::before {
+    background: $dac-royal-blue;
+  }
+
+  &.event-card--replay_pending::before {
+    background: #d97706;
+  }
+
+  &.event-card--ended::before {
+    background: #9ca3af;
+  }
+}
+
+.event-card-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+
+  &.event-card-badge--live {
+    background: rgba($dac-crimson-red, 0.1);
+    color: $dac-crimson-red;
+  }
+
+  &.event-card-badge--upcoming {
+    background: rgba($dac-royal-blue, 0.1);
+    color: $dac-royal-blue;
+  }
+
+  &.event-card-badge--replay {
+    background: rgba($dac-royal-blue, 0.1);
+    color: $dac-royal-blue;
+  }
+
+  &.event-card-badge--pending {
+    background: rgba(#d97706, 0.1);
+    color: #d97706;
+  }
+
+  &.event-card-badge--ended {
+    background: rgba(#6b7280, 0.08);
+    color: #6b7280;
+  }
+}
+
+.event-card-content {
+  flex: 1;
+  padding: 20px;
+  padding-left: 20px;
+
+  @media (max-width: 767px) {
+    padding-left: 16px;
+  }
+}
+
+.event-card-sport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.event-card-sport-emoji {
+  font-size: 18px;
+}
+
+.event-card-sport-name {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.event-card-round {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  padding-left: 8px;
+  border-left: 1px solid #d1d5db;
+}
+
+.event-card-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+
+  @media (min-width: 768px) {
+    font-size: 22px;
+  }
+}
+
+.event-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.event-card-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: #6b7280;
+
+  i {
+    font-size: 14px;
+    color: #9ca3af;
+  }
+}
+
+.event-card-arrow {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  color: #d1d5db;
+  transition: color 0.2s ease;
+
+  i {
+    font-size: 20px;
+  }
+
+  .event-card:hover & {
+    color: $dac-royal-blue;
+  }
+}
+
+
+// ============================================
+// EMPTY STATE
+// ============================================
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.empty-state-icon {
+  margin-bottom: 24px;
+
+  i {
+    font-size: 64px;
+    color: #d1d5db;
+  }
+}
+
+.empty-state-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: #374151;
+  margin: 0 0 12px 0;
+}
+
+.empty-state-text {
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0 0 24px 0;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.empty-state .btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 // Typography
@@ -276,7 +721,6 @@ small {
   background: #000;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 
   iframe {
     width: 100%;
@@ -293,7 +737,6 @@ small {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   color: $dac-white;
 
   i {
@@ -470,77 +913,94 @@ small {
 }
 
 .watch-related-game-card {
-  padding: 16px;
-  background: rgba(#F3F4F6, 0.3);
+  position: relative;
+  padding: 12px 12px 12px 16px;
+  background: $dac-white;
+  border: 1px solid #E5E7EB;
   border-radius: 8px;
   display: block;
   text-decoration: none;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
   cursor: pointer;
 
+  // Left accent bar
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 8px 0 0 8px;
+    background-color: #9CA3AF;
+  }
+
+  &--live::before {
+    background-color: $dac-crimson-red;
+  }
+
+  &--replay_available::before {
+    background-color: $dac-royal-blue;
+  }
+
+  &--replay_pending::before {
+    background-color: #F59E0B;
+  }
+
+  &--upcoming::before {
+    background-color: #10B981;
+  }
+
   &:hover {
-    background: rgba(#E5E7EB, 0.8);
+    border-color: $dac-royal-blue;
+    transform: translateY(-1px);
   }
 }
 
-.watch-related-game-header {
+.watch-related-game-sport {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.watch-related-game-emoji {
+  font-size: 14px;
+}
+
+.watch-related-game-sport-name {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.watch-related-game-round {
+  font-family: var(--font-body);
+  font-size: 11px;
+  color: #9CA3AF;
+
+  &::before {
+    content: '|';
+    margin-right: 6px;
+  }
 }
 
 .watch-related-game-title {
   font-family: var(--font-body);
-  font-size: 16px;
-  font-weight: 700;
-  color: #111827;
-  flex: 1;
-}
-
-.watch-related-game-round {
-  display: inline-block;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-family: var(--font-body);
-  font-size: 12px;
+  font-size: 15px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-
-  &.preliminary {
-    background: rgba($dac-royal-blue, 0.1);
-    color: $dac-royal-blue;
-  }
-
-  &.championship {
-    background: rgba($dac-crimson-red, 0.1);
-    color: $dac-crimson-red;
-  }
+  color: #111827;
+  margin-bottom: 2px;
 }
 
 .watch-related-game-meta {
   font-family: var(--font-body);
-  font-size: 14px;
+  font-size: 13px;
   color: #6B7280;
-}
-
-.watch-related-games-link {
-  display: block;
-  margin-top: 16px;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: $dac-royal-blue;
-  text-decoration: none;
-  text-align: center;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: $dac-blue-dark;
-  }
 }
 
 // Footer

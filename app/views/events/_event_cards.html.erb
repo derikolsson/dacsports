@@ -1,0 +1,52 @@
+<%# locals: (events:) %>
+<div class="event-cards">
+  <% events.each do |event| %>
+    <%= link_to event_path(event.slug), class: "event-card event-card--#{event.status}" do %>
+      <div class="event-card-content">
+        <div class="event-card-sport">
+          <% if event.sport.present? %>
+            <span class="event-card-sport-emoji"><%= event.sport_emoji %></span>
+            <span class="event-card-sport-name"><%= event.sport %></span>
+          <% end %>
+          <% if event.round.present? %>
+            <span class="event-card-round"><%= event.round %></span>
+          <% end %>
+          <% if event.live? %>
+            <span class="event-card-badge event-card-badge--live">Live</span>
+          <% elsif event.upcoming? %>
+            <span class="event-card-badge event-card-badge--upcoming">Upcoming</span>
+          <% elsif event.replay_available? %>
+            <span class="event-card-badge event-card-badge--replay">Replay</span>
+          <% elsif event.replay_pending? %>
+            <span class="event-card-badge event-card-badge--pending">Replay Pending</span>
+          <% elsif event.ended? %>
+            <span class="event-card-badge event-card-badge--ended">Ended</span>
+          <% end %>
+        </div>
+
+        <h3 class="event-card-title"><%= event.title %></h3>
+
+        <div class="event-card-meta">
+          <div class="event-card-meta-item">
+            <i class="bi bi-calendar3"></i>
+            <span><%= event.event_date.strftime('%A, %B %-d') %></span>
+          </div>
+          <div class="event-card-meta-item">
+            <i class="bi bi-clock"></i>
+            <span><%= event.start_at&.in_time_zone('America/Chicago')&.strftime('%-I:%M %p') || 'TBD' %> CT</span>
+          </div>
+          <% if event.location.present? %>
+            <div class="event-card-meta-item">
+              <i class="bi bi-geo-alt"></i>
+              <span><%= event.location %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="event-card-arrow">
+        <i class="bi bi-chevron-right"></i>
+      </div>
+    <% end %>
+  <% end %>
+</div>

@@ -1,8 +1,19 @@
-<div class="container pt-3 pb-5">
+<div class="container pt-5 pb-3">
   <div class="text-center mb-5">
     <h1 class="display-4 fw-bold mb-2">DAC Sports Network</h1>
     <p class="lead text-muted">Your home for live broadcasts of Dallas College athletics</p>
   </div>
 
-  <%= render "event_table", events: @events %>
+  <% if @events.any? %>
+    <%= render "event_cards", events: @events %>
+  <% else %>
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="bi bi-calendar-x"></i>
+      </div>
+      <h2 class="empty-state-title">No Upcoming Games</h2>
+      <p class="empty-state-text">There are no games currently scheduled. Check back soon or browse our archive of past games.</p>
+      <%= link_to "Browse Archive", archive_path, class: "btn btn-primary" %>
+    </div>
+  <% end %>
 </div>

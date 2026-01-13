@@ -40,13 +40,58 @@
   </head>
 
   <body data-session-id="<%= Current.session&.id %>" data-keepalive-timeout="<%= Dacsports.redis.get('keepalive_timeout') %>">
-    <header class="site-header text-center py-4">
+    <nav class="navbar navbar-expand-lg navbar-dark dac-navbar">
       <div class="container">
-        <%= link_to root_path, class: "d-inline-block" do %>
-          <%= image_tag "logo.png", alt: "DAC Sports Network", class: "logo-main" %>
+        <%= link_to root_path, class: "navbar-brand" do %>
+          <%= image_tag "logo.png", alt: "DAC Sports Network", class: "navbar-logo" %>
+          <span class="navbar-brand-text">DAC Sports Network</span>
         <% end %>
+
+        <button class="navbar-toggler" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar"
+                aria-expanded="false"
+                aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNavbar">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <%= link_to "Schedule", schedule_path, class: "nav-link#{' active' if controller_name == 'events' && action_name == 'index'}" %>
+            </li>
+            <li class="nav-item">
+              <%= link_to "Archive", archive_path, class: "nav-link#{' active' if action_name == 'archive'}" %>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle<%= ' active' if controller_name == 'teams' %>" href="#" id="teamsDropdown"
+                 role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Teams
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end dac-teams-dropdown" aria-labelledby="teamsDropdown">
+                <% Team.alphabetical.each do |team| %>
+                  <li>
+                    <%= link_to team_path(team.slug), class: "dropdown-item dac-team-dropdown-item" do %>
+                      <% if team.mini_logo_exists? %>
+                        <%= image_tag team.mini_logo_path, class: "team-dropdown-logo", alt: "" %>
+                      <% elsif team.logo_exists? %>
+                        <%= image_tag team.logo_path, class: "team-dropdown-logo", alt: "" %>
+                      <% end %>
+                      <span><%= team.name %></span>
+                    <% end %>
+                  </li>
+                <% end %>
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <%= link_to "All Teams", teams_path, class: "dropdown-item fw-semibold" %>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
       </div>
-    </header>
+    </nav>
 
     <%= yield %>
 

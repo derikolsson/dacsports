@@ -107,27 +107,30 @@
           <h2 class="watch-related-games-title">Related Broadcasts</h2>
           <div class="watch-related-games-list">
             <% @event.related_events.each do |event| %>
-              <%= link_to event_path(event.slug), class: "watch-related-game-card" do %>
-                <div class="watch-related-game-header">
-                  <div class="watch-related-game-title">
-                    <%= event.title %>
-                  </div>
+              <%= link_to event_path(event.slug), class: "watch-related-game-card watch-related-game-card--#{event.status}" do %>
+                <div class="watch-related-game-sport">
+                  <% if event.sport.present? %>
+                    <span class="watch-related-game-emoji"><%= event.sport_emoji %></span>
+                    <span class="watch-related-game-sport-name"><%= event.sport %></span>
+                  <% end %>
                   <% if event.round.present? %>
-                    <span class="watch-related-game-round <%= event.round.downcase.include?('championship') ? 'championship' : 'preliminary' %>">
-                      <%= event.round %>
-                    </span>
+                    <span class="watch-related-game-round"><%= event.round %></span>
+                  <% end %>
+                  <% if event.live? %>
+                    <span class="event-card-badge event-card-badge--live">Live</span>
+                  <% elsif event.replay_available? %>
+                    <span class="event-card-badge event-card-badge--replay">Replay</span>
+                  <% elsif event.replay_pending? %>
+                    <span class="event-card-badge event-card-badge--pending">Replay Pending</span>
                   <% end %>
                 </div>
+                <div class="watch-related-game-title"><%= event.title %></div>
                 <div class="watch-related-game-meta">
-                  <% if event.sport.present? %>
-                    <%= event.sport_emoji %> <%= event.sport %> •
-                  <% end %>
                   <%= event.event_date.strftime('%A, %B %-d') %>
                 </div>
               <% end %>
             <% end %>
           </div>
-          <%= link_to "View full schedule →", root_path, class: "watch-related-games-link" %>
         </div>
       <% end %>
     </div>

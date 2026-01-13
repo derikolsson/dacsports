@@ -11,6 +11,9 @@ Rails.application.routes.draw do
 
   root "events#index"
 
+  get "schedule", to: "events#index", as: :schedule
+  get "archive", to: "events#archive", as: :archive
+
   resources :events, only: [ :index, :show ], param: :slug do
     member do
       post :status
