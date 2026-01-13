@@ -10,6 +10,8 @@ class EventsController < ApplicationController
   def archive
     @title = "Game Archive"
     @events = Event.visible.past.order(start_at: :desc)
+    @sports = @events.where.not(sport: [nil, ""]).distinct.reorder(:sport).pluck(:sport)
+    @events = @events.where(sport: params[:sport]) if params[:sport].present?
   end
 
   def show

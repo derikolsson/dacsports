@@ -4,5 +4,19 @@
     <p class="lead text-muted">Watch replays from past Dallas College athletic events</p>
   </div>
 
+  <% if @sports.any? %>
+    <div class="sport-filters mb-4">
+      <%= link_to archive_path, class: "sport-filter-pill #{params[:sport].blank? ? 'sport-filter-pill--active' : ''}" do %>
+        All
+      <% end %>
+      <% @sports.each do |sport| %>
+        <%= link_to archive_path(sport: sport), class: "sport-filter-pill #{params[:sport] == sport ? 'sport-filter-pill--active' : ''}" do %>
+          <span class="sport-filter-emoji"><%= Event.new(sport: sport).sport_emoji %></span>
+          <%= sport %>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
   <%= render "event_cards", events: @events %>
 </div>

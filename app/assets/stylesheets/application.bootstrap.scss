@@ -1372,3 +1372,48 @@ button:hover:not(:disabled) {
   text-align: center;
   min-width: 2.25em;
 }
+
+// ============================================
+// SPORT FILTER PILLS
+// ============================================
+
+.sport-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.sport-filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  background: white;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: $dac-royal-blue;
+    color: $dac-royal-blue;
+    transform: none;
+    box-shadow: none;
+  }
+
+  &.sport-filter-pill--active {
+    background: $dac-royal-blue;
+    color: white;
+    border-color: $dac-royal-blue;
+  }
+}
+
+.sport-filter-emoji {
+  font-size: 16px;
+}
