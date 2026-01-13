@@ -95,22 +95,14 @@
 
     <footer class="mt-auto py-4 text-center">
       <div class="container">
-        <p class="campus-list mb-2">
-          <span>Brookhaven</span>
-          <span class="campus-separator">•</span>
-          <span>Cedar Valley</span>
-          <span class="campus-separator">•</span>
-          <span>Eastfield</span>
-          <span class="campus-separator">•</span>
-          <span>El Centro</span>
-          <span class="campus-separator">•</span>
-          <span>Mountain View</span>
-          <span class="campus-separator">•</span>
-          <span>North Lake</span>
-          <span class="campus-separator">•</span>
-          <span>Richland</span>
-        </p>
-        <p class="mb-0 text-muted small">&copy; <%= Time.current.year %> DAC Sports Network. All rights reserved.</p>
+        <div class="footer-team-logos mb-3">
+          <% Team.alphabetical.each do |team| %>
+            <% if team.logo_exists? %>
+              <%= image_tag team.logo_path, alt: team.name, class: "footer-team-logo" %>
+            <% end %>
+          <% end %>
+        </div>
+        <p class="mb-0 small">&copy; <%= Time.current.year %> DAC Sports Network. All rights reserved.</p>
       </div>
     </footer>
   </body>

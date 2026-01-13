@@ -996,32 +996,22 @@ footer {
   padding: 40px 20px;
   background: transparent;
   margin-top: auto;
+  color: #9ca3af;
 }
 
-.campus-list {
-  color: #6b7280;
-  font-size: 14px;
+.footer-team-logos {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 24px;
+}
 
-  span:not(.campus-separator) {
-    display: inline;
-    transition: color 0.2s ease;
-  }
-
-  .campus-separator {
-    color: #D1D5DB;
-    margin: 0 8px;
-  }
-
-  @media (max-width: 767px) {
-    span:not(.campus-separator) {
-      display: block;
-      margin: 0.25rem 0;
-    }
-
-    .campus-separator {
-      display: none;
-    }
-  }
+.footer-team-logo {
+  height: 64px;
+  width: auto;
+  filter: grayscale(100%);
+  opacity: 0.35;
 }
 
 // Status Badges (matching show page style)
