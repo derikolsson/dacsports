@@ -19,6 +19,7 @@
 
         <ul class="nav nav-pills">
           <li class="nav-item"><%= link_to "Dashboard", internal_root_path, class: "nav-link #{'active' if controller_name == 'home'}" %></li>
+          <li class="nav-item"><%= link_to "Reports", internal_reports_path, class: "nav-link #{'active' if controller_name == 'reports'}" %></li>
           <li class="nav-item"><%= link_to "Events", internal_events_path, class: "nav-link #{'active' if controller_name == 'events'}" %></li>
           <li class="nav-item"><%= link_to "Teams", internal_teams_path, class: "nav-link #{'active' if controller_name == 'teams'}" %></li>
           <li class="nav-item"><%= link_to "Uploads", internal_uploads_path, class: "nav-link #{'active' if controller_name == 'uploads'}" %></li>

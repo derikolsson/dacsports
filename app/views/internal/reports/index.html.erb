@@ -1,0 +1,174 @@
+<h1 class="mb-4">Reports</h1>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <%= form_with url: internal_reports_path, method: :get, local: true, class: "row g-3 align-items-end" do %>
+      <div class="col-auto">
+        <%= label_tag :start_date, "Start Date", class: "form-label" %>
+        <%= date_field_tag :start_date, @start_date, class: "form-control" %>
+      </div>
+      <div class="col-auto">
+        <%= label_tag :end_date, "End Date", class: "form-label" %>
+        <%= date_field_tag :end_date, @end_date, class: "form-control" %>
+      </div>
+      <div class="col-auto">
+        <%= submit_tag "Apply", class: "btn btn-primary" %>
+      </div>
+      <div class="col-auto">
+        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "All Time", internal_reports_path(start_date: "2020-01-01", end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<h4 class="mb-3">Summary</h4>
+<div class="row mb-4">
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Live Users</h5>
+        <p class="display-6"><%= number_with_delimiter(@summary[:live][:users]) %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Live Views</h5>
+        <p class="display-6"><%= number_with_delimiter(@summary[:live][:views]) %></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">VOD Users</h5>
+        <p class="display-6"><%= number_with_delimiter(@summary[:vod][:users]) %></p>
+        <small class="text-muted">30-day window</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">VOD Views</h5>
+        <p class="display-6"><%= number_with_delimiter(@summary[:vod][:views]) %></p>
+        <small class="text-muted">30-day window</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">By Device Type</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="text-end">Live</th>
+              <th class="text-end">VOD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @device_breakdown.each do |device, stats| %>
+              <tr>
+                <td><%= device %></td>
+                <td class="text-end"><%= number_to_percentage(stats[:live], precision: 1) %></td>
+                <td class="text-end"><%= number_to_percentage(stats[:vod], precision: 1) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">By Operating System</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm mb-0">
+          <thead>
+            <tr>
+              <th></th>
+              <th class="text-end">Live</th>
+              <th class="text-end">VOD</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @os_breakdown.each do |os, stats| %>
+              <tr>
+                <td><%= os %></td>
+                <td class="text-end"><%= number_to_percentage(stats[:live], precision: 1) %></td>
+                <td class="text-end"><%= number_to_percentage(stats[:vod], precision: 1) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-5">
+  <div class="card-header">
+    <h5 class="mb-0">Breakdown per Event</h5>
+  </div>
+  <div class="card-body">
+    <% if @event_stats.empty? %>
+      <p class="text-muted mb-0">No events found in selected date range.</p>
+    <% else %>
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover mb-0" style="--bs-border-color: #adb5bd;">
+          <thead>
+            <tr>
+              <th rowspan="2" class="align-bottom">Event</th>
+              <th colspan="2" class="text-center table-danger">Live</th>
+              <th colspan="2" class="text-center table-primary">VOD - 1D</th>
+              <th colspan="2" class="text-center table-primary">VOD - 7D</th>
+              <th colspan="2" class="text-center table-primary">VOD - 30D</th>
+            </tr>
+            <tr>
+              <th class="text-end table-danger">Viewers</th>
+              <th class="text-end table-danger">Views</th>
+              <th class="text-end table-primary">Viewers</th>
+              <th class="text-end table-primary">Views</th>
+              <th class="text-end table-primary">Viewers</th>
+              <th class="text-end table-primary">Views</th>
+              <th class="text-end table-primary">Viewers</th>
+              <th class="text-end table-primary">Views</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @event_stats.each do |event| %>
+              <tr>
+                <td>
+                  <%= event["title"] %>
+                  <br>
+                  <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %></small>
+                </td>
+                <td class="text-end table-danger"><%= event["live_unique_viewers"] || 0 %></td>
+                <td class="text-end table-danger"><%= event["live_views"] || 0 %></td>
+                <td class="text-end table-primary"><%= event["vod_1d_viewers"] || 0 %></td>
+                <td class="text-end table-primary"><%= event["vod_1d_views"] || 0 %></td>
+                <td class="text-end table-primary"><%= event["vod_7d_viewers"] || 0 %></td>
+                <td class="text-end table-primary"><%= event["vod_7d_views"] || 0 %></td>
+                <td class="text-end table-primary"><%= event["vod_30d_viewers"] || 0 %></td>
+                <td class="text-end table-primary"><%= event["vod_30d_views"] || 0 %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  </div>
+</div>
