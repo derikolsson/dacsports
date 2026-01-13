@@ -61,10 +61,16 @@
   </fieldset>
 
   <div class="row">
-    <div class="col-md-8 mb-3">
-      <%= f.label :start_at, "Event Date & Time", class: 'form-label' %>
+    <div class="col-md-4 mb-3">
+      <%= f.label :start_at, "Game Time", class: 'form-label' %>
       <%= f.datetime_local_field :start_at, class: 'form-control', required: true %>
-      <small class="form-text text-muted">Event start time (for auto-start via cron job)</small>
+      <small class="form-text text-muted">When the game starts (shown to public)</small>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <%= f.label :stream_starts_at, "Stream Start Time", class: 'form-label' %>
+      <%= f.datetime_local_field :stream_starts_at, class: 'form-control' %>
+      <small class="form-text text-muted">When stream auto-starts (leave blank for manual start)</small>
     </div>
 
     <div class="col-md-4 mb-3">

@@ -89,7 +89,7 @@ class Internal::EventsController < Internal::ApplicationController
 
   def event_params
     params.require(:event).permit(
-      :title, :slug, :start_at, :time_zone,
+      :title, :slug, :start_at, :stream_starts_at, :time_zone,
       :live_embed_code, :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round,
       event_teams_attributes: [ :id, :team_id, :seed, :_destroy ]

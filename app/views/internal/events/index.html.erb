@@ -29,13 +29,19 @@
     <% @events.each do |event| %>
       <tr>
         <td>
-          <div><%= event.event_date.strftime('%Y-%m-%d') %></div>
-          <small class="text-muted">
-            <%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%-I:%M %p %Z') || 'TBD' %>
+          <div><strong><%= event.event_date.strftime('%Y-%m-%d') %></strong></div>
+          <small>
+            <strong><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%-I:%M %p') || 'TBD' %></strong>
           </small>
+          <% if event.stream_starts_at.present? %>
+            <br>
+            <small class="text-muted">
+              Stream: <%= event.stream_starts_at.in_time_zone(event.time_zone).strftime('%-I:%M %p') %>
+            </small>
+          <% end %>
         </td>
         <td>
-          <div><%= event.title %></div>
+          <div><strong><%= event.title %></strong></div>
           <small class="text-muted d-block">
             <code><%= event.slug %></code>
           </small>
