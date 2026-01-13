@@ -4,7 +4,6 @@
       <th>Date & Time</th>
       <th>Event</th>
       <th>Teams</th>
-      <th>Location</th>
       <th>Status</th>
       <th>Visibility</th>
       <th>Actions</th>
@@ -46,9 +45,6 @@
           <% else %>
             <span class="text-muted">—</span>
           <% end %>
-        </td>
-        <td>
-          <%= event.location.presence || content_tag(:span, '—', class: 'text-muted') %>
         </td>
         <td>
           <span class="badge bg-<%= case event.status
