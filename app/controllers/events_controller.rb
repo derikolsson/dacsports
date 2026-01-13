@@ -8,6 +8,7 @@ class EventsController < ApplicationController
   end
 
   def archive
+    @title = "Game Archive"
     @events = Event.visible.past.order(start_at: :desc)
   end
 
@@ -26,7 +27,7 @@ class EventsController < ApplicationController
 
     @title = case @event.status
     when "live" then "Live: #{@event.title}"
-    when "replay_available" then "Replay: #{@event.title}"
+    when "replay_available" then "Replay: #{@event.title} (#{@event.start_at.strftime("%b %-d, %Y")})"
     else @event.title
     end
 
