@@ -1,8 +1,9 @@
 module ApplicationHelper
   def team_badge(team)
+    badge_text = team.team_colors[:text] || "#fff"
     content_tag(:span, team.abbreviation,
       class: "team-badge",
-      style: "background-color: #{team.primary_color}; color: #fff;",
+      style: "background-color: #{team.primary_color}; color: #{badge_text};",
       title: team.name)
   end
 

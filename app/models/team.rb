@@ -11,12 +11,12 @@ class Team < ApplicationRecord
 
   TEAM_COLORS = {
     "brookhaven"    => { primary: "#1B5E20", secondary: "#000000", abbr: "BH", mascot: "Bears" },
-    "cedar-valley"  => { primary: "#E65100", secondary: "#000000", abbr: "CV", text: "#BF360C", mascot: "Suns" },
-    "eastfield"     => { primary: "#1565C0", secondary: "#EF6C00", abbr: "EF", mascot: "Harvester Bees" },
-    "el-centro"     => { primary: "#4A148C", secondary: "#00BCD4", abbr: "EC", mascot: "Eagles" },
-    "mountain-view" => { primary: "#1565C0", secondary: "#FFC107", abbr: "MV", mascot: "Lions" },
-    "north-lake"    => { primary: "#2E7D32", secondary: "#1976D2", abbr: "NL", mascot: "Blazers" },
-    "richland"      => { primary: "#4A148C", secondary: "#FFC107", abbr: "RC", mascot: "Thunderducks" }
+    "cedar-valley"  => { primary: "#FFD700", secondary: "#000000", abbr: "CV", text: "#000000", mascot: "Suns" },
+    "eastfield"     => { primary: "#E86100", secondary: "#1565C0", abbr: "EF", mascot: "Harvester Bees" },
+    "el-centro"     => { primary: "#1B365D", secondary: "#A9A9A9", abbr: "EC", mascot: "Eagles" },
+    "mountain-view" => { primary: "#F4B41A", secondary: "#003087", abbr: "MV", text: "#003087", mascot: "Lions" },
+    "north-lake"    => { primary: "#228B22", secondary: "#1976D2", abbr: "NL", mascot: "Blazers" },
+    "richland"      => { primary: "#2D2A5E", secondary: "#0d964e", abbr: "RC", mascot: "Thunderducks" }
   }.freeze
 
   has_many :event_teams, dependent: :destroy
