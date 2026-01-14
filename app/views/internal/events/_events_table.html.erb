@@ -76,6 +76,9 @@
                 <li>
                   <%= link_to 'View Public Page', event_path(event.slug), class: 'dropdown-item', target: '_blank' %>
                 </li>
+                <li>
+                  <%= link_to 'Preview Page', event_path(event.slug, preview: true), class: 'dropdown-item', target: '_blank' %>
+                </li>
 
                 <% if event.can_go_live? || event.can_end? || event.can_mark_replay_pending? || event.can_publish_replay? %>
                   <li><hr class="dropdown-divider"></li>

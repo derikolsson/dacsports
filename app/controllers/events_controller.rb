@@ -27,6 +27,10 @@ class EventsController < ApplicationController
       raise ActiveRecord::RecordNotFound
     end
 
+    # Enforce visibility unless preview mode
+    @preview_mode = params[:preview] == "true"
+    raise ActiveRecord::RecordNotFound unless @event.visible? || @preview_mode
+
     @title = case @event.status
     when "live" then "Live: #{@event.title}"
     when "replay_available" then "Replay: #{@event.title} (#{@event.start_at.strftime("%b %-d, %Y")})"
