@@ -29,7 +29,7 @@
         <div class="event-card-meta">
           <div class="event-card-meta-item">
             <i class="bi bi-calendar3"></i>
-            <span><% if event.event_date < Date.current.in_time_zone('America/Chicago') %>
+            <span><% if event.event_date < Time.current.in_time_zone('America/Chicago').to_date %>
               <%= event.event_date.strftime('%B %-d, %Y') %>
             <% else %>
               <%= event.event_date.strftime('%A, %B %-d') %>
