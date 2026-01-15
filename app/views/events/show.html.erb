@@ -50,7 +50,7 @@
           <% if @event.replay_embed_code.present? %>
             <%= @event.replay_embed_code.html_safe %>
           <% elsif @event.mux_replay_playback_id.present? %>
-            <%= mux_player(playback_id: @event.mux_replay_playback_id, title: @event.title, video_id: @event.slug) %>
+            <%= mux_player(playback_id: @event.mux_replay_playback_id, title: @event.title, video_id: @event.slug, start_time: @event.replay_start_time, end_time: @event.replay_end_time) %>
           <% end %>
         </div>
       <% end %>

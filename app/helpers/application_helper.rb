@@ -15,7 +15,7 @@ module ApplicationHelper
     end
   end
 
-  def mux_player(playback_id:, title:, video_id:, live: false)
+  def mux_player(playback_id:, title:, video_id:, live: false, start_time: nil, end_time: nil)
     attrs = {
       "playback-id" => playback_id,
       "metadata-video-title" => title,
@@ -23,6 +23,8 @@ module ApplicationHelper
       "accent-color" => "#dc0028"
     }
     attrs["redundant-streams"] = "" if live
+    attrs["asset-start-time"] = start_time.to_s if start_time.present?
+    attrs["asset-end-time"] = end_time.to_s if end_time.present?
 
     attr_string = attrs.map { |k, v| v.empty? ? k : "#{k}=\"#{ERB::Util.html_escape(v)}\"" }.join("\n  ")
 
