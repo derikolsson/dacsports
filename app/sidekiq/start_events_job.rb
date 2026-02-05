@@ -4,7 +4,7 @@ class StartEventsJob
   def perform
     Event.upcoming
          .where.not(stream_starts_at: nil)
-         .where("stream_starts_at <= ?", 10.minutes.from_now)
+         .where("stream_starts_at <= ?", Time.current)
          .each do |event|
       event.go_live! if event.can_go_live?
     end
