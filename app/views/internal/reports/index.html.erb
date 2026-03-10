@@ -154,7 +154,7 @@
                 <td>
                   <%= event["title"] %>
                   <br>
-                  <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %></small>
+                  <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %><%= " · #{event["sport"]}" if event["sport"].present? %></small>
                 </td>
                 <td class="text-end table-danger"><%= event["live_unique_viewers"] || 0 %></td>
                 <td class="text-end table-danger"><%= event["live_views"] || 0 %></td>

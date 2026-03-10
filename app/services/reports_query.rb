@@ -60,6 +60,7 @@ class ReportsQuery
         e.id,
         e.title,
         e.start_at,
+        e.sport,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'live' THEN s.visitor_id END) AS live_unique_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'live' THEN ev.session_id END) AS live_views,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '1 day' THEN s.visitor_id END) AS vod_1d_viewers,
@@ -72,7 +73,7 @@ class ReportsQuery
       LEFT JOIN event_visits ev ON ev.event_id = e.id
       LEFT JOIN sessions s ON s.id = ev.session_id
       WHERE e.start_at BETWEEN :start_date AND :end_date
-      GROUP BY e.id, e.title, e.start_at
+      GROUP BY e.id, e.title, e.start_at, e.sport
       ORDER BY e.start_at ASC
     SQL
 
