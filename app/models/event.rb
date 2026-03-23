@@ -15,7 +15,8 @@ class Event < ApplicationRecord
     "Men's Basketball",
     "Women's Basketball",
     "Men's Football",
-    "Women's Football"
+    "Women's Football",
+    "Baseball"
   ].freeze
 
   # Enum for status
@@ -59,6 +60,8 @@ class Event < ApplicationRecord
       "🏀"
     elsif sport_lower.include?("football")
       "🏈"
+    elsif sport_lower.include?("baseball")
+      "⚾"
     else
       ""
     end
