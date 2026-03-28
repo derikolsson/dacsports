@@ -13,9 +13,9 @@
     <% events.each do |event| %>
       <tr>
         <td>
-          <div><strong><%= event.event_date.strftime('%Y-%m-%d') %></strong></div>
+          <div><strong><%= event.event_date.strftime('%a, %b %-d') %></strong></div>
           <small>
-            <strong><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%-I:%M %p') || 'TBD' %></strong>
+            <strong><%= event.start_at&.in_time_zone(event.time_zone)&.strftime('%-I:%M %p %Z') || 'TBD' %></strong>
           </small>
           <% if event.stream_starts_at.present? %>
             <br>
