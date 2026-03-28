@@ -39,6 +39,7 @@ Rails.application.routes.draw do
         post :go_live
         post :end_event
         post :mark_replay_pending
+        post :mark_technical_difficulties
         post :publish_replay
       end
     end

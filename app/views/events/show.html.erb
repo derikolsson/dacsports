@@ -45,6 +45,12 @@
           <p>A replay of this broadcast will be available shortly</p>
         </div>
 
+      <% when 'technical_difficulties' %>
+        <div class="watch-video-placeholder">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p>We're experiencing technical difficulties &mdash; stand by while we work to sort it out. The full replay will be posted later.</p>
+        </div>
+
       <% when 'replay_available' %>
         <div class="watch-video-player">
           <% if @event.replay_embed_code.present? %>
@@ -63,7 +69,7 @@
 
       <%# Status Badge and Sport Line %>
       <div class="watch-event-meta">
-        <% if @event.live? %>
+        <% if @event.live? || @event.technical_difficulties? %>
           <span class="watch-live-badge">LIVE</span>
         <% elsif @event.replay_available? %>
           <span class="watch-replay-badge">REPLAY</span>
@@ -133,7 +139,7 @@
                   <% if event.round.present? %>
                     <span class="watch-related-game-round"><%= event.round %></span>
                   <% end %>
-                  <% if event.live? %>
+                  <% if event.live? || event.technical_difficulties? %>
                     <span class="event-card-badge event-card-badge--live">Live</span>
                   <% elsif event.replay_available? %>
                     <span class="event-card-badge event-card-badge--replay">Replay</span>
@@ -154,7 +160,7 @@
   </div>
 </div>
 
-<% if @event.upcoming? || @event.live? || @event.replay_pending? || @event.replay_available? %>
+<% if @event.upcoming? || @event.live? || @event.technical_difficulties? || @event.replay_pending? || @event.replay_available? %>
   <script type="module">
     import { initializePolling } from 'polling';
 

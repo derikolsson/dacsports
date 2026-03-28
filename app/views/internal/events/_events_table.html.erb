@@ -53,6 +53,7 @@
             when 'ended' then 'dark'
             when 'replay_pending' then 'warning'
             when 'replay_available' then 'primary'
+            when 'technical_difficulties' then 'danger'
           end %>">
             <%= event.status.titleize %>
           </span>
@@ -80,7 +81,7 @@
                   <%= link_to 'Preview Page', event_path(event.slug, preview: true), class: 'dropdown-item', target: '_blank' %>
                 </li>
 
-                <% if event.can_go_live? || event.can_end? || event.can_mark_replay_pending? || event.can_publish_replay? %>
+                <% if event.can_go_live? || event.can_end? || event.can_mark_replay_pending? || event.can_mark_technical_difficulties? || event.can_publish_replay? %>
                   <li><hr class="dropdown-divider"></li>
                   <li><h6 class="dropdown-header">Status Changes</h6></li>
                 <% end %>
@@ -108,6 +109,15 @@
                     <%= button_to 'Mark Replay Pending', mark_replay_pending_internal_event_path(event),
                         method: :post, class: 'dropdown-item text-warning',
                         data: { confirm: 'Mark this event for replay?' },
+                        form: { style: 'display: inline;' } %>
+                  </li>
+                <% end %>
+
+                <% if event.can_mark_technical_difficulties? %>
+                  <li>
+                    <%= button_to 'Technical Difficulties', mark_technical_difficulties_internal_event_path(event),
+                        method: :post, class: 'dropdown-item text-danger',
+                        data: { confirm: 'Mark this event as having technical difficulties?' },
                         form: { style: 'display: inline;' } %>
                   </li>
                 <% end %>

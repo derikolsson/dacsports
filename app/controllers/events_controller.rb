@@ -3,7 +3,7 @@ class EventsController < ApplicationController
 
   def index
     @events = Event.visible
-                   .where("start_at >= ? OR status IN (?)", Time.current.beginning_of_day, %w[upcoming live])
+                   .where("start_at >= ? OR status IN (?)", Time.current.beginning_of_day, %w[upcoming live technical_difficulties])
                    .order(start_at: :asc)
   end
 
@@ -32,7 +32,7 @@ class EventsController < ApplicationController
     raise ActiveRecord::RecordNotFound unless @event.visible? || @preview_mode
 
     @title = case @event.status
-    when "live" then "Live: #{@event.title}"
+    when "live", "technical_difficulties" then "Live: #{@event.title}"
     when "replay_available" then "Replay: #{@event.title} (#{@event.start_at.strftime("%b %-d, %Y")})"
     else @event.title
     end

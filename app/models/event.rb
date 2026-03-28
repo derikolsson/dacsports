@@ -25,7 +25,8 @@ class Event < ApplicationRecord
     live: "live",
     ended: "ended",
     replay_pending: "replay_pending",
-    replay_available: "replay_available"
+    replay_available: "replay_available",
+    technical_difficulties: "technical_difficulties"
   }, default: :upcoming
 
   # Validations
@@ -84,15 +85,19 @@ class Event < ApplicationRecord
   end
 
   def can_end?
-    live?
+    live? || technical_difficulties?
   end
 
   def can_mark_replay_pending?
+    live? || technical_difficulties?
+  end
+
+  def can_mark_technical_difficulties?
     live?
   end
 
   def can_publish_replay?
-    replay_pending? && has_replay_video_source?
+    (replay_pending? || technical_difficulties?) && has_replay_video_source?
   end
 
   # State transitions
@@ -109,6 +114,11 @@ class Event < ApplicationRecord
   def mark_replay_pending!
     return false unless can_mark_replay_pending?
     update!(status: :replay_pending)
+  end
+
+  def mark_technical_difficulties!
+    return false unless can_mark_technical_difficulties?
+    update!(status: :technical_difficulties)
   end
 
   def publish_replay!

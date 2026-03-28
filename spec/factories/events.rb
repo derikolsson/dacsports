@@ -32,6 +32,12 @@ FactoryBot.define do
       start_at { 1.week.ago }
     end
 
+    trait :technical_difficulties do
+      status { :technical_difficulties }
+      start_at { 1.hour.ago }
+      live_embed_code { "<iframe src='https://example.com/live'></iframe>" }
+    end
+
     trait :replay_available do
       status { :replay_available }
       start_at { 1.week.ago }

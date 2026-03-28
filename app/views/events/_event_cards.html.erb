@@ -11,7 +11,7 @@
           <% if event.round.present? %>
             <span class="event-card-round"><%= event.round %></span>
           <% end %>
-          <% if event.live? %>
+          <% if event.live? || event.technical_difficulties? %>
             <span class="event-card-badge event-card-badge--live">Live</span>
           <% elsif event.upcoming? %>
             <span class="event-card-badge event-card-badge--upcoming">Upcoming</span>

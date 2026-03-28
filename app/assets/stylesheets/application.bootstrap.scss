@@ -432,6 +432,10 @@ body {
   &.event-card--ended::before {
     background: #9ca3af;
   }
+
+  &.event-card--technical_difficulties::before {
+    background: $dac-crimson-red;
+  }
 }
 
 .event-card-badge {

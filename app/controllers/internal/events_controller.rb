@@ -1,5 +1,5 @@
 class Internal::EventsController < Internal::ApplicationController
-  before_action :set_event, only: [ :edit, :update, :destroy, :go_live, :end_event, :mark_replay_pending, :publish_replay ]
+  before_action :set_event, only: [ :edit, :update, :destroy, :go_live, :end_event, :mark_replay_pending, :mark_technical_difficulties, :publish_replay ]
 
   def index
     today_start = Time.current.beginning_of_day
@@ -70,6 +70,14 @@ class Internal::EventsController < Internal::ApplicationController
       redirect_to internal_events_path, notice: "Event marked as replay pending"
     else
       redirect_to internal_events_path, alert: "Could not mark replay pending"
+    end
+  end
+
+  def mark_technical_difficulties
+    if @event.mark_technical_difficulties!
+      redirect_to internal_events_path, notice: "Event marked as technical difficulties"
+    else
+      redirect_to internal_events_path, alert: "Could not mark technical difficulties"
     end
   end
 

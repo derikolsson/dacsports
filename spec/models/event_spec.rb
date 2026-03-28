@@ -50,7 +50,8 @@ RSpec.describe Event, type: :model do
       live: 'live',
       ended: 'ended',
       replay_pending: 'replay_pending',
-      replay_available: 'replay_available'
+      replay_available: 'replay_available',
+      technical_difficulties: 'technical_difficulties'
     ).backed_by_column_of_type(:string) }
   end
 
@@ -143,6 +144,15 @@ RSpec.describe Event, type: :model do
       end
     end
 
+    describe '#mark_technical_difficulties!' do
+      let(:event) { create(:event, :live) }
+
+      it 'transitions from live to technical_difficulties' do
+        expect(event.mark_technical_difficulties!).to be true
+        expect(event.reload.status).to eq('technical_difficulties')
+      end
+    end
+
     describe '#publish_replay!' do
       let(:event) { create(:event, :replay_pending, replay_embed_code: '<iframe>replay</iframe>') }
 
@@ -155,6 +165,12 @@ RSpec.describe Event, type: :model do
         event.update_column(:replay_embed_code, nil)
         expect(event.publish_replay!).to be false
         expect(event.reload.status).to eq('replay_pending')
+      end
+
+      it 'transitions from technical_difficulties to replay_available' do
+        td_event = create(:event, :technical_difficulties, replay_embed_code: '<iframe>replay</iframe>')
+        expect(td_event.publish_replay!).to be true
+        expect(td_event.reload.status).to eq('replay_available')
       end
     end
   end
