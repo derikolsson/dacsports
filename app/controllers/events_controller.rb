@@ -31,11 +31,16 @@ class EventsController < ApplicationController
     @preview_mode = params[:preview] == "true"
     raise ActiveRecord::RecordNotFound unless @event.visible? || @preview_mode
 
-    @title = case @event.status
-    when "live", "technical_difficulties" then "Live: #{@event.title}"
-    when "replay_available" then "Replay: #{@event.title} (#{@event.start_at.strftime("%b %-d, %Y")})"
-    else @event.title
+    prefix = @event.sport.present? ? "#{@event.sport}: " : ""
+    date_str = @event.event_date&.strftime("%b %-d, %Y")
+    status_label = case @event.status
+    when "live", "technical_difficulties" then "Live"
+    when "replay_available" then "Replay"
     end
+    suffix = [ status_label, date_str ].compact.join(" • ")
+
+    @title = "#{prefix}#{@event.title}"
+    @title += " (#{suffix})" if suffix.present?
 
   end
 
