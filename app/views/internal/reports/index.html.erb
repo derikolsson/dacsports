@@ -1,6 +1,9 @@
-<h1 class="mb-4">Reports</h1>
+<h1 class="mb-4 d-print-none">Reports</h1>
+<h1 class="mb-4 d-none d-print-block">
+  DAC Sports Network – Viewership: <%= @start_date.strftime("%b %-d, %Y") %> – <%= @end_date.strftime("%b %-d, %Y") %>
+</h1>
 
-<div class="card mb-4">
+<div class="card mb-4 d-print-none">
   <div class="card-body">
     <%= form_with url: internal_reports_path, method: :get, local: true, class: "row g-3 align-items-end" do %>
       <div class="col-auto">
