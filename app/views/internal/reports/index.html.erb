@@ -128,24 +128,31 @@
       <p class="text-muted mb-0">No events found in selected date range.</p>
     <% else %>
       <div class="table-responsive">
-        <table class="table table-bordered table-hover mb-0" style="--bs-border-color: #adb5bd;">
+        <table class="table table-bordered table-hover mb-0 event-breakdown-table" style="--bs-border-color: #adb5bd;">
+          <colgroup>
+            <col class="event-col">
+            <col class="data-col"><col class="data-col">
+            <col class="data-col"><col class="data-col">
+            <col class="data-col"><col class="data-col">
+            <col class="data-col"><col class="data-col">
+          </colgroup>
           <thead>
             <tr>
               <th rowspan="2" class="align-bottom">Event</th>
-              <th colspan="2" class="text-center table-danger">Live</th>
-              <th colspan="2" class="text-center table-primary">VOD - 1D</th>
-              <th colspan="2" class="text-center table-primary">VOD - 7D</th>
-              <th colspan="2" class="text-center table-primary">VOD - 30D</th>
+              <th colspan="2" class="text-center table-danger group-start">Live</th>
+              <th colspan="2" class="text-center vod-1d group-start">VOD - 1D</th>
+              <th colspan="2" class="text-center vod-7d group-start">VOD - 7D</th>
+              <th colspan="2" class="text-center vod-30d group-start">VOD - 30D</th>
             </tr>
             <tr>
-              <th class="text-end table-danger">Viewers</th>
+              <th class="text-end table-danger group-start">Viewers</th>
               <th class="text-end table-danger">Views</th>
-              <th class="text-end table-primary">Viewers</th>
-              <th class="text-end table-primary">Views</th>
-              <th class="text-end table-primary">Viewers</th>
-              <th class="text-end table-primary">Views</th>
-              <th class="text-end table-primary">Viewers</th>
-              <th class="text-end table-primary">Views</th>
+              <th class="text-end vod-1d group-start">Viewers</th>
+              <th class="text-end vod-1d">Views</th>
+              <th class="text-end vod-7d group-start">Viewers</th>
+              <th class="text-end vod-7d">Views</th>
+              <th class="text-end vod-30d group-start">Viewers</th>
+              <th class="text-end vod-30d">Views</th>
             </tr>
           </thead>
           <tbody>
@@ -156,14 +163,14 @@
                   <br>
                   <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %><%= " · #{event["sport"]}" if event["sport"].present? %></small>
                 </td>
-                <td class="text-end table-danger"><%= event["live_unique_viewers"] || 0 %></td>
+                <td class="text-end table-danger group-start"><%= event["live_unique_viewers"] || 0 %></td>
                 <td class="text-end table-danger"><%= event["live_views"] || 0 %></td>
-                <td class="text-end table-primary"><%= event["vod_1d_viewers"] || 0 %></td>
-                <td class="text-end table-primary"><%= event["vod_1d_views"] || 0 %></td>
-                <td class="text-end table-primary"><%= event["vod_7d_viewers"] || 0 %></td>
-                <td class="text-end table-primary"><%= event["vod_7d_views"] || 0 %></td>
-                <td class="text-end table-primary"><%= event["vod_30d_viewers"] || 0 %></td>
-                <td class="text-end table-primary"><%= event["vod_30d_views"] || 0 %></td>
+                <td class="text-end vod-1d group-start"><%= event["vod_1d_viewers"] || 0 %></td>
+                <td class="text-end vod-1d"><%= event["vod_1d_views"] || 0 %></td>
+                <td class="text-end vod-7d group-start"><%= event["vod_7d_viewers"] || 0 %></td>
+                <td class="text-end vod-7d"><%= event["vod_7d_views"] || 0 %></td>
+                <td class="text-end vod-30d group-start"><%= event["vod_30d_viewers"] || 0 %></td>
+                <td class="text-end vod-30d"><%= event["vod_30d_views"] || 0 %></td>
               </tr>
             <% end %>
           </tbody>
