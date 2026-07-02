@@ -20,7 +20,7 @@ gem "cssbundling-rails"
 gem "jbuilder"
 
 # Background jobs
-gem "sidekiq", "~> 8.0.8"
+gem "sidekiq", "~> 8.1.0"
 gem "sidekiq-cron"
 gem "redis", ">= 5.0"
 
