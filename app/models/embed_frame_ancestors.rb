@@ -26,6 +26,7 @@ class EmbedFrameAncestors
   }xi
 
   MAX_ORIGINS = 50
+  MAX_ORIGIN_LENGTH = 253  # DNS limit; also keeps the header from bloating
 
   attr_accessor :raw
 
@@ -49,7 +50,7 @@ class EmbedFrameAncestors
   end
 
   def origins
-    raw.to_s.split(/[\s,]+/).map(&:strip).reject(&:blank?)
+    raw.to_s.split(/[\s,]+/).map(&:strip).reject(&:blank?).uniq
   end
 
   def blocked?
@@ -76,11 +77,22 @@ class EmbedFrameAncestors
     end
 
     origins.each do |origin|
-      next if origin.match?(ORIGIN_FORMAT)
+      if origin.length > MAX_ORIGIN_LENGTH
+        errors.add(:base, "#{origin.truncate(60)} is too long to be a hostname.")
+        next
+      end
 
-      errors.add(:base, "#{origin.truncate(60)} is not a valid origin. " \
-                        "Use a full origin such as https://athletics.example.org, " \
-                        "optionally with a single wildcard label (https://*.example.org).")
+      unless origin.match?(ORIGIN_FORMAT)
+        errors.add(:base, "#{origin.truncate(60)} is not a valid origin. " \
+                          "Use a full origin such as https://athletics.example.org, " \
+                          "optionally with a single wildcard label (https://*.example.org).")
+        next
+      end
+
+      port = origin[/:(\d+)\z/, 1]
+      next if port.nil? || port.to_i.between?(1, 65_535)
+
+      errors.add(:base, "#{origin.truncate(60)} has an invalid port.")
     end
   end
 end

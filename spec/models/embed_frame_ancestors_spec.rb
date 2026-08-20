@@ -32,6 +32,21 @@ RSpec.describe EmbedFrameAncestors do
       end
     end
 
+    it 'rejects a port outside the valid range' do
+      expect(described_class.new(raw: "https://a.org:443")).to be_valid
+      expect(described_class.new(raw: "https://a.org:99999")).not_to be_valid
+      expect(described_class.new(raw: "https://a.org:0")).not_to be_valid
+    end
+
+    it 'rejects a hostname longer than DNS allows, which would only bloat the header' do
+      expect(described_class.new(raw: "https://#{'a' * 4000}.org")).not_to be_valid
+    end
+
+    it 'collapses duplicate entries' do
+      settings = described_class.new(raw: "https://a.org\nhttps://a.org\nhttps://a.org")
+      expect(settings.origins).to eq([ "https://a.org" ])
+    end
+
     it 'rejects an unreasonable number of entries' do
       raw = Array.new(described_class::MAX_ORIGINS + 1) { |i| "https://site#{i}.example.org" }.join("\n")
       expect(described_class.new(raw: raw)).not_to be_valid
