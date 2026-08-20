@@ -113,10 +113,10 @@ RSpec.describe "Embeds", type: :request do
       end
 
       it "uses the configured partner list when one is set" do
-        Dacsports.redis.set("embed_frame_ancestors", "https://northside.org")
+        Dacsports.redis.set("embed_frame_ancestors", "https://northlake.example.edu")
         get embed_path(event.slug)
 
-        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors https://northside.org")
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors https://northlake.example.edu")
       ensure
         Dacsports.redis.del("embed_frame_ancestors")
       end
@@ -209,13 +209,13 @@ RSpec.describe "Embeds", type: :request do
     # from inside the frame and is same-origin. Without carrying it forward, every embed
     # visit would be credited to us instead of the partner.
     it "attributes a poll to the partner that loaded the page, not to the frame" do
-      get embed_path(event.slug), headers: { "Referer" => "https://northside.org/athletics/live" }
+      get embed_path(event.slug), headers: { "Referer" => "https://northlake.example.edu/athletics/live" }
       token = response.body[/sourceToken: "([^"]+)"/, 1]
       expect(token).to be_present
 
       expect(EventVisitJob).to receive(:perform_async).with(
         anything, event.id, "vod", anything, anything,
-        "embed:https://northside.org", "https://northside.org"
+        "embed:https://northlake.example.edu", "https://northlake.example.edu"
       )
 
       # As the in-frame poller does: same-origin, no partner referer, no cookies needed.
@@ -252,13 +252,13 @@ RSpec.describe "Embeds", type: :request do
     # Attribution must survive a viewer who blocks third-party cookies, which Safari
     # does by default — the reason this is a signed token and not a cookie.
     it "attributes correctly with no cookies at all" do
-      get embed_path(event.slug), headers: { "Referer" => "https://northside.org/live" }
+      get embed_path(event.slug), headers: { "Referer" => "https://northlake.example.edu/live" }
       token = response.body[/sourceToken: "([^"]+)"/, 1]
       session_id = Session.last.id
 
       expect(EventVisitJob).to receive(:perform_async).with(
         anything, event.id, "vod", anything, anything,
-        "embed:https://northside.org", "https://northside.org"
+        "embed:https://northlake.example.edu", "https://northlake.example.edu"
       )
 
       reset!  # drops the cookie jar

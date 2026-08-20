@@ -42,8 +42,8 @@ RSpec.describe ReportsQuery do
     let!(:second_partner) do
       create(:event_visit, :vod, event: event,
                                  session: create(:session, device_type: "tablet"),
-                                 source: "embed:https://eastfield.edu",
-                                 referrer_origin: "https://eastfield.edu",
+                                 source: "embed:https://eastfield.example.edu",
+                                 referrer_origin: "https://eastfield.example.edu",
                                  started_at: 1.day.ago)
     end
 
@@ -64,7 +64,7 @@ RSpec.describe ReportsQuery do
   describe '.partner_sources' do
     it 'lists partner properties with traffic, labelled by origin' do
       expect(described_class.partner_sources)
-        .to eq([ [ "https://northside.org", "embed:https://northside.org" ] ])
+        .to eq([ [ "https://northlake.example.edu", "embed:https://northlake.example.edu" ] ])
     end
 
     it 'does not list the on-site source' do
@@ -73,7 +73,7 @@ RSpec.describe ReportsQuery do
   end
 
   describe 'scoped to a partner property' do
-    subject(:report) { described_class.new(**range, source: "embed:https://northside.org") }
+    subject(:report) { described_class.new(**range, source: "embed:https://northlake.example.edu") }
 
     it 'counts only that partner’s traffic' do
       expect(report.summary_stats[:vod]).to eq(users: 1, views: 1)

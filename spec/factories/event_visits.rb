@@ -15,8 +15,8 @@ FactoryBot.define do
     end
 
     trait :embedded do
-      source { "embed:https://northside.org" }
-      referrer_origin { "https://northside.org" }
+      source { "embed:https://northlake.example.edu" }
+      referrer_origin { "https://northlake.example.edu" }
     end
   end
 end

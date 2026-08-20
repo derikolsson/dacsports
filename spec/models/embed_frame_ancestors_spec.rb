@@ -6,8 +6,8 @@ RSpec.describe EmbedFrameAncestors do
   describe 'validation' do
     it 'accepts full origins, wildcards and ports' do
       %w[
-        https://athletics.northside.org
-        https://*.northside.org
+        https://athletics.northlake.example.edu
+        https://*.northlake.example.edu
         http://127.0.0.1:3198
         https://a.b.example.org
       ].each do |origin|
@@ -16,7 +16,7 @@ RSpec.describe EmbedFrameAncestors do
     end
 
     it 'rejects a bare domain with no scheme' do
-      expect(described_class.new(raw: "northside.org")).not_to be_valid
+      expect(described_class.new(raw: "northlake.example.edu")).not_to be_valid
     end
 
     # The value is written verbatim into a response header, so a semicolon or newline

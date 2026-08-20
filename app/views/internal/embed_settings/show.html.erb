@@ -38,7 +38,7 @@
           <div class="mb-3">
             <%= f.text_area :raw, rows: 8, class: "form-control font-monospace",
                             value: @settings.origins.join("\n"),
-                            placeholder: "https://athletics.northside.org\nhttps://*.northside.org" %>
+                            placeholder: "https://athletics.example.edu\nhttps://*.example.edu" %>
             <small class="form-text text-muted">
               One per line. Full origins only &mdash; <code>https://athletics.example.org</code>,
               not <code>example.org</code>. Include the port if there is one.

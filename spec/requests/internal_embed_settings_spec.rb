@@ -26,17 +26,17 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
 
   it "saves partner sites and serves them on the embed route" do
     patch internal_embed_settings_path,
-          params: { embed_frame_ancestors: { raw: "https://athletics.northside.org\nhttps://*.northside.org" } },
+          params: { embed_frame_ancestors: { raw: "https://athletics.northlake.example.edu\nhttps://*.northlake.example.edu" } },
           headers: auth_headers
 
     expect(response).to redirect_to(internal_embed_settings_path)
     expect(EmbedFrameAncestors.header_value)
-      .to eq("https://athletics.northside.org https://*.northside.org")
+      .to eq("https://athletics.northlake.example.edu https://*.northlake.example.edu")
 
     event = create(:event, :signed_replay)
     get embed_path(event.slug)
     expect(response.headers["Content-Security-Policy"])
-      .to eq("frame-ancestors https://athletics.northside.org https://*.northside.org")
+      .to eq("frame-ancestors https://athletics.northlake.example.edu https://*.northlake.example.edu")
   end
 
   it "refuses an entry that would inject extra CSP directives, leaving the list untouched" do
