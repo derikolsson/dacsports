@@ -43,6 +43,56 @@
     return value.length > 1024 ? value.slice(0, 1024) : value;
   }
 
+  // Visitor identity, stored in the PARENT page's storage.
+  //
+  // This is the whole trick: storage written here belongs to the partner's own origin,
+  // so it is first-party and survives third-party cookie blocking. A cookie set inside
+  // our iframe is third-party and is dropped outright by Safari, which made every page
+  // load look like a brand new viewer.
+  //
+  // Scoped per partner site by definition — each origin has its own storage — which is
+  // exactly the granularity we report at. Safari still clears script-writable storage
+  // after a stretch with no interaction, so this is "much better", not "permanent".
+  function visitorId() {
+    // A partner can decline storage entirely with data-storage="off" — useful if their
+    // site runs a consent banner and does not want a write before the user accepts.
+    // The player still works; their viewers just count as new each visit.
+    if ((script.getAttribute("data-storage") || "").toLowerCase() === "off") return null;
+
+    var key = "dacsn_vid";
+    try {
+      var existing = window.localStorage.getItem(key);
+      if (existing && /^[0-9a-f-]{36}$/.test(existing)) return existing;
+
+      var generated = uuid();
+      window.localStorage.setItem(key, generated);
+      return generated;
+    } catch (e) {
+      // Private mode, disabled storage, or a sandboxed parent. The iframe falls back to
+      // its own cookie, and failing that a per-load id.
+      return null;
+    }
+  }
+
+  function uuid() {
+    try {
+      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+      var bytes = new Uint8Array(16);
+      window.crypto.getRandomValues(bytes);
+      bytes[6] = (bytes[6] & 0x0f) | 0x40;
+      bytes[8] = (bytes[8] & 0x3f) | 0x80;
+      var hex = [];
+      for (var i = 0; i < 16; i++) hex.push((bytes[i] + 0x100).toString(16).slice(1));
+      return (
+        hex.slice(0, 4).join("") + "-" + hex.slice(4, 6).join("") + "-" +
+        hex.slice(6, 8).join("") + "-" + hex.slice(8, 10).join("") + "-" +
+        hex.slice(10, 16).join("")
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+
   var params = [];
   try {
     params.push("src=" + encodeURIComponent(truncate(window.location.href)));
@@ -52,6 +102,9 @@
     // Sandboxed parents can throw on location access. The server-side Referer header
     // is the authoritative record anyway; these params are only enrichment.
   }
+
+  var vid = visitorId();
+  if (vid) params.push("v=" + encodeURIComponent(vid));
 
   var src = origin + "/embed/" + encodeURIComponent(slug);
   if (params.length) src += "?" + params.join("&");

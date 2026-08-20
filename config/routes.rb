@@ -37,6 +37,7 @@ Rails.application.routes.draw do
     mount Sidekiq::Web => "/sidekiq"
 
     resources :reports, only: [ :index ]
+    resource :embed_settings, only: [ :show, :update ]
     resources :teams
     resources :events do
       collection do

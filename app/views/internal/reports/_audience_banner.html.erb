@@ -1,0 +1,15 @@
+<%# The same figures mean very different things per audience, so say which one is on screen. %>
+<div class="alert alert-secondary py-2 px-3 mb-3">
+  <% if @source == ReportsQuery::ON_SITE %>
+    Showing <strong>dacsports.net</strong> only. Partner embeds are excluded.
+  <% elsif @source == ReportsQuery::ALL_PARTNERS %>
+    Showing <strong>all partner sites</strong> combined.
+    <span class="text-muted">
+      A viewer watching on two different partner sites counts once on each &mdash; browsers
+      keep each site's storage separate, so the same person cannot be recognised across
+      properties. Treat the combined total as views, not people.
+    </span>
+  <% else %>
+    Showing <strong><%= @partner_options.to_a.find { |(_, v)| v == @source }&.first || @source %></strong> only.
+  <% end %>
+</div>

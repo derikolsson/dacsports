@@ -1,14 +1,37 @@
 class ReportsQuery
   attr_reader :start_date, :end_date, :source
 
-  # Reports are on-site figures by default. Embed visits land in the same table, so
-  # without this every existing number would silently absorb partner traffic — and with
-  # it the unique-count inflation that comes from third-party cookie blocking. Pass a
-  # source to report on a partner property instead.
-  def initialize(start_date:, end_date:, source: EventVisit::DEFAULT_SOURCE)
+  # Audience the figures cover:
+  #
+  #   "dsn"            DAC Sports Network's own site (the default, and what every
+  #                    pre-existing report meant before embeds shared this table)
+  #   "partners"       every partner property combined
+  #   "embed:https://…" one specific partner property
+  #
+  # Defaulting to on-site matters: without it, existing numbers would silently absorb
+  # partner traffic.
+  ON_SITE = EventVisit::DEFAULT_SOURCE
+  ALL_PARTNERS = "partners".freeze
+
+  def initialize(start_date:, end_date:, source: ON_SITE)
     @start_date = start_date.beginning_of_day
     @end_date = end_date.end_of_day
-    @source = source
+    @source = source.presence || ON_SITE
+  end
+
+  def all_partners?
+    source == ALL_PARTNERS
+  end
+
+  # Partner properties that actually have traffic, for the report's picker.
+  def self.partner_sources(start_date: nil, end_date: nil)
+    scope = EventVisit.embedded
+    if start_date && end_date
+      scope = scope.joins(:event).where(events: { start_at: start_date.beginning_of_day..end_date.end_of_day })
+    end
+    scope.distinct.pluck(:source, :referrer_origin)
+         .map { |src, origin| [ origin.presence || "Unattributed", src ] }
+         .sort_by { |label, _| label }
   end
 
   def summary_stats
@@ -67,7 +90,7 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN s.visitor_id END) AS vod_30d_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN ev.session_id END) AS vod_30d_views
       FROM events e
-      LEFT JOIN event_visits ev ON ev.event_id = e.id AND ev.source = :source
+      LEFT JOIN event_visits ev ON ev.event_id = e.id AND #{source_predicate}
       LEFT JOIN sessions s ON s.id = ev.session_id
       WHERE e.start_at BETWEEN :start_date AND :end_date
       GROUP BY e.id, e.title, e.start_at, e.sport
@@ -75,17 +98,24 @@ class ReportsQuery
     SQL
 
     ActiveRecord::Base.connection.exec_query(
-      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source } ])
+      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source, on_site: ON_SITE } ])
     ).to_a
   end
 
   private
 
+  # Filters the LEFT JOIN rather than the WHERE clause, so events with no visits from
+  # this audience still appear in the report instead of dropping out of it.
+  def source_predicate
+    all_partners? ? "ev.source <> :on_site" : "ev.source = :source"
+  end
+
   def scoped_visits
-    EventVisit
+    base = EventVisit
       .joins(:session, :event)
       .where(events: { start_at: start_date..end_date })
-      .where(source: source)
+
+    all_partners? ? base.embedded : base.where(source: source)
   end
 
   def calculate_percentages(raw_counts, normalizer)

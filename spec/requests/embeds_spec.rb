@@ -314,6 +314,38 @@ RSpec.describe "Embeds", type: :request do
       expect { get embed_path(hidden.slug) }.not_to change(Session, :count)
     end
 
+    # The wrapper writes this id to the PARTNER page's own localStorage, making it
+    # first-party there. That is what survives third-party cookie blocking, which
+    # otherwise made every frame load look like a brand new viewer.
+    it "reuses the visitor id supplied by the wrapper" do
+      vid = SecureRandom.uuid
+
+      get embed_path(event.slug), params: { v: vid }
+      expect(Session.last.visitor_id).to eq(vid)
+
+      expect { get embed_path(event.slug), params: { v: vid } }.not_to change(Session, :count)
+    end
+
+    it "ignores a malformed visitor id rather than storing it" do
+      get embed_path(event.slug), params: { v: "not-a-uuid'; DROP TABLE" }
+
+      expect(response).to have_http_status(:ok)
+      expect(Session.last.visitor_id).to match(/\A[0-9a-f-]{36}\z/)
+    end
+
+    # The poller carries no visitor identity of its own; it echoes the session from page
+    # load. Establishing one here would mint a fresh Session on every poll.
+    it "creates no session when the poller checks in" do
+      get embed_path(event.slug)
+      session_id = Session.last.id
+
+      expect {
+        3.times do
+          post embed_status_path(event.slug), params: { session_id: session_id }, as: :json
+        end
+      }.not_to change(Session, :count)
+    end
+
     it "creates a session for a real view" do
       expect { get embed_path(event.slug) }.to change(Session, :count).by(1)
     end

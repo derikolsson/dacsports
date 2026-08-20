@@ -65,7 +65,10 @@ class EmbedsController < ApplicationController
     event, = find_event_by_slug(params[:slug])
     return head :not_found unless event && event.visible?
 
-    set_current_session
+    # No session is established here. The poller echoes back the id from page load, and
+    # its request carries no visitor identity of its own — creating one would mint a
+    # fresh Session on every poll, which is worse than the per-page-load inflation this
+    # is meant to solve.
     track_visit(event)
 
     render json: {
@@ -255,7 +258,28 @@ class EmbedsController < ApplicationController
   # Overrides SessionManagement's source of visitor identity for this route only. The
   # site cookie is SameSite=Lax and is simply not sent here, so leaving it in place
   # minted a brand new Session on every single frame load.
+  # Visitor id, in preference order:
+  #
+  #   1. The wrapper's `v` param. Written to the PARTNER page's own localStorage, so it
+  #      is first-party storage and survives third-party cookie blocking — the case that
+  #      otherwise makes every frame load look like a new viewer.
+  #   2. Our own partitioned cookie, for the <noscript> iframe and anywhere localStorage
+  #      is unavailable.
+  #   3. A fresh id, so a visit is never simply lost.
+  #
+  # Format-checked because it is client-supplied and lands in sessions.visitor_id. It
+  # is an analytics identifier, not a credential — a forged value can skew a viewer
+  # count, which is true of every client-side analytics id, and grants nothing.
+  VISITOR_ID_FORMAT = /\A[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\z/
+
   def get_or_create_visitor_id
+    supplied = params[:v].to_s.downcase
+    return supplied if supplied.match?(VISITOR_ID_FORMAT)
+
+    cookie_visitor_id
+  end
+
+  def cookie_visitor_id
     existing = cookies[:embed_visitor_id].presence
     return existing if existing
 

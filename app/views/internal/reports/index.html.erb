@@ -15,17 +15,31 @@
         <%= date_field_tag :end_date, @end_date, class: "form-control" %>
       </div>
       <div class="col-auto">
+        <%= label_tag :source, "Audience", class: "form-label" %>
+        <%= select_tag :source,
+              grouped_options_for_select(
+                [
+                  [ "DAC Sports Network", [ [ "DAC Sports Network site", ReportsQuery::ON_SITE ] ] ],
+                  [ "Partners", [ [ "All partner sites", ReportsQuery::ALL_PARTNERS ] ] + @partner_options ]
+                ],
+                @source
+              ),
+              class: "form-select" %>
+      </div>
+      <div class="col-auto">
         <%= submit_tag "Apply", class: "btn btn-primary" %>
       </div>
       <div class="col-auto">
-        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "All Time", internal_reports_path(start_date: "2020-01-01", end_date: Date.current), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "All Time", internal_reports_path(start_date: "2020-01-01", end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
       </div>
     <% end %>
   </div>
 </div>
+
+<%= render "audience_banner" %>
 
 <h4 class="mb-3">Summary</h4>
 <div class="row mb-4">

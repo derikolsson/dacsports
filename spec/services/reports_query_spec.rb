@@ -36,6 +36,42 @@ RSpec.describe ReportsQuery do
     end
   end
 
+  describe 'scoped to all partners as a group' do
+    subject(:report) { described_class.new(**range, source: described_class::ALL_PARTNERS) }
+
+    let!(:second_partner) do
+      create(:event_visit, :vod, event: event,
+                                 session: create(:session, device_type: "tablet"),
+                                 source: "embed:https://eastfield.edu",
+                                 referrer_origin: "https://eastfield.edu",
+                                 started_at: 1.day.ago)
+    end
+
+    it 'combines every partner and excludes on-site traffic' do
+      expect(report.summary_stats[:vod]).to eq(users: 2, views: 2)
+    end
+
+    it 'excludes on-site devices from the breakdown' do
+      expect(report.device_breakdown.keys).to match_array([ "Phone", "Tablet" ])
+    end
+
+    it 'combines partners in the per-event breakdown' do
+      row = report.per_event_stats.find { |r| r["id"] == event.id }
+      expect(row["vod_30d_viewers"]).to eq(2)
+    end
+  end
+
+  describe '.partner_sources' do
+    it 'lists partner properties with traffic, labelled by origin' do
+      expect(described_class.partner_sources)
+        .to eq([ [ "https://northside.org", "embed:https://northside.org" ] ])
+    end
+
+    it 'does not list the on-site source' do
+      expect(described_class.partner_sources.map(&:last)).not_to include(described_class::ON_SITE)
+    end
+  end
+
   describe 'scoped to a partner property' do
     subject(:report) { described_class.new(**range, source: "embed:https://northside.org") }
 

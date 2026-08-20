@@ -1,0 +1,92 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Embed Settings</h1>
+</div>
+
+<% if @settings.blocked? %>
+  <div class="alert alert-warning">
+    <strong>Embedding is currently blocked everywhere.</strong>
+    Partners who have already pasted their snippet will see an error until a site is
+    added below. Nothing on their end needs to change — it starts working as soon as
+    you save.
+  </div>
+<% else %>
+  <div class="alert alert-success">
+    <strong>Embedding is allowed on <%= pluralize(@settings.origins.size, "site") %>.</strong>
+    Anywhere else, the player refuses to load.
+  </div>
+<% end %>
+
+<% if @settings.errors.any? %>
+  <div class="alert alert-danger">
+    <p class="mb-2"><strong>Nothing was saved.</strong></p>
+    <ul class="mb-0">
+      <% @settings.errors.full_messages.each do |message| %>
+        <li><%= message.sub(/\A/, "") %></li>
+      <% end %>
+    </ul>
+  </div>
+<% end %>
+
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Approved partner sites</h2>
+
+        <%= form_with model: @settings, scope: :embed_frame_ancestors,
+                      url: internal_embed_settings_path, method: :patch do |f| %>
+          <div class="mb-3">
+            <%= f.text_area :raw, rows: 8, class: "form-control font-monospace",
+                            value: @settings.origins.join("\n"),
+                            placeholder: "https://athletics.northside.org\nhttps://*.northside.org" %>
+            <small class="form-text text-muted">
+              One per line. Full origins only &mdash; <code>https://athletics.example.org</code>,
+              not <code>example.org</code>. Include the port if there is one.
+              <br>
+              A wildcard covers a single level, so <code>https://*.example.org</code> matches
+              <code>athletics.example.org</code> but not <code>a.b.example.org</code>. List the
+              apex and the wildcard separately if you need both.
+              <br>
+              Leave empty to block embedding everywhere.
+            </small>
+          </div>
+
+          <div class="d-flex gap-2">
+            <%= f.submit "Save", class: "btn btn-primary" %>
+            <%= link_to "Cancel", internal_embed_settings_path, class: "btn btn-outline-secondary" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">What this controls</h2>
+        <p class="small mb-2">
+          This is the list of <strong>pages allowed to embed our player</strong>. It is sent
+          as a <code>frame-ancestors</code> header, and the browser enforces it.
+        </p>
+        <p class="small mb-2">
+          Ask each partner for <strong>the URL of the page the embed goes on</strong>, not
+          &ldquo;your domain&rdquo;. Athletics pages often live on a vendor host
+          (Finalsite, Blackboard, rSchoolToday, VNN, Hudl), so the embedding site is
+          frequently not the school&rsquo;s main domain.
+        </p>
+        <p class="small mb-0 text-muted">
+          Separately, Mux only allows playback to start from our own domains. That does not
+          change here, and partner domains never need to be added to it &mdash; the video
+          plays inside our page, not theirs.
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Current header</h2>
+        <code class="small d-block text-break">frame-ancestors <%= EmbedFrameAncestors.header_value %></code>
+      </div>
+    </div>
+  </div>
+</div>
