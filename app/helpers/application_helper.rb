@@ -38,8 +38,10 @@ module ApplicationHelper
   # overloading it: this is a parallel render path, and the on-site player must not be
   # able to regress when the embed changes.
   #
-  # Pinned to @mux/mux-player@2 — v2.3.0+ has Chromecast built in, and the unpinned URL
-  # the on-site helper uses is a live dependency on whatever Mux ships next.
+  # Pinned to the current major. Chromecast needs >= 2.3.0, but @2 resolves to 2.9.1,
+  # which fires a stray relative fetch against our own origin on every load; @3 does not.
+  # Pinned rather than bare so a future major cannot land here without us choosing it —
+  # the on-site helper's unpinned URL is a live dependency on whatever Mux ships next.
   def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil)
     attrs = {
       "playback-id" => playback_id,
@@ -50,6 +52,11 @@ module ApplicationHelper
       "metadata-video-id" => video_id,
       "accent-color" => "#dc0028"
     }
+    # Explicit poster. Left to compute its own, mux-player emits a relative "undefined"
+    # URL and the browser fetches it against our origin on every load.
+    if tokens[:thumbnail].present?
+      attrs["poster"] = "https://image.mux.com/#{playback_id}/thumbnail.webp?token=#{tokens[:thumbnail]}"
+    end
     # Storyboards are on-demand only; Mux does not generate them for live.
     attrs["storyboard-token"] = tokens[:storyboard] if tokens[:storyboard].present?
     attrs["redundant-streams"] = "" if stream_type == "live"
@@ -58,7 +65,7 @@ module ApplicationHelper
 
     attr_string = attrs.compact.map { |k, v| v.to_s.empty? ? k : "#{k}=\"#{ERB::Util.html_escape(v)}\"" }.join("\n  ")
 
-    %(<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player@2"></script>
+    %(<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player@3"></script>
 <mux-player
   #{attr_string}
 ></mux-player>).html_safe

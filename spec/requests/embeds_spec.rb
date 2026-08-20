@@ -22,6 +22,20 @@ RSpec.describe "Embeds", type: :request do
         expect(response.body).to include('stream-type="on-demand"')
       end
 
+      # @2 resolves to 2.9.1, which fires a stray relative fetch at our own origin on
+      # every load. Pinned rather than bare so a new major cannot land unchosen.
+      it "pins mux-player to a known-good major" do
+        get embed_path(event.slug)
+
+        expect(response.body).to include("@mux/mux-player@3")
+        expect(response.body).not_to include("@mux/mux-player@2")
+      end
+
+      it "sets an explicit poster using the thumbnail token" do
+        get embed_path(event.slug)
+        expect(response.body).to match(%r{poster="https://image\.mux\.com/[^"]+token=})
+      end
+
       it "hides casting, which would silently fail under the embed restriction" do
         get embed_path(event.slug)
         expect(response.body).to include("--cast-button: none")
@@ -223,6 +237,62 @@ RSpec.describe "Embeds", type: :request do
     end
   end
 
+  describe "visitor identity" do
+    let(:event) { create(:event, :signed_replay) }
+
+    # The site's visitor_id cookie is SameSite=Lax and is never sent in a cross-site
+    # frame, so the embed needs its own. Partitioned because that is the only third-party
+    # cookie form Chrome still honours.
+    it "sets a partitioned embed cookie scoped to the embed path" do
+      get embed_path(event.slug)
+
+      cookie = response.headers["Set-Cookie"].to_s
+      expect(cookie).to include("embed_visitor_id")
+      expect(cookie).to match(/path=\/embed/i)
+      expect(cookie).to match(/samesite=none/i)
+      expect(cookie).to match(/partitioned/i)
+    end
+
+    it "reuses the session for a returning viewer instead of minting a new one" do
+      get embed_path(event.slug)
+      visitor = cookies[:embed_visitor_id]
+      expect(visitor).to be_present
+
+      expect { 3.times { get embed_path(event.slug) } }.not_to change(Session, :count)
+    end
+
+    # embed.js is fetched on every partner page view, whether or not anyone watches. A
+    # session per fetch would badly inflate the sessions table and every unique built on
+    # it.
+    it "creates no session for embed.js" do
+      expect { get embed_script_path }.not_to change(Session, :count)
+    end
+
+    it "creates no session for an unknown slug" do
+      expect { get embed_path("no-such-event") }.not_to change(Session, :count)
+    end
+
+    it "creates no session for a hidden event" do
+      hidden = create(:event, :signed_replay, :hidden)
+      expect { get embed_path(hidden.slug) }.not_to change(Session, :count)
+    end
+
+    it "creates a session for a real view" do
+      expect { get embed_path(event.slug) }.to change(Session, :count).by(1)
+    end
+
+    # The poller posts this straight back as session_id, and EventVisit belongs_to
+    # :session — handing it the cookie UUID instead would fail the association and
+    # silently drop every embed visit.
+    it "hands the poller a real session id, not the cookie value" do
+      get embed_path(event.slug)
+
+      session_id = Session.last.id
+      expect(response.body).to include(%(sessionId: "#{session_id}"))
+      expect(response.body).not_to include(cookies[:embed_visitor_id].to_s)
+    end
+  end
+
   describe "GET /embed.js" do
     it "serves the wrapper as javascript" do
       get embed_script_path
@@ -237,6 +307,13 @@ RSpec.describe "Embeds", type: :request do
     it "sets a short public cache so a fix propagates same-day" do
       get embed_script_path
       expect(response.headers["Cache-Control"]).to include("max-age=300")
+    end
+
+    # Framing the host that served the script keeps the wrapper self-consistent and
+    # lets it be exercised against staging rather than only production.
+    it "derives the iframe origin from its own script src" do
+      get embed_script_path
+      expect(response.body).to include("new URL(script.src")
     end
 
     it "sets the iframe allow attribute, without which fullscreen and PiP die silently" do

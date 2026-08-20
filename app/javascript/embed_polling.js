@@ -8,7 +8,7 @@
 // viewer gets pulled off a player they should not be seeing. On reload the route can
 // return a denial state and sign nothing.
 export function initializeEmbedPolling({
-  eventSlug, eventStatus, forceReloadVersion, visitorId, source, enabled, initialTtl
+  eventSlug, eventStatus, forceReloadVersion, sessionId, source, enabled, initialTtl
 }) {
   const startedAt = new Date().toISOString();
   const pageLoadedAt = Date.now();
@@ -24,7 +24,7 @@ export function initializeEmbedPolling({
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({
-        session_id: visitorId,
+        session_id: sessionId,
         event_status: eventStatus,
         started_at: startedAt,
         source: source,

@@ -18,6 +18,13 @@ class EmbedsController < ApplicationController
 
   layout "embed"
 
+  # Session identity is established lazily, only once we know we are serving a real
+  # event to a real viewer. Left as a blanket before_action it would mint a Session row
+  # for every embed.js fetch — which happens on every partner page view, video or not —
+  # and for every bogus slug, badly inflating the sessions table and the uniques built
+  # on it.
+  skip_before_action :set_current_session
+
   before_action :allow_framing
   after_action :log_embed_request, only: :show
 
@@ -44,7 +51,8 @@ class EmbedsController < ApplicationController
     return render_missing unless @event.visible?
 
     @source = embed_source
-    @visitor_id = embed_visitor_id
+    set_current_session
+    @session_id = Current.session&.id
     @stream_type = @event.live? ? "live" : "on-demand"
     @poll_ttl = poll_ttl
     @tokens, @playback_id = signed_playback
@@ -56,6 +64,7 @@ class EmbedsController < ApplicationController
     event, = find_event_by_slug(params[:slug])
     return head :not_found unless event && event.visible?
 
+    set_current_session
     track_visit(event)
 
     render json: {
@@ -87,7 +96,6 @@ class EmbedsController < ApplicationController
 
   def render_missing
     @source = embed_source
-    @visitor_id = embed_visitor_id
     render :missing, status: :not_found
   end
 
@@ -190,7 +198,11 @@ class EmbedsController < ApplicationController
   # loads and repeat visits, but never stitches them across two properties or with
   # dacsports.net. Those are separate visitors by browser design. Count uniques per
   # property; do not sum them into a total.
-  def embed_visitor_id
+  #
+  # Overrides SessionManagement's source of visitor identity for this route only. The
+  # site cookie is SameSite=Lax and is simply not sent here, so leaving it in place
+  # minted a brand new Session on every single frame load.
+  def get_or_create_visitor_id
     existing = cookies[:embed_visitor_id].presence
     return existing if existing
 

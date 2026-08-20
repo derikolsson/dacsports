@@ -12,7 +12,7 @@
 (function () {
   "use strict";
 
-  var ORIGIN = "https://dacsports.net";
+  var FALLBACK_ORIGIN = "https://dacsports.net";
 
   // document.currentScript is correct during synchronous execution; the querySelector
   // fallback covers deferred/async loading where currentScript is null.
@@ -24,6 +24,16 @@
     })();
 
   if (!script) return;
+
+  // Frame the same host that served this script. Keeps the wrapper self-consistent
+  // (it cannot point somewhere it was not served from), and lets it be exercised
+  // against staging or a local server rather than only production.
+  var origin = FALLBACK_ORIGIN;
+  try {
+    if (script.src) origin = new URL(script.src, window.location.href).origin;
+  } catch (e) {
+    // Keep the fallback.
+  }
 
   var slug = script.getAttribute("data-stream");
   if (!slug) return;
@@ -43,7 +53,7 @@
     // is the authoritative record anyway; these params are only enrichment.
   }
 
-  var src = ORIGIN + "/embed/" + encodeURIComponent(slug);
+  var src = origin + "/embed/" + encodeURIComponent(slug);
   if (params.length) src += "?" + params.join("&");
 
   // A cross-origin iframe cannot size itself, so it needs an aspect-ratio wrapper or it
