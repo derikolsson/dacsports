@@ -51,7 +51,7 @@ Rails.application.routes.draw do
       end
     end
 
-    resources :uploads, only: [:index] do
+    resources :uploads, only: [ :index ] do
       collection do
         post :create_upload_url
       end

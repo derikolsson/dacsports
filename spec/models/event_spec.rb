@@ -33,14 +33,41 @@ RSpec.describe Event, type: :model do
       end
     end
 
+    # A live event needs *a* video source, not specifically an embed code. Any of the
+    # embed code, the public playback ID, or the signed playback ID satisfies it, so the
+    # error lands on :base rather than on one attribute.
     context 'when status is live' do
-      subject { build(:event, :live) }
-      it { should validate_presence_of(:live_embed_code) }
+      it 'is invalid with no live video source' do
+        event = build(:event, :live, live_embed_code: nil, mux_live_playback_id: nil,
+                                     mux_live_signed_playback_id: nil)
+
+        expect(event).not_to be_valid
+        expect(event.errors[:base]).to include(/Live video source required/)
+      end
+
+      it 'accepts a signed playback ID as the source' do
+        expect(build(:event, :signed_live)).to be_valid
+      end
+
+      it 'accepts a public playback ID as the source' do
+        event = build(:event, :live, live_embed_code: nil, mux_live_playback_id: "PUBLICID")
+        expect(event).to be_valid
+      end
     end
 
     context 'when status is replay_available' do
-      subject { build(:event, :replay_available) }
-      it { should validate_presence_of(:replay_embed_code) }
+      it 'is invalid with no replay video source' do
+        event = build(:event, :replay_available, replay_embed_code: nil,
+                                                 mux_replay_playback_id: nil,
+                                                 mux_replay_signed_playback_id: nil)
+
+        expect(event).not_to be_valid
+        expect(event.errors[:base]).to include(/Replay video source required/)
+      end
+
+      it 'accepts a signed playback ID as the source' do
+        expect(build(:event, :signed_replay)).to be_valid
+      end
     end
   end
 

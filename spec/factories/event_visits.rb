@@ -13,5 +13,10 @@ FactoryBot.define do
     trait :vod do
       event_status { "vod" }
     end
+
+    trait :embedded do
+      source { "embed:https://northside.org" }
+      referrer_origin { "https://northside.org" }
+    end
   end
 end

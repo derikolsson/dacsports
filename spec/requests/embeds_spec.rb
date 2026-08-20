@@ -1,0 +1,251 @@
+require 'rails_helper'
+
+RSpec.describe "Embeds", type: :request do
+  before { stub_mux_signing_credentials }
+
+  describe "GET /embed/:slug" do
+    context "in a playable state" do
+      let(:event) { create(:event, :signed_replay) }
+
+      it "renders a player with all three signed tokens" do
+        get embed_path(event.slug)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("<mux-player")
+        expect(response.body).to include("playback-token=")
+        expect(response.body).to include("thumbnail-token=")
+        expect(response.body).to include("storyboard-token=")
+      end
+
+      it "marks on-demand content with the right stream type" do
+        get embed_path(event.slug)
+        expect(response.body).to include('stream-type="on-demand"')
+      end
+
+      it "hides casting, which would silently fail under the embed restriction" do
+        get embed_path(event.slug)
+        expect(response.body).to include("--cast-button: none")
+        expect(response.body).to include("--airplay-button: none")
+      end
+    end
+
+    context "when live" do
+      let(:event) { create(:event, :signed_live) }
+
+      it "marks the stream as live" do
+        get embed_path(event.slug)
+        expect(response.body).to include('stream-type="live"')
+      end
+
+      # Mux only generates storyboards for on-demand assets.
+      it "omits the storyboard token" do
+        get embed_path(event.slug)
+
+        expect(response.body).to include("playback-token=")
+        expect(response.body).not_to include("storyboard-token=")
+      end
+    end
+
+    # The reload is an enforcement mechanism: it is how a viewer gets pulled off a
+    # player they should not be seeing. If a reload re-signed, it would just hand the
+    # viewer a fresh token, so these states must issue nothing.
+    context "in a non-playable state" do
+      %i[upcoming ended replay_pending technical_difficulties].each do |state|
+        it "issues no token and renders no player when #{state}" do
+          event = create(:event, state)
+
+          get embed_path(event.slug)
+
+          expect(response).to have_http_status(:ok)
+          expect(response.body).not_to include("playback-token=")
+          expect(response.body).not_to include("<mux-player")
+          expect(response.body).to include("embed-slate")
+        end
+      end
+    end
+
+    it "issues no token when the event has no signed playback id" do
+      event = create(:event, :replay_available)
+
+      get embed_path(event.slug)
+
+      expect(response.body).not_to include("playback-token=")
+    end
+
+    describe "framing headers" do
+      let(:event) { create(:event, :signed_replay) }
+
+      # SAMEORIGIN is a Rails default and is live in production; it would block every
+      # partner page.
+      it "does not send X-Frame-Options" do
+        get embed_path(event.slug)
+        expect(response.headers["X-Frame-Options"]).to be_nil
+      end
+
+      it "ships closed with frame-ancestors 'none'" do
+        get embed_path(event.slug)
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'none'")
+      end
+
+      # The wrong direction here silently opens the route to anyone, so an outage must
+      # deny rather than guess.
+      it "fails closed when Redis is unreachable" do
+        allow(Dacsports.redis).to receive(:get).and_raise(Redis::CannotConnectError)
+
+        get embed_path(event.slug)
+
+        expect(response).to have_http_status(:ok)
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'none'")
+      end
+
+      it "uses the configured partner list when one is set" do
+        Dacsports.redis.set("embed_frame_ancestors", "https://northside.org")
+        get embed_path(event.slug)
+
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors https://northside.org")
+      ensure
+        Dacsports.redis.del("embed_frame_ancestors")
+      end
+    end
+
+    describe "visibility" do
+      # Preview is an internal affordance and must not be reachable from a partner page.
+      it "does not honour ?preview=true on a hidden event" do
+        event = create(:event, :signed_replay, :hidden)
+
+        get embed_path(event.slug), params: { preview: "true" }
+
+        expect(response).to have_http_status(:not_found)
+        expect(response.body).not_to include("playback-token=")
+      end
+
+      it "404s a hidden event" do
+        event = create(:event, :signed_replay, :hidden)
+
+        get embed_path(event.slug)
+
+        expect(response).to have_http_status(:not_found)
+      end
+
+      it "404s an unknown slug" do
+        get embed_path("no-such-event")
+        expect(response).to have_http_status(:not_found)
+      end
+    end
+
+    # These predate generating the player from Mux IDs. Rendering them would bypass
+    # signing entirely and inject html_safe admin markup into a frame we vouch for.
+    it "never renders the legacy embed code fields" do
+      event = create(:event, :replay_available,
+                     replay_embed_code: "<iframe src='https://elsewhere.example.com/x'></iframe>")
+
+      get embed_path(event.slug)
+
+      expect(response.body).not_to include("elsewhere.example.com")
+    end
+
+    it "redirects a retired slug to the current one" do
+      event = create(:event, :signed_replay, slug: "old-slug")
+      event.update!(slug: "new-slug")
+
+      get embed_path("old-slug")
+
+      expect(response).to have_http_status(:moved_permanently)
+      expect(response).to redirect_to(embed_path("new-slug"))
+    end
+
+    it "does not reflect attacker-controlled parent params into the page" do
+      event = create(:event, :signed_replay)
+
+      get embed_path(event.slug), params: {
+        src: "https://evil.example.com/<script>alert(1)</script>",
+        title: "<script>alert(2)</script>"
+      }
+
+      expect(response.body).not_to include("alert(1)")
+      expect(response.body).not_to include("alert(2)")
+      expect(response.body).not_to include("evil.example.com")
+    end
+  end
+
+  describe "POST /embed/:slug/status" do
+    let(:event) { create(:event, :signed_replay) }
+    let(:session) { create(:session) }
+
+    it "returns the current state for the poller" do
+      post embed_status_path(event.slug), params: { session_id: session.id }, as: :json
+
+      expect(response).to have_http_status(:ok)
+      body = response.parsed_body
+      expect(body["status"]).to eq("replay_available")
+      expect(body["force_reload_version"]).to eq(event.force_reload_count)
+      expect(body["ttl"]).to be_present
+    end
+
+    it "404s a hidden event so the poller reloads into the denial state" do
+      hidden = create(:event, :signed_replay, :hidden)
+
+      post embed_status_path(hidden.slug), params: { session_id: session.id }, as: :json
+
+      expect(response).to have_http_status(:not_found)
+    end
+
+    it "records the visit against the referring property" do
+      expect(EventVisitJob).to receive(:perform_async).with(
+        session.id, event.id, "vod", anything, anything,
+        "embed:https://northside.org", "https://northside.org"
+      )
+
+      post embed_status_path(event.slug),
+           params: { session_id: session.id, enabled: "true" },
+           headers: { "Referer" => "https://northside.org/athletics/live" },
+           as: :json
+    end
+
+    # Source comes from the request's own Referer, never from the body, so a hostile
+    # parent cannot attribute its traffic to another property.
+    it "ignores a source supplied in the request body" do
+      expect(EventVisitJob).to receive(:perform_async).with(
+        session.id, event.id, "vod", anything, anything,
+        "embed:https://northside.org", "https://northside.org"
+      )
+
+      post embed_status_path(event.slug),
+           params: { session_id: session.id, enabled: "true", source: "embed:https://someone-else.org" },
+           headers: { "Referer" => "https://northside.org/athletics/live" },
+           as: :json
+    end
+
+    it "does not record a visit without a session id" do
+      expect(EventVisitJob).not_to receive(:perform_async)
+
+      post embed_status_path(event.slug), params: { enabled: "true" }, as: :json
+    end
+  end
+
+  describe "GET /embed.js" do
+    it "serves the wrapper as javascript" do
+      get embed_script_path
+
+      expect(response).to have_http_status(:ok)
+      expect(response.media_type).to eq("application/javascript")
+      expect(response.body).to include("data-stream")
+    end
+
+    # The whole reason the wrapper was chosen over a raw iframe is that a fix can
+    # propagate same-day. A long cache would defeat that.
+    it "sets a short public cache so a fix propagates same-day" do
+      get embed_script_path
+      expect(response.headers["Cache-Control"]).to include("max-age=300")
+    end
+
+    it "sets the iframe allow attribute, without which fullscreen and PiP die silently" do
+      get embed_script_path
+
+      expect(response.body).to include("autoplay")
+      expect(response.body).to include("fullscreen")
+      expect(response.body).to include("picture-in-picture")
+      expect(response.body).to include("remote-playback")
+    end
+  end
+end

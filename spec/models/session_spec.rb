@@ -10,14 +10,20 @@ RSpec.describe Session, type: :model do
   end
 
   describe '#active?' do
-    it 'returns true when last_seen_at is within 3 minutes' do
+    # A session rolls over after 10 minutes of inactivity. Note this is a different
+    # window from the 3-minute "currently watching" figure on the internal dashboard.
+    it 'returns true when last_seen_at is within the window' do
       session = build(:session, last_seen_at: 2.minutes.ago)
       expect(session.active?).to be true
     end
 
-    it 'returns false when last_seen_at is older than 3 minutes' do
-      session = build(:session, last_seen_at: 5.minutes.ago)
+    it 'returns false when last_seen_at is older than the window' do
+      session = build(:session, last_seen_at: 11.minutes.ago)
       expect(session.active?).to be false
+    end
+
+    it 'is falsy when last_seen_at is missing' do
+      expect(build(:session, last_seen_at: nil).active?).to be_falsey
     end
   end
 

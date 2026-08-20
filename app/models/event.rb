@@ -149,17 +149,19 @@ class Event < ApplicationRecord
 
   def bump_force_reload_count
     if title_changed? || live_embed_code_changed? || replay_embed_code_changed? ||
-       mux_live_playback_id_changed? || mux_replay_playback_id_changed? || status_changed?
+       mux_live_playback_id_changed? || mux_replay_playback_id_changed? ||
+       mux_live_signed_playback_id_changed? || mux_replay_signed_playback_id_changed? ||
+       status_changed?
       self.force_reload_count += 1
     end
   end
 
   def has_live_video_source?
-    live_embed_code.present? || mux_live_playback_id.present?
+    live_embed_code.present? || mux_live_playback_id.present? || mux_live_signed_playback_id.present?
   end
 
   def has_replay_video_source?
-    replay_embed_code.present? || mux_replay_playback_id.present?
+    replay_embed_code.present? || mux_replay_playback_id.present? || mux_replay_signed_playback_id.present?
   end
 
   def live_video_source_present

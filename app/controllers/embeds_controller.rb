@@ -46,6 +46,7 @@ class EmbedsController < ApplicationController
     @source = embed_source
     @visitor_id = embed_visitor_id
     @stream_type = @event.live? ? "live" : "on-demand"
+    @poll_ttl = poll_ttl
     @tokens, @playback_id = signed_playback
 
     render :show
@@ -60,7 +61,7 @@ class EmbedsController < ApplicationController
     render json: {
       status: event.status,
       force_reload_version: event.force_reload_count,
-      ttl: Dacsports.redis.get("event_status_ttl").to_i
+      ttl: poll_ttl
     }
   end
 
@@ -119,8 +120,23 @@ class EmbedsController < ApplicationController
   end
 
   def frame_ancestors
-    configured = Dacsports.redis.get("embed_frame_ancestors").presence
+    configured = redis_get("embed_frame_ancestors").presence
+    # Fails CLOSED. If Redis is unreachable we deny framing rather than guess at a
+    # partner list — the wrong direction here silently opens the route to anyone.
     configured || "'none'"
+  end
+
+  def poll_ttl
+    redis_get("event_status_ttl").to_i.clamp(5_000, 300_000)
+  end
+
+  # This route is loaded inside seven third-party pages. A Redis blip should degrade it,
+  # not 500 it.
+  def redis_get(key)
+    Dacsports.redis.get(key)
+  rescue Redis::BaseError, Errno::ECONNREFUSED => e
+    Rails.logger.warn("[embed] redis unavailable for #{key}: #{e.message}")
+    nil
   end
 
   def track_visit(event)

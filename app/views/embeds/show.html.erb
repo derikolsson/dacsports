@@ -24,6 +24,6 @@
     visitorId: <%= @visitor_id.to_json.html_safe %>,
     source: <%= @source.to_json.html_safe %>,
     enabled: <%= @tokens.present? %>,
-    initialTtl: <%= Dacsports.redis.get('event_status_ttl').to_i %>
+    initialTtl: <%= @poll_ttl %>
   });
 </script>
