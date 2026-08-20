@@ -192,6 +192,8 @@
     if (cover.parentNode) cover.parentNode.removeChild(cover);
   }
 
+  var LOADING_TEXT = "Loading\u2026";
+
   var MESSAGES = {
     unauthorized: "This page is not authorized to display this content.",
     not_found: "This broadcast isn't available.",
@@ -199,6 +201,9 @@
     // Saying "not authorized" here would send someone after the wrong problem.
     unavailable: "This content couldn't be loaded."
   };
+
+  // How long to wait for an answer before giving up and saying something neutral.
+  var CHECK_TIMEOUT_MS = 4000;
 
   function showUnavailable() {
     if (settled) return;
@@ -208,8 +213,22 @@
     if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
 
     // All we observed is that the frame never reported in, which is equally true of a
-    // block, a network failure and an ad blocker. Ask before naming a cause.
-    setStatus(MESSAGES.unavailable);
+    // block, a network failure and an ad blocker. Stay on "Loading" while we ask —
+    // showing the neutral message first and correcting it a moment later reads as the
+    // card changing its mind.
+    setStatus(LOADING_TEXT);
+
+    var decided = false;
+    function decide(text) {
+      if (decided) return;
+      decided = true;
+      clearTimeout(checkTimer);
+      setStatus(text);
+    }
+
+    var checkTimer = setTimeout(function () {
+      decide(MESSAGES.unavailable);
+    }, CHECK_TIMEOUT_MS);
 
     try {
       fetch(origin + "/embed/" + encodeURIComponent(slug) + "/check", {
@@ -221,18 +240,21 @@
           return response.ok ? response.json() : null;
         })
         .then(function (data) {
-          if (data && MESSAGES[data.reason]) setStatus(MESSAGES[data.reason]);
+          decide((data && MESSAGES[data.reason]) || MESSAGES.unavailable);
         })
         .catch(function () {
-          // Cannot reach us at all, so "couldn't be loaded" is already the right answer.
+          // Cannot reach us at all, so the neutral message is already the right answer.
+          decide(MESSAGES.unavailable);
         });
-    } catch (e) {}
+    } catch (e) {
+      decide(MESSAGES.unavailable);
+    }
   }
 
   function startTimer() {
     if (timer || settled) return;
     loadingTimer = setTimeout(function () {
-      if (!settled) setStatus("Loading\u2026");
+      if (!settled) setStatus(LOADING_TEXT);
     }, LOADING_DELAY_MS);
     timer = setTimeout(showUnavailable, READY_TIMEOUT_MS);
   }

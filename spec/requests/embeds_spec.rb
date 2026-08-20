@@ -485,13 +485,22 @@ RSpec.describe "Embeds", type: :request do
     end
 
     # Naming a cause we have not established would send a partner after the wrong
-    # problem, so the neutral message is the default and the specific ones are earned.
-    it "defaults to a neutral failure message and asks before naming a cause" do
+    # problem, so specific messages are earned by asking rather than assumed.
+    it "asks what happened before naming a cause" do
       get embed_script_path
 
-      expect(response.body).to include("This content couldn't be loaded.")
       expect(response.body).to include("/check")
-      expect(response.body).to include("MESSAGES.unavailable")
+      expect(response.body).to include("This content couldn't be loaded.")
+      expect(response.body).to include("This page is not authorized to display this content.")
+    end
+
+    # Showing the neutral message and correcting it a moment later reads as the card
+    # changing its mind, so it stays on "Loading" until there is an answer.
+    it "waits on the loading message rather than showing a guess it may retract" do
+      get embed_script_path
+
+      expect(response.body).to include("setStatus(LOADING_TEXT)")
+      expect(response.body).to include("CHECK_TIMEOUT_MS")
     end
 
     # Shown immediately it would flash up and tear down on every successful load, since
