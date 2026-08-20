@@ -37,5 +37,15 @@
   </head>
   <body>
     <div class="embed-stage"><%= yield %></div>
+    <script>
+      // Tell the wrapper we rendered. Sent from the layout so every response reports in,
+      // including the holding slates — otherwise the wrapper's cover would sit on top of
+      // a page that is perfectly fine and hide what it says.
+      try {
+        if (window.parent !== window) {
+          window.parent.postMessage({ source: "dac-sports-network", type: "ready" }, "*");
+        }
+      } catch (e) {}
+    </script>
   </body>
 </html>

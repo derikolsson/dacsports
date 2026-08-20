@@ -30,6 +30,7 @@ Rails.application.routes.draw do
   get "embed.js", to: "embeds#script", as: :embed_script
   get "embed/:slug", to: "embeds#show", as: :embed
   post "embed/:slug/status", to: "embeds#status", as: :embed_status
+  get "embed/:slug/check", to: "embeds#check", as: :embed_check
 
   # Internal admin routes
   namespace :internal do

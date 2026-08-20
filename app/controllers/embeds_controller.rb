@@ -78,6 +78,33 @@ class EmbedsController < ApplicationController
     }
   end
 
+  # Why an embed did not render.
+  #
+  # The wrapper can only observe that the frame never reported in, which is equally true
+  # of a blocked page, a network failure, an ad blocker, or our own outage. Telling a
+  # partner "not authorized" on that evidence alone would send them after the wrong
+  # problem, so it asks here before saying anything.
+  #
+  # Deliberately CORS-open: it returns no data a viewer of the partner's page could not
+  # already infer, and it is useless without an origin we are willing to answer for.
+  def check
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    expires_now
+
+    event, = find_event_by_slug(params[:slug])
+
+    reason =
+      if event.nil? || !event.visible?
+        "not_found"
+      elsif !origin_permitted?
+        "unauthorized"
+      else
+        "ok"
+      end
+
+    render json: { reason: reason }
+  end
+
   # Served through the controller rather than as a static or Propshaft asset so it can
   # have both a stable URL districts paste once and a short TTL. public/ inherits a
   # one-year cache-control, and Propshaft fingerprints the filename.
@@ -183,6 +210,37 @@ class EmbedsController < ApplicationController
   rescue Redis::BaseError, Errno::ECONNREFUSED => e
     Rails.logger.warn("[embed] redis unavailable for #{key}: #{e.message}")
     nil
+  end
+
+  # Mirrors what frame-ancestors would allow, so the answer matches what the browser
+  # actually did rather than a second opinion that could drift from it.
+  def origin_permitted?
+    allowed = frame_ancestors
+    return false if allowed == "'none'"
+
+    requester = referrer_origin
+    return allowed.include?(EmbedFrameAncestors::SELF) if requester.blank?
+
+    allowed.split(/\s+/).any? { |entry| origin_matches?(entry, requester) }
+  end
+
+  def origin_matches?(entry, requester)
+    return requester == request.base_url if entry == EmbedFrameAncestors::SELF
+
+    return true if entry.casecmp?(requester)
+
+    # A wildcard covers exactly one label: *.example.org matches a.example.org but not
+    # a.b.example.org. Same rule the browser applies.
+    scheme, host = entry.split("://", 2)
+    return false unless host&.start_with?("*.")
+
+    suffix = host.delete_prefix("*")
+    requester.downcase.start_with?("#{scheme.downcase}://") &&
+      requester.downcase.delete_prefix("#{scheme.downcase}://").then do |rest|
+        rest.end_with?(suffix.downcase) &&
+          rest.delete_suffix(suffix.downcase).present? &&
+          !rest.delete_suffix(suffix.downcase).include?(".")
+      end
   end
 
   def track_visit(event)

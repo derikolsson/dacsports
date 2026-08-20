@@ -136,6 +136,7 @@
   // ever see ours, and it doubles as a loading state on a slow connection.
   var cover = document.createElement("div");
   cover.setAttribute("role", "note");
+  cover.setAttribute("aria-live", "polite");
   cover.style.cssText =
     "position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;" +
     "align-items:center;justify-content:center;gap:.5rem;padding:1.5rem;text-align:center;" +
@@ -148,6 +149,18 @@
     "font-size:1.05rem;letter-spacing:.1em;color:#f5f5f5;font-weight:700;";
   cover.appendChild(brand);
 
+  // One line under the brand, used first for "Loading" and then, if it comes to it, for
+  // the refusal. Reusing the element means the card gains a line rather than swapping
+  // one block for another.
+  var status = document.createElement("p");
+  status.style.cssText =
+    "margin:0;font-size:.85rem;font-weight:400;color:#a1a1aa;max-width:34rem;line-height:1.45;";
+
+  function setStatus(text) {
+    status.textContent = text;
+    if (!status.parentNode) cover.appendChild(status);
+  }
+
   wrapper.appendChild(iframe);
   wrapper.appendChild(cover);
 
@@ -155,8 +168,13 @@
   // often because this page is not on the approved list, but equally a network failure
   // or a bad slug.
   var READY_TIMEOUT_MS = 6000;
+  // Held back deliberately. The frame reports in well inside this on a normal
+  // connection, so showing "Loading" immediately would flash it up and tear it down
+  // again on every successful load — worse than a card that simply sits still.
+  var LOADING_DELAY_MS = 600;
   var settled = false;
   var timer = null;
+  var loadingTimer = null;
 
   function onMessage(event) {
     if (event.origin !== origin) return;
@@ -169,25 +187,53 @@
     if (settled) return;
     settled = true;
     clearTimeout(timer);
+    clearTimeout(loadingTimer);
     window.removeEventListener("message", onMessage);
     if (cover.parentNode) cover.parentNode.removeChild(cover);
   }
 
+  var MESSAGES = {
+    unauthorized: "This page is not authorized to display this content.",
+    not_found: "This broadcast isn't available.",
+    // The frame failed for some other reason — our outage, the network, an extension.
+    // Saying "not authorized" here would send someone after the wrong problem.
+    unavailable: "This content couldn't be loaded."
+  };
+
   function showUnavailable() {
     if (settled) return;
     settled = true;
+    clearTimeout(loadingTimer);
     window.removeEventListener("message", onMessage);
     if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
 
-    var heading = document.createElement("p");
-    heading.textContent = "This page is not authorized to display this content.";
-    heading.style.cssText =
-      "margin:0;font-size:.85rem;font-weight:400;color:#a1a1aa;max-width:34rem;line-height:1.45;";
-    cover.appendChild(heading);
+    // All we observed is that the frame never reported in, which is equally true of a
+    // block, a network failure and an ad blocker. Ask before naming a cause.
+    setStatus(MESSAGES.unavailable);
+
+    try {
+      fetch(origin + "/embed/" + encodeURIComponent(slug) + "/check", {
+        mode: "cors",
+        credentials: "omit",
+        cache: "no-store"
+      })
+        .then(function (response) {
+          return response.ok ? response.json() : null;
+        })
+        .then(function (data) {
+          if (data && MESSAGES[data.reason]) setStatus(MESSAGES[data.reason]);
+        })
+        .catch(function () {
+          // Cannot reach us at all, so "couldn't be loaded" is already the right answer.
+        });
+    } catch (e) {}
   }
 
   function startTimer() {
     if (timer || settled) return;
+    loadingTimer = setTimeout(function () {
+      if (!settled) setStatus("Loading\u2026");
+    }, LOADING_DELAY_MS);
     timer = setTimeout(showUnavailable, READY_TIMEOUT_MS);
   }
 

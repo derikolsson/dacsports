@@ -44,6 +44,16 @@ RSpec.describe "Embeds", type: :request do
         expect(response.body).to include("postMessage")
       end
 
+      # Sent from the layout, so a holding slate reports in too — otherwise the wrapper's
+      # cover would sit on top of a perfectly healthy page and hide what it says.
+      it "reports in from the holding slates as well" do
+        pending_event = create(:event, :replay_pending)
+
+        get embed_path(pending_event.slug)
+
+        expect(response.body).to include("postMessage")
+      end
+
       it "hides casting, which would silently fail under the embed restriction" do
         get embed_path(event.slug)
         expect(response.body).to include("--cast-button: none")
@@ -370,6 +380,60 @@ RSpec.describe "Embeds", type: :request do
     end
   end
 
+  # The wrapper can only observe that the frame never reported in, which is equally true
+  # of a block, a network failure, an ad blocker and our own outage. It asks here rather
+  # than asserting a cause it has not established.
+  describe "GET /embed/:slug/check" do
+    let(:event) { create(:event, :signed_replay) }
+
+    after { Dacsports.redis.del(EmbedFrameAncestors::REDIS_KEY) }
+
+    it "reports an unapproved origin as unauthorized" do
+      get embed_check_path(event.slug), headers: { "Origin" => "https://stranger.example.edu" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["reason"]).to eq("unauthorized")
+    end
+
+    it "reports an approved origin as ok" do
+      EmbedFrameAncestors.new(raw: "https://athletics.example.edu").save
+
+      get embed_check_path(event.slug), headers: { "Origin" => "https://athletics.example.edu" }
+
+      expect(response.parsed_body["reason"]).to eq("ok")
+    end
+
+    it "honours a wildcard for one label only, as the browser does" do
+      EmbedFrameAncestors.new(raw: "https://*.example.edu").save
+
+      get embed_check_path(event.slug), headers: { "Origin" => "https://a.example.edu" }
+      expect(response.parsed_body["reason"]).to eq("ok")
+
+      get embed_check_path(event.slug), headers: { "Origin" => "https://a.b.example.edu" }
+      expect(response.parsed_body["reason"]).to eq("unauthorized")
+    end
+
+    it "distinguishes an unknown slug from an unapproved page" do
+      get embed_check_path("no-such-event"), headers: { "Origin" => "https://stranger.example.edu" }
+      expect(response.parsed_body["reason"]).to eq("not_found")
+    end
+
+    it "does not leak a hidden event as though it existed" do
+      hidden = create(:event, :signed_replay, :hidden)
+
+      get embed_check_path(hidden.slug), headers: { "Origin" => "https://stranger.example.edu" }
+
+      expect(response.parsed_body["reason"]).to eq("not_found")
+    end
+
+    # Called cross-origin from the partner's page, so it needs CORS. It returns nothing
+    # a viewer of that page could not already infer.
+    it "is readable cross-origin" do
+      get embed_check_path(event.slug), headers: { "Origin" => "https://athletics.example.edu" }
+      expect(response.headers["Access-Control-Allow-Origin"]).to eq("*")
+    end
+  end
+
   describe "GET /embed.js" do
     it "serves the wrapper as javascript" do
       get embed_script_path
@@ -418,6 +482,25 @@ RSpec.describe "Embeds", type: :request do
     it "waits until the embed is on screen before deciding it failed" do
       get embed_script_path
       expect(response.body).to include("IntersectionObserver")
+    end
+
+    # Naming a cause we have not established would send a partner after the wrong
+    # problem, so the neutral message is the default and the specific ones are earned.
+    it "defaults to a neutral failure message and asks before naming a cause" do
+      get embed_script_path
+
+      expect(response.body).to include("This content couldn't be loaded.")
+      expect(response.body).to include("/check")
+      expect(response.body).to include("MESSAGES.unavailable")
+    end
+
+    # Shown immediately it would flash up and tear down on every successful load, since
+    # the frame normally reports in well inside the delay.
+    it "holds back the loading message rather than flashing it" do
+      get embed_script_path
+
+      expect(response.body).to include("LOADING_DELAY_MS")
+      expect(response.body).to match(/Loading/)
     end
 
     it "sets the iframe allow attribute, without which fullscreen and PiP die silently" do

@@ -14,17 +14,6 @@
   <%= render "slate", title: @event.title, message: embed_slate_message(@event) %>
 <% end %>
 
-<script>
-  // Tell the wrapper we actually rendered. If this never arrives — the page is blocked
-  // by frame-ancestors, the network failed, the slug 404s — the wrapper shows a message
-  // in the partner's page instead of leaving a silent black box.
-  try {
-    if (window.parent !== window) {
-      window.parent.postMessage({ source: "dac-sports-network", type: "ready" }, "*");
-    }
-  } catch (e) {}
-</script>
-
 <script type="module">
   import { initializeEmbedPolling } from '<%= asset_path("embed_polling.js") %>';
 
