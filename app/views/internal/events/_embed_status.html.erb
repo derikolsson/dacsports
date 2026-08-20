@@ -16,8 +16,15 @@
       <code class="mux-id" title="<%= signed %>"><%= truncate(signed, length: 12) %></code>
       <button type="button" class="btn btn-link btn-sm p-0 copy-btn" data-copy="<%= signed %>" title="Copy signed playback ID">copy id</button>
     </div>
-    <button type="button" class="btn btn-link btn-sm p-0 copy-btn"
-            data-copy='<script src="<%= embed_script_url(host: request.host_with_port, protocol: request.protocol) %>" data-stream="<%= event.slug %>"></script>'
-            title="Copy the snippet to hand to a partner">copy snippet</button>
+    <%# Built through tag helpers rather than a hand-written attribute: the comment
+        carries the event title, and a title like "Men's Soccer" would otherwise break
+        out of the attribute's quoting. %>
+    <%= tag.button "copy snippet",
+          type: "button",
+          class: "btn btn-link btn-sm p-0 copy-btn",
+          title: "Copy the snippet to hand to a partner",
+          data: {
+            copy: embed_snippet_for(event, embed_script_url(host: request.host_with_port, protocol: request.protocol))
+          } %>
   <% end %>
 </div>

@@ -42,6 +42,16 @@ class Event < ApplicationRecord
   scope :past, -> { where(status: [ "ended", "replay_pending", "replay_available" ]) }
   scope :by_date, -> { order(start_at: :desc) }
 
+  # Events that would actually render a player at /embed/:slug right now — the state has
+  # to be playable AND the matching signed playback ID has to exist. Anything else shows
+  # a slate and signs no token.
+  scope :embeddable, -> {
+    visible.where(
+      "(status = 'live' AND mux_live_signed_playback_id IS NOT NULL AND mux_live_signed_playback_id <> '') OR " \
+      "(status = 'replay_available' AND mux_replay_signed_playback_id IS NOT NULL AND mux_replay_signed_playback_id <> '')"
+    )
+  }
+
   # Helper method for date display
   def event_date
     start_at&.in_time_zone(time_zone)&.to_date
@@ -78,6 +88,12 @@ class Event < ApplicationRecord
     else
       nil
     end
+  end
+
+  # True when /embed/:slug will serve a signed player for this event.
+  def embeddable?
+    (live? && mux_live_signed_playback_id.present?) ||
+      (replay_available? && mux_replay_signed_playback_id.present?)
   end
 
   def can_go_live?

@@ -21,7 +21,7 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
     get internal_embed_settings_path, headers: auth_headers
 
     expect(response).to have_http_status(:ok)
-    expect(response.body).to include("Embedding is currently blocked everywhere")
+    expect(response.body).to include("No partner sites are approved yet")
   end
 
   it "saves partner sites and serves them on the embed route" do
@@ -31,12 +31,12 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
 
     expect(response).to redirect_to(internal_embed_settings_path)
     expect(EmbedFrameAncestors.header_value)
-      .to eq("https://athletics.northlake.example.edu https://*.northlake.example.edu")
+      .to eq("'self' https://athletics.northlake.example.edu https://*.northlake.example.edu")
 
     event = create(:event, :signed_replay)
     get embed_path(event.slug)
     expect(response.headers["Content-Security-Policy"])
-      .to eq("frame-ancestors https://athletics.northlake.example.edu https://*.northlake.example.edu")
+      .to eq("frame-ancestors 'self' https://athletics.northlake.example.edu https://*.northlake.example.edu")
   end
 
   it "refuses an entry that would inject extra CSP directives, leaving the list untouched" do
@@ -48,7 +48,7 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
 
     expect(response).to have_http_status(:unprocessable_content)
     expect(response.body).to include("is not a valid origin")
-    expect(EmbedFrameAncestors.header_value).to eq("https://good.example.org")
+    expect(EmbedFrameAncestors.header_value).to eq("'self' https://good.example.org")
   end
 
   it "returns to blocked when the list is emptied" do
@@ -58,6 +58,6 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
           params: { embed_frame_ancestors: { raw: "" } },
           headers: auth_headers
 
-    expect(EmbedFrameAncestors.header_value).to eq("'none'")
+    expect(EmbedFrameAncestors.header_value).to eq("'self'")
   end
 end

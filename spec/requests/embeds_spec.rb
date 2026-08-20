@@ -96,9 +96,9 @@ RSpec.describe "Embeds", type: :request do
         expect(response.headers["X-Frame-Options"]).to be_nil
       end
 
-      it "ships closed with frame-ancestors 'none'" do
+      it "ships closed: our own origin only, no partners" do
         get embed_path(event.slug)
-        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'none'")
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'self'")
       end
 
       # The wrong direction here silently opens the route to anyone, so an outage must
@@ -109,14 +109,14 @@ RSpec.describe "Embeds", type: :request do
         get embed_path(event.slug)
 
         expect(response).to have_http_status(:ok)
-        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'none'")
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'self'")
       end
 
       it "uses the configured partner list when one is set" do
         Dacsports.redis.set("embed_frame_ancestors", "https://northlake.example.edu")
         get embed_path(event.slug)
 
-        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors https://northlake.example.edu")
+        expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors 'self' https://northlake.example.edu")
       ensure
         Dacsports.redis.del("embed_frame_ancestors")
       end

@@ -42,11 +42,16 @@ class EmbedFrameAncestors
     nil
   end
 
-  # What the header actually gets. 'none' when nothing is configured, so the route stays
-  # closed until somebody deliberately opens it.
+  # What the header actually gets.
+  #
+  # 'self' is always included so our own internal preview page can frame the embed and
+  # confirm it works before anyone is told it does. It grants nothing meaningful — an
+  # attacker able to serve a page on dacsports.net has better options than framing us —
+  # and partners stay blocked until they are listed explicitly.
+  SELF = "'self'".freeze
+
   def self.header_value
-    stored = read_redis.presence
-    stored || "'none'"
+    [ SELF, read_redis.presence ].compact.join(" ")
   end
 
   def origins

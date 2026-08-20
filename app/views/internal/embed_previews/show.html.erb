@@ -1,0 +1,103 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">Embed Preview</h1>
+  <%= link_to "Embed settings", internal_embed_settings_path, class: "btn btn-outline-secondary btn-sm" %>
+</div>
+
+<% if @event.nil? %>
+  <div class="alert alert-warning">
+    <strong>No event is embeddable right now.</strong>
+    An event appears here once it is <em>live</em> or has a <em>published replay</em>
+    <strong>and</strong> carries the matching signed playback ID. Until both are true,
+    <code>/embed/&lt;slug&gt;</code> shows a holding slate and issues no token.
+  </div>
+<% else %>
+  <div class="row">
+    <div class="col-lg-8">
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <h2 class="h5 mb-1"><%= @event.title %></h2>
+              <div class="text-muted small">
+                <%= @event.sport %>
+                &middot; <%= @event.event_date&.strftime("%A, %B %-d, %Y") %>
+                &middot; <span class="badge bg-<%= @event.live? ? 'success' : 'primary' %>"><%= @event.status.titleize %></span>
+              </div>
+            </div>
+            <%= link_to "Open directly", embed_path(@event.slug), class: "btn btn-sm btn-outline-secondary", target: "_blank", rel: "noopener" %>
+          </div>
+
+          <%# Loaded through embed.js rather than a hand-written iframe, so this exercises
+              the real delivery path: the wrapper, its sizing, the allow attribute, and
+              the signed route behind it. %>
+          <div id="embed-preview-frame"></div>
+          <script src="<%= embed_script_url(host: request.host_with_port, protocol: request.protocol) %>"
+                  data-stream="<%= @event.slug %>"></script>
+
+          <p class="small text-muted mt-3 mb-0">
+            This is the wrapper partners paste, running against the live signed route.
+            If it plays here, the signing and playback restriction are working.
+          </p>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h6 text-uppercase text-muted mb-3">Snippet for this event</h2>
+          <pre class="bg-light p-3 rounded small mb-2"><code><%= embed_snippet_for(@event, embed_script_url(host: request.host_with_port, protocol: request.protocol)) %></code></pre>
+          <%= tag.button "Copy snippet",
+                type: "button",
+                class: "btn btn-sm btn-primary copy-btn",
+                data: { copy: embed_snippet_for(@event, embed_script_url(host: request.host_with_port, protocol: request.protocol)) } %>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h2 class="h6 text-uppercase text-muted mb-3">Why it might not play</h2>
+          <ul class="list-unstyled small mb-0">
+            <li class="mb-2">
+              <strong>Signed playback ID</strong><br>
+              <code class="text-break"><%= @event.live? ? @event.mux_live_signed_playback_id : @event.mux_replay_signed_playback_id %></code>
+            </li>
+            <li class="mb-2">
+              <strong>Frame-ancestors</strong><br>
+              <code class="text-break"><%= @frame_ancestors %></code><br>
+              <span class="text-muted">
+                <%= @partners.any? ? pluralize(@partners.size, "partner site") + " approved" : "No partner sites approved yet — this page still works, theirs will not." %>
+              </span>
+            </li>
+            <li>
+              <strong>Playback restriction</strong><br>
+              <span class="text-muted">
+                Mux only allows playback to start from our own domains. A partner page is
+                fine because the video plays inside our iframe, not theirs.
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <% if @recent.many? %>
+        <div class="card">
+          <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted mb-3">Other embeddable events</h2>
+            <ul class="list-unstyled small mb-0">
+              <% @recent.each do |other| %>
+                <li class="mb-1">
+                  <%= link_to internal_embed_preview_path(slug: other.slug),
+                        class: (other.id == @event.id ? "fw-bold text-decoration-none" : "text-decoration-none") do %>
+                    <%= other.title %>
+                    <span class="text-muted">&middot; <%= other.event_date&.strftime("%b %-d") %></span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

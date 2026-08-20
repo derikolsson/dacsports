@@ -54,13 +54,15 @@ RSpec.describe EmbedFrameAncestors do
   end
 
   describe '.header_value' do
-    it "is 'none' when nothing is configured" do
-      expect(described_class.header_value).to eq("'none'")
+    # 'self' is always present so the internal preview page can frame the embed; no
+    # partner can, until listed.
+    it "is our own origin only when no partner is configured" do
+      expect(described_class.header_value).to eq("'self'")
     end
 
     it 'lists the configured origins' do
       described_class.new(raw: "https://a.example.org\nhttps://b.example.org").save
-      expect(described_class.header_value).to eq("https://a.example.org https://b.example.org")
+      expect(described_class.header_value).to eq("'self' https://a.example.org https://b.example.org")
     end
   end
 
@@ -68,13 +70,13 @@ RSpec.describe EmbedFrameAncestors do
     it 'does not persist an invalid list' do
       described_class.new(raw: "https://good.example.org").save
       expect(described_class.new(raw: "https://evil.org; default-src *").save).to be false
-      expect(described_class.header_value).to eq("https://good.example.org")
+      expect(described_class.header_value).to eq("'self' https://good.example.org")
     end
 
-    it 'clears the key when emptied, returning to blocked' do
+    it 'clears the key when emptied, blocking every partner again' do
       described_class.new(raw: "https://a.example.org").save
       described_class.new(raw: "").save
-      expect(described_class.header_value).to eq("'none'")
+      expect(described_class.header_value).to eq("'self'")
     end
   end
 end

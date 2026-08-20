@@ -62,12 +62,25 @@ RSpec.describe "Internal::Events", type: :request do
     end
 
     it "offers the partner snippet for a provisioned event" do
-      event = create(:event, :signed_replay)
+      event = create(:event, :signed_replay, title: "Brookhaven vs Richland", sport: "Men's Soccer")
 
       get archive_internal_events_path, headers: auth_headers
 
-      expect(response.body).to include("embed.js")
-      expect(response.body).to include(%(data-stream="#{event.slug}"))
+      snippet = CGI.unescapeHTML(response.body)
+      expect(snippet).to include("embed.js")
+      expect(snippet).to include(%(data-stream="#{event.slug}"))
+    end
+
+    # These get copied several at a time into an email, where one bare script tag looks
+    # exactly like the next.
+    it "names the event in a comment above the snippet" do
+      create(:event, :signed_replay, title: "Brookhaven vs Richland", sport: "Men's Soccer",
+                                     start_at: 3.days.ago.change(hour: 19))
+
+      get archive_internal_events_path, headers: auth_headers
+
+      expect(CGI.unescapeHTML(response.body))
+        .to include("<!-- Men's Soccer: Brookhaven vs Richland — #{3.days.ago.strftime('%b %-d, %Y')} -->")
     end
   end
 end

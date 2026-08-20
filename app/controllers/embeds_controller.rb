@@ -162,11 +162,14 @@ class EmbedsController < ApplicationController
     response.headers["Content-Security-Policy"] = "frame-ancestors #{frame_ancestors}"
   end
 
+  # Fails CLOSED: if Redis is unreachable we fall back to our own origin only, rather
+  # than guessing at a partner list. The wrong direction here silently opens the route
+  # to anyone.
   def frame_ancestors
-    configured = redis_get("embed_frame_ancestors").presence
-    # Fails CLOSED. If Redis is unreachable we deny framing rather than guess at a
-    # partner list — the wrong direction here silently opens the route to anyone.
-    configured || "'none'"
+    EmbedFrameAncestors.header_value
+  rescue StandardError => e
+    Rails.logger.warn("[embed] frame-ancestors unavailable: #{e.message}")
+    EmbedFrameAncestors::SELF
   end
 
   def poll_ttl

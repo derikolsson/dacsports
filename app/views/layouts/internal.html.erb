@@ -28,6 +28,7 @@
           <li class="nav-item"><%= link_to "Teams", internal_teams_path, class: "nav-link #{'active' if controller_name == 'teams'}" %></li>
           <li class="nav-item"><%= link_to "Uploads", internal_uploads_path, class: "nav-link #{'active' if controller_name == 'uploads'}" %></li>
           <li class="nav-item"><%= link_to "Embeds", internal_embed_settings_path, class: "nav-link #{'active' if controller_name == 'embed_settings'}" %></li>
+          <li class="nav-item"><%= link_to "Embed Preview", internal_embed_preview_path, class: "nav-link #{'active' if controller_name == 'embed_previews'}" %></li>
           <li class="nav-item"><%= link_to "Sidekiq", '/internal/sidekiq', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
           <li class="nav-item"><%= link_to "Web Analytics", 'https://app.usefathom.com/share/bpvxynyg/dac+sports+network', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
           <li class="nav-item">

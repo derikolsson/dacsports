@@ -38,6 +38,7 @@ Rails.application.routes.draw do
 
     resources :reports, only: [ :index ]
     resource :embed_settings, only: [ :show, :update ]
+    resource :embed_preview, only: [ :show ]
     resources :teams
     resources :events do
       collection do

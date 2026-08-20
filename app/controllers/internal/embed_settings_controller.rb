@@ -8,7 +8,7 @@ class Internal::EmbedSettingsController < Internal::ApplicationController
 
     if @settings.save
       redirect_to internal_embed_settings_path,
-                  notice: @settings.blocked? ? "Embedding is now blocked everywhere." : "Partner sites updated."
+                  notice: @settings.blocked? ? "Partner embedding is now blocked." : "Partner sites updated."
     else
       flash.now[:alert] = "Nothing was saved."
       render :show, status: :unprocessable_entity
