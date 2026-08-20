@@ -166,12 +166,12 @@
     var brand = document.createElement("div");
     brand.textContent = "DAC SPORTS NETWORK";
     brand.style.cssText =
-      "font-size:.7rem;letter-spacing:.14em;color:#dc0028;font-weight:700;";
+      "font-size:1.05rem;letter-spacing:.1em;color:#f5f5f5;font-weight:700;";
 
     var heading = document.createElement("p");
     heading.textContent = "This page is not authorized to display this content.";
     heading.style.cssText =
-      "margin:0;font-size:1rem;font-weight:600;max-width:34rem;line-height:1.45;";
+      "margin:0;font-size:.85rem;font-weight:400;color:#a1a1aa;max-width:34rem;line-height:1.45;";
 
     panel.appendChild(brand);
     panel.appendChild(heading);
