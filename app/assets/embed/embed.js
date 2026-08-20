@@ -169,19 +169,12 @@
       "font-size:.7rem;letter-spacing:.14em;color:#dc0028;font-weight:700;";
 
     var heading = document.createElement("p");
-    heading.textContent = "This player is not enabled for this page yet.";
-    heading.style.cssText = "margin:0;font-size:1rem;font-weight:600;";
-
-    var detail = document.createElement("p");
-    detail.textContent =
-      "Send the address of this page to DAC Sports Network and it will start working here. " +
-      "Nothing on this page needs to change.";
-    detail.style.cssText =
-      "margin:0;font-size:.85rem;color:#b6b6bb;max-width:34rem;line-height:1.45;";
+    heading.textContent = "This page is not authorized to display this content.";
+    heading.style.cssText =
+      "margin:0;font-size:1rem;font-weight:600;max-width:34rem;line-height:1.45;";
 
     panel.appendChild(brand);
     panel.appendChild(heading);
-    panel.appendChild(detail);
     wrapper.appendChild(panel);
   }
 

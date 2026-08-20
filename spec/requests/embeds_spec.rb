@@ -398,7 +398,7 @@ RSpec.describe "Embeds", type: :request do
     it "carries a fallback message for pages that are not approved" do
       get embed_script_path
 
-      expect(response.body).to include("not enabled for this page")
+      expect(response.body).to include("not authorized to display this content")
       expect(response.body).to include("dac-sports-network")
     end
 
