@@ -48,6 +48,7 @@ Rails.application.routes.draw do
         post :mark_replay_pending
         post :mark_technical_difficulties
         post :publish_replay
+        post :resolve_signed_playback
       end
     end
 

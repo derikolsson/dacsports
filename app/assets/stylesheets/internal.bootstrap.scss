@@ -71,3 +71,14 @@ header {
     text-decoration: none;
   }
 }
+
+// Embed provisioning status on the events index
+.embed-status {
+  .mux-id-row { display: flex; align-items: center; gap: .35rem; margin-top: .2rem; }
+  .mux-id { font-size: .7rem; color: #6c757d; }
+  .copy-btn {
+    font-size: .7rem;
+    text-decoration: none;
+    &.copied { color: #198754; }
+  }
+}

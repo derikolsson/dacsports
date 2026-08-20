@@ -1,0 +1,23 @@
+<%# Whether this event can actually be embedded, answerable without opening Mux. %>
+<% signed = event.live? ? event.mux_live_signed_playback_id : event.mux_replay_signed_playback_id %>
+<% relevant = event.live? || event.replay_available? %>
+
+<div class="embed-status">
+  <% if !relevant %>
+    <span class="text-muted small">—</span>
+  <% elsif signed.present? %>
+    <span class="badge bg-success-subtle text-success-emphasis" title="Signed playback ID present">Ready</span>
+  <% else %>
+    <span class="badge bg-warning-subtle text-warning-emphasis" title="No signed playback ID — /embed/<%= event.slug %> will show a slate">No signed ID</span>
+  <% end %>
+
+  <% if signed.present? %>
+    <div class="mux-id-row">
+      <code class="mux-id" title="<%= signed %>"><%= truncate(signed, length: 12) %></code>
+      <button type="button" class="btn btn-link btn-sm p-0 copy-btn" data-copy="<%= signed %>" title="Copy signed playback ID">copy id</button>
+    </div>
+    <button type="button" class="btn btn-link btn-sm p-0 copy-btn"
+            data-copy='<script src="<%= embed_script_url(host: request.host_with_port, protocol: request.protocol) %>" data-stream="<%= event.slug %>"></script>'
+            title="Copy the snippet to hand to a partner">copy snippet</button>
+  <% end %>
+</div>

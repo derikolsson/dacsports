@@ -6,6 +6,7 @@
       <th>Teams</th>
       <th>Status</th>
       <th>Visibility</th>
+      <th>Embed</th>
       <th>Actions</th>
     </tr>
   </thead>
@@ -64,6 +65,9 @@
           <% else %>
             <span class="text-danger" title="Hidden from public">✗</span>
           <% end %>
+        </td>
+        <td>
+          <%= render "internal/events/embed_status", event: event %>
         </td>
         <td>
           <div class="d-flex gap-2">

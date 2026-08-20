@@ -89,6 +89,23 @@ class Internal::EventsController < Internal::ApplicationController
     end
   end
 
+  # Mints (or finds) the signed playback ID for the pasted asset, so the operator never
+  # has to go dig one out of the Mux dashboard.
+  def resolve_signed_playback
+    @event = Event.find(params[:id])
+
+    if @event.mux_asset_id.blank?
+      redirect_to edit_internal_event_path(@event), alert: "Enter and save a Mux Asset ID first."
+      return
+    end
+
+    signed_id = MuxSignedPlaybackId.for_asset(@event.mux_asset_id)
+    @event.update!(mux_replay_signed_playback_id: signed_id)
+    redirect_to edit_internal_event_path(@event), notice: "Signed playback ID resolved: #{signed_id}"
+  rescue MuxSignedPlaybackId::Error, ActiveRecord::RecordInvalid => e
+    redirect_to edit_internal_event_path(@event), alert: "Could not resolve signed playback ID: #{e.message}"
+  end
+
   private
 
   def set_event
@@ -99,6 +116,7 @@ class Internal::EventsController < Internal::ApplicationController
     params.require(:event).permit(
       :title, :slug, :start_at, :stream_starts_at, :time_zone,
       :mux_live_playback_id, :mux_replay_playback_id,
+      :mux_live_signed_playback_id, :mux_replay_signed_playback_id, :mux_asset_id,
       :replay_start_time, :replay_end_time,
       :live_embed_code, :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round,
