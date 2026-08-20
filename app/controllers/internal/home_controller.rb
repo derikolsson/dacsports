@@ -1,11 +1,11 @@
 class Internal::HomeController < Internal::ApplicationController
   def index
     @active_viewers = Rails.cache.fetch("active_viewers", expires_in: 10.seconds) do
-      EventVisit.where("last_seen_at > ?", 3.minutes.ago).distinct.count(:session_id)
+      EventVisit.on_site.where("last_seen_at > ?", 3.minutes.ago).distinct.count(:session_id)
     end
 
     @active_viewers_by_event = Rails.cache.fetch("active_viewers_by_event", expires_in: 10.seconds) do
-      EventVisit.where("last_seen_at > ?", 3.minutes.ago)
+      EventVisit.on_site.where("last_seen_at > ?", 3.minutes.ago)
                .group(:event_id, :event_status)
                .distinct
                .count(:session_id)
@@ -13,9 +13,9 @@ class Internal::HomeController < Internal::ApplicationController
 
     @total_views = Rails.cache.fetch("total_views", expires_in: 10.seconds) do
       {
-        all_time: EventVisit.count,
-        last_24h: EventVisit.where("started_at > ?", 24.hours.ago).count,
-        last_7d: EventVisit.where("started_at > ?", 7.days.ago).count
+        all_time: EventVisit.on_site.count,
+        last_24h: EventVisit.on_site.where("started_at > ?", 24.hours.ago).count,
+        last_7d: EventVisit.on_site.where("started_at > ?", 7.days.ago).count
       }
     end
 

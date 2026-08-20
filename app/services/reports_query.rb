@@ -1,20 +1,21 @@
 class ReportsQuery
-  attr_reader :start_date, :end_date
+  attr_reader :start_date, :end_date, :source
 
-  def initialize(start_date:, end_date:)
+  # Reports are on-site figures by default. Embed visits land in the same table, so
+  # without this every existing number would silently absorb partner traffic — and with
+  # it the unique-count inflation that comes from third-party cookie blocking. Pass a
+  # source to report on a partner property instead.
+  def initialize(start_date:, end_date:, source: EventVisit::DEFAULT_SOURCE)
     @start_date = start_date.beginning_of_day
     @end_date = end_date.end_of_day
+    @source = source
   end
 
   def summary_stats
-    live_stats = EventVisit
-      .joins(:session, :event)
-      .where(events: { start_at: start_date..end_date })
+    live_stats = scoped_visits
       .where(event_status: "live")
 
-    vod_stats = EventVisit
-      .joins(:session, :event)
-      .where(events: { start_at: start_date..end_date })
+    vod_stats = scoped_visits
       .where(event_status: "vod")
       .where("event_visits.started_at <= events.start_at + INTERVAL '30 days'")
 
@@ -31,9 +32,7 @@ class ReportsQuery
   end
 
   def device_breakdown
-    raw_counts = EventVisit
-      .joins(:session, :event)
-      .where(events: { start_at: start_date..end_date })
+    raw_counts = scoped_visits
       .where("event_visits.event_status = 'live' OR (event_visits.event_status = 'vod' AND event_visits.started_at <= events.start_at + INTERVAL '30 days')")
       .group("sessions.device_type", "event_visits.event_status")
       .distinct
@@ -43,9 +42,7 @@ class ReportsQuery
   end
 
   def os_breakdown
-    raw_counts = EventVisit
-      .joins(:session, :event)
-      .where(events: { start_at: start_date..end_date })
+    raw_counts = scoped_visits
       .where("event_visits.event_status = 'live' OR (event_visits.event_status = 'vod' AND event_visits.started_at <= events.start_at + INTERVAL '30 days')")
       .group("sessions.os_name", "event_visits.event_status")
       .distinct
@@ -70,7 +67,7 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN s.visitor_id END) AS vod_30d_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN ev.session_id END) AS vod_30d_views
       FROM events e
-      LEFT JOIN event_visits ev ON ev.event_id = e.id
+      LEFT JOIN event_visits ev ON ev.event_id = e.id AND ev.source = :source
       LEFT JOIN sessions s ON s.id = ev.session_id
       WHERE e.start_at BETWEEN :start_date AND :end_date
       GROUP BY e.id, e.title, e.start_at, e.sport
@@ -78,11 +75,18 @@ class ReportsQuery
     SQL
 
     ActiveRecord::Base.connection.exec_query(
-      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date } ])
+      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source } ])
     ).to_a
   end
 
   private
+
+  def scoped_visits
+    EventVisit
+      .joins(:session, :event)
+      .where(events: { start_at: start_date..end_date })
+      .where(source: source)
+  end
 
   def calculate_percentages(raw_counts, normalizer)
     totals = { "live" => 0, "vod" => 0 }
