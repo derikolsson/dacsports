@@ -130,6 +130,61 @@
 
   wrapper.appendChild(iframe);
 
+  // The frame reports in once it renders. Silence means it never got to run — most
+  // often because this page is not on the approved list yet, but equally a network
+  // failure or a bad slug. Either way the partner gets an explanation rather than a
+  // black rectangle they cannot diagnose.
+  var READY_TIMEOUT_MS = 6000;
+  var settled = false;
+
+  function onMessage(event) {
+    if (event.origin !== origin) return;
+    var data = event.data;
+    if (!data || data.source !== "dac-sports-network" || data.type !== "ready") return;
+    settled = true;
+    window.removeEventListener("message", onMessage);
+  }
+
+  window.addEventListener("message", onMessage);
+
+  setTimeout(function () {
+    if (settled) return;
+    window.removeEventListener("message", onMessage);
+    showUnavailable();
+  }, READY_TIMEOUT_MS);
+
+  function showUnavailable() {
+    wrapper.removeChild(iframe);
+
+    var panel = document.createElement("div");
+    panel.setAttribute("role", "note");
+    panel.style.cssText =
+      "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;" +
+      "justify-content:center;gap:.5rem;padding:1.5rem;text-align:center;background:#0b0b0c;" +
+      "color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
+
+    var brand = document.createElement("div");
+    brand.textContent = "DAC SPORTS NETWORK";
+    brand.style.cssText =
+      "font-size:.7rem;letter-spacing:.14em;color:#dc0028;font-weight:700;";
+
+    var heading = document.createElement("p");
+    heading.textContent = "This player is not enabled for this page yet.";
+    heading.style.cssText = "margin:0;font-size:1rem;font-weight:600;";
+
+    var detail = document.createElement("p");
+    detail.textContent =
+      "Send the address of this page to DAC Sports Network and it will start working here. " +
+      "Nothing on this page needs to change.";
+    detail.style.cssText =
+      "margin:0;font-size:.85rem;color:#b6b6bb;max-width:34rem;line-height:1.45;";
+
+    panel.appendChild(brand);
+    panel.appendChild(heading);
+    panel.appendChild(detail);
+    wrapper.appendChild(panel);
+  }
+
   if (script.parentNode) {
     script.parentNode.insertBefore(wrapper, script.nextSibling);
   } else {

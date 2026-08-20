@@ -10,7 +10,10 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
     }
   end
 
-  after { Dacsports.redis.del(EmbedFrameAncestors::REDIS_KEY) }
+  after do
+    Dacsports.redis.del(EmbedFrameAncestors::REDIS_KEY)
+    Dacsports.redis.del(EmbedFrameAncestors::ALLOW_SELF_KEY)
+  end
 
   it "requires authentication" do
     get internal_embed_settings_path
@@ -49,6 +52,23 @@ RSpec.describe "Internal::EmbedSettings", type: :request do
     expect(response).to have_http_status(:unprocessable_content)
     expect(response.body).to include("is not a valid origin")
     expect(EmbedFrameAncestors.header_value).to eq("'self' https://good.example.org")
+  end
+
+  it "can close the player to our own site too" do
+    patch internal_embed_settings_path,
+          params: { embed_frame_ancestors: { raw: "https://a.example.edu", allow_self: "false" } },
+          headers: auth_headers
+
+    expect(EmbedFrameAncestors.header_value).to eq("https://a.example.edu")
+
+    event = create(:event, :signed_replay)
+    get embed_path(event.slug)
+    expect(response.headers["Content-Security-Policy"]).to eq("frame-ancestors https://a.example.edu")
+  end
+
+  it "links to the preview rather than burying it in the nav" do
+    get internal_embed_settings_path, headers: auth_headers
+    expect(response.body).to include(internal_embed_preview_path)
   end
 
   it "returns to blocked when the list is emptied" do

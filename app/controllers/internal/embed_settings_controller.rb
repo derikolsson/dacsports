@@ -4,7 +4,10 @@ class Internal::EmbedSettingsController < Internal::ApplicationController
   end
 
   def update
-    @settings = EmbedFrameAncestors.new(raw: params.dig(:embed_frame_ancestors, :raw))
+    @settings = EmbedFrameAncestors.new(
+      raw: params.dig(:embed_frame_ancestors, :raw),
+      allow_self: params.dig(:embed_frame_ancestors, :allow_self)
+    )
 
     if @settings.save
       redirect_to internal_embed_settings_path,

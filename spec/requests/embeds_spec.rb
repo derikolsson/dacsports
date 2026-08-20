@@ -36,6 +36,14 @@ RSpec.describe "Embeds", type: :request do
         expect(response.body).to match(%r{poster="https://image\.mux\.com/[^"]+token=})
       end
 
+      # The wrapper waits for this to decide whether the frame actually rendered.
+      it "reports in to the parent page once it renders" do
+        get embed_path(event.slug)
+
+        expect(response.body).to include("dac-sports-network")
+        expect(response.body).to include("postMessage")
+      end
+
       it "hides casting, which would silently fail under the embed restriction" do
         get embed_path(event.slug)
         expect(response.body).to include("--cast-button: none")
@@ -383,6 +391,15 @@ RSpec.describe "Embeds", type: :request do
     it "derives the iframe origin from its own script src" do
       get embed_script_path
       expect(response.body).to include("new URL(script.src")
+    end
+
+    # A blocked frame renders nothing at all, so without this a partner who pastes the
+    # code before approval sees a silent black box with no way to tell what is wrong.
+    it "carries a fallback message for pages that are not approved" do
+      get embed_script_path
+
+      expect(response.body).to include("not enabled for this page")
+      expect(response.body).to include("dac-sports-network")
     end
 
     it "sets the iframe allow attribute, without which fullscreen and PiP die silently" do

@@ -11,6 +11,7 @@ class EmbedFrameAncestors
   include ActiveModel::Model
 
   REDIS_KEY = "embed_frame_ancestors".freeze
+  ALLOW_SELF_KEY = "embed_frame_ancestors_allow_self".freeze
 
   # scheme://host, an optional single leading wildcard label, and an optional port.
   # Wildcards cover one label only — *.example.com does not match a.b.example.com — so
@@ -29,11 +30,21 @@ class EmbedFrameAncestors
   MAX_ORIGIN_LENGTH = 253  # DNS limit; also keeps the header from bloating
 
   attr_accessor :raw
+  attr_writer :allow_self
 
   validate :every_origin_is_valid
 
   def self.current
-    new(raw: read_redis)
+    new(raw: read_redis, allow_self: allow_self?)
+  end
+
+  # Whether our own site may frame the player. On by default because the internal
+  # preview page needs it; turn it off for a genuinely closed posture, at the cost of
+  # the preview.
+  def self.allow_self?
+    Dacsports.redis.get(ALLOW_SELF_KEY) != "false"
+  rescue Redis::BaseError, Errno::ECONNREFUSED
+    true
   end
 
   def self.read_redis
@@ -51,11 +62,22 @@ class EmbedFrameAncestors
   SELF = "'self'".freeze
 
   def self.header_value
-    [ SELF, read_redis.presence ].compact.join(" ")
+    parts = []
+    parts << SELF if allow_self?
+    parts << read_redis.presence
+    parts.compact!
+
+    # Never emit an empty directive — that would be treated as malformed and could be
+    # ignored entirely, which fails open.
+    parts.any? ? parts.join(" ") : "'none'"
   end
 
   def origins
     raw.to_s.split(/[\s,]+/).map(&:strip).reject(&:blank?).uniq
+  end
+
+  def allow_self?
+    ActiveModel::Type::Boolean.new.cast(@allow_self) != false
   end
 
   def blocked?
@@ -70,6 +92,8 @@ class EmbedFrameAncestors
     else
       Dacsports.redis.set(REDIS_KEY, origins.join(" "))
     end
+
+    Dacsports.redis.set(ALLOW_SELF_KEY, allow_self?.to_s)
     true
   end
 

@@ -1,7 +1,10 @@
 require 'rails_helper'
 
 RSpec.describe EmbedFrameAncestors do
-  after { Dacsports.redis.del(described_class::REDIS_KEY) }
+  after do
+    Dacsports.redis.del(described_class::REDIS_KEY)
+    Dacsports.redis.del(described_class::ALLOW_SELF_KEY)
+  end
 
   describe 'validation' do
     it 'accepts full origins, wildcards and ports' do
@@ -63,6 +66,34 @@ RSpec.describe EmbedFrameAncestors do
     it 'lists the configured origins' do
       described_class.new(raw: "https://a.example.org\nhttps://b.example.org").save
       expect(described_class.header_value).to eq("'self' https://a.example.org https://b.example.org")
+    end
+  end
+
+  describe 'allowing our own site' do
+    it 'includes self by default, so the preview page can frame the embed' do
+      expect(described_class.header_value).to eq("'self'")
+    end
+
+    it 'drops self when switched off' do
+      described_class.new(raw: "https://a.example.edu", allow_self: false).save
+      expect(described_class.header_value).to eq("https://a.example.edu")
+    end
+
+    it 'restores self when switched back on' do
+      described_class.new(raw: "https://a.example.edu", allow_self: false).save
+      described_class.new(raw: "https://a.example.edu", allow_self: true).save
+      expect(described_class.header_value).to eq("'self' https://a.example.edu")
+    end
+
+    # An empty directive is malformed and could be ignored outright, which fails open.
+    it "emits 'none' rather than an empty directive when nothing is allowed" do
+      described_class.new(raw: "", allow_self: false).save
+      expect(described_class.header_value).to eq("'none'")
+    end
+
+    it 'remembers the setting across reloads' do
+      described_class.new(raw: "", allow_self: false).save
+      expect(described_class.current.allow_self?).to be false
     end
   end
 

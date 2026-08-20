@@ -1,5 +1,6 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <h1 class="h3 mb-0">Embed Settings</h1>
+  <%= link_to "Preview an embed", internal_embed_preview_path, class: "btn btn-outline-secondary btn-sm" %>
 </div>
 
 <% if @settings.blocked? %>
@@ -51,6 +52,17 @@
             </small>
           </div>
 
+          <div class="form-check mb-3">
+            <%= f.check_box :allow_self, { class: "form-check-input", checked: @settings.allow_self? }, "true", "false" %>
+            <%= f.label :allow_self, "Allow our own site to frame the player", class: "form-check-label" %>
+            <small class="form-text text-muted d-block">
+              Needed by the <%= link_to "embed preview", internal_embed_preview_path %>, which checks a
+              real embed before you hand it to anyone. Turning this off closes the player to
+              every site including ours, and the preview stops working. Partner sites are
+              unaffected either way.
+            </small>
+          </div>
+
           <div class="d-flex gap-2">
             <%= f.submit "Save", class: "btn btn-primary" %>
             <%= link_to "Cancel", internal_embed_settings_path, class: "btn btn-outline-secondary" %>
@@ -78,6 +90,19 @@
           Separately, Mux only allows playback to start from our own domains. That does not
           change here, and partner domains never need to be added to it &mdash; the video
           plays inside our page, not theirs.
+        </p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">What an unapproved site sees</h2>
+        <p class="small mb-0">
+          The browser refuses to draw the player, and the snippet replaces it with a short
+          message: <em>&ldquo;This player is not enabled for this page yet.&rdquo;</em> with a
+          line telling them to send you the page address. So a partner who pastes the code
+          early gets an explanation rather than a blank box, and nothing on their end has to
+          change once you approve them.
         </p>
       </div>
     </div>
