@@ -22,7 +22,7 @@
     eventStatus: <%= (@event.replay_available? ? "vod" : @event.status).to_json.html_safe %>,
     forceReloadVersion: <%= @event.force_reload_count.to_i %>,
     sessionId: <%= @session_id.to_json.html_safe %>,
-    source: <%= @source.to_json.html_safe %>,
+    sourceToken: <%= @source_token.to_json.html_safe %>,
     enabled: <%= @tokens.present? %>,
     initialTtl: <%= @poll_ttl %>
   });

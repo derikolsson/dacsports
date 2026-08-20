@@ -204,29 +204,66 @@ RSpec.describe "Embeds", type: :request do
       expect(response).to have_http_status(:not_found)
     end
 
-    it "records the visit against the referring property" do
+
+    # Only the initial page load sees the partner's Referer; the poller's request comes
+    # from inside the frame and is same-origin. Without carrying it forward, every embed
+    # visit would be credited to us instead of the partner.
+    it "attributes a poll to the partner that loaded the page, not to the frame" do
+      get embed_path(event.slug), headers: { "Referer" => "https://northside.org/athletics/live" }
+      token = response.body[/sourceToken: "([^"]+)"/, 1]
+      expect(token).to be_present
+
       expect(EventVisitJob).to receive(:perform_async).with(
-        session.id, event.id, "vod", anything, anything,
+        anything, event.id, "vod", anything, anything,
         "embed:https://northside.org", "https://northside.org"
+      )
+
+      # As the in-frame poller does: same-origin, no partner referer, no cookies needed.
+      post embed_status_path(event.slug),
+           params: { session_id: Session.last.id, enabled: "true", source_token: token },
+           headers: { "Referer" => "http://www.example.com/embed/#{event.slug}" },
+           as: :json
+    end
+
+    # A plain param would let any parent page claim another property's traffic. The
+    # token is only ever minted server-side from a Referer we actually saw.
+    it "rejects a forged source token rather than trusting it" do
+      expect(EventVisitJob).to receive(:perform_async).with(
+        anything, event.id, "vod", anything, anything, "embed", nil
+      )
+
+      post embed_status_path(event.slug),
+           params: { session_id: session.id, enabled: "true",
+                     source_token: "not-a-real-token--#{Base64.strict_encode64('{"origin":"https://someone-else.org"}')}" },
+           as: :json
+    end
+
+    it "records no partner when no token is supplied" do
+      expect(EventVisitJob).to receive(:perform_async).with(
+        anything, event.id, "vod", anything, anything, "embed", nil
       )
 
       post embed_status_path(event.slug),
            params: { session_id: session.id, enabled: "true" },
-           headers: { "Referer" => "https://northside.org/athletics/live" },
+           headers: { "Referer" => "http://www.example.com/embed/#{event.slug}" },
            as: :json
     end
 
-    # Source comes from the request's own Referer, never from the body, so a hostile
-    # parent cannot attribute its traffic to another property.
-    it "ignores a source supplied in the request body" do
+    # Attribution must survive a viewer who blocks third-party cookies, which Safari
+    # does by default — the reason this is a signed token and not a cookie.
+    it "attributes correctly with no cookies at all" do
+      get embed_path(event.slug), headers: { "Referer" => "https://northside.org/live" }
+      token = response.body[/sourceToken: "([^"]+)"/, 1]
+      session_id = Session.last.id
+
       expect(EventVisitJob).to receive(:perform_async).with(
-        session.id, event.id, "vod", anything, anything,
+        anything, event.id, "vod", anything, anything,
         "embed:https://northside.org", "https://northside.org"
       )
 
+      reset!  # drops the cookie jar
       post embed_status_path(event.slug),
-           params: { session_id: session.id, enabled: "true", source: "embed:https://someone-else.org" },
-           headers: { "Referer" => "https://northside.org/athletics/live" },
+           params: { session_id: session_id, enabled: "true", source_token: token },
            as: :json
     end
 

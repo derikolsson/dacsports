@@ -51,6 +51,7 @@ class EmbedsController < ApplicationController
     return render_missing unless @event.visible?
 
     @source = embed_source
+    @source_token = embed_source_token
     set_current_session
     @session_id = Current.session&.id
     @stream_type = @event.live? ? "live" : "on-demand"
@@ -151,14 +152,16 @@ class EmbedsController < ApplicationController
     return unless params[:session_id].present?
     return unless EventVisit::TRACKED_STATUSES.include?(visit_status(event))
 
+    source, origin = verified_embed_source
+
     EventVisitJob.perform_async(
       params[:session_id],
       event.id,
       visit_status(event),
       params[:started_at],
       Time.now.utc.iso8601(6),
-      embed_source,
-      referrer_origin
+      source,
+      origin
     )
   end
 
@@ -166,13 +169,144 @@ class EmbedsController < ApplicationController
     event.replay_available? ? "vod" : event.status
   end
 
-  # Partner identifier. Derived from the request's own Referer rather than anything the
-  # wrapper sends, so a hostile parent cannot attribute its traffic to someone else.
+  # Partner identifier.
+  #
+  # Only the initial page load carries the partner's origin in Referer. The poller's
+  # request is made from inside the frame, so its Referer is this route's own URL — so
+  # attribution has to be captured on the way in and carried forward, or every embed
+  # visit gets credited to us instead of the partner.
+  #
+  # Carried in a signed cookie rather than echoed through the page, so it is not
+  # something a hostile parent can set to another property's name. The cookie is
+  # partitioned by top-level site along with the visitor cookie, so one viewer watching
+  # on two different partner sites is attributed correctly on each.
   def embed_source
-    origin = referrer_origin
-    return "embed" if origin.blank?
+    origin = partner_origin
+    origin.present? ? "embed:#{origin}" : "embed"
+  end
 
-    "embed:#{origin}"
+  # The referring origin, but only when it is actually somebody else. An in-frame poll
+  # is same-origin, and if the source cookie was dropped (a viewer blocking third-party
+  # cookies) we would otherwise record dacsports.net itself as the partner and quietly
+  # invent traffic for a property that does not exist.
+  def partner_origin
+    origin = referrer_origin
+    return nil if origin.blank?
+    return nil if origin == request.base_url
+
+    origin
+  end
+
+  # Attribution is stamped into the page at load time, signed, and echoed back by the
+  # poller.
+  #
+  # It has to be carried somehow: only the initial load sees the partner's Referer,
+  # since the poller's request is made from inside the frame and is same-origin. A
+  # cookie was the first attempt, but third-party cookies are blocked outright in
+  # Safari, so attribution would go missing for a large share of real viewers.
+  #
+  # Signed rather than a plain param so a parent page cannot claim another property's
+  # traffic — the value is only ever minted server-side from the Referer we actually saw.
+  def embed_source_token
+    verifier.generate({ source: embed_source, origin: partner_origin }, expires_in: 24.hours)
+  end
+
+  # [source, origin] from the token the poller echoed back, or the unattributed default.
+  def verified_embed_source
+    raw = params[:source_token].presence
+    return [ "embed", nil ] if raw.blank?
+
+    # The verifier's JSON serializer round-trips symbol keys as strings.
+    payload = verifier.verify(raw).with_indifferent_access
+    [ payload[:source].presence || "embed", payload[:origin].presence ]
+  rescue ActiveSupport::MessageVerifier::InvalidSignature
+    Rails.logger.warn("[embed] rejected an invalid source token")
+    [ "embed", nil ]
+  end
+
+  def verifier
+    Rails.application.message_verifier(:embed_source)
+  end
+
+  def embed_restriction_id
+    Rails.application.credentials.dig(:mux, :playback_restriction_id_embed)
+  end
+
+  # Frames must not inherit the site's X-Frame-Options: SAMEORIGIN, which would block
+  # every district page. frame-ancestors then decides who may actually frame us; it
+  # ships as 'none' so the route fails closed before anyone depends on it.
+  def allow_framing
+    response.headers.delete("X-Frame-Options")
+    response.headers["Content-Security-Policy"] = "frame-ancestors #{frame_ancestors}"
+  end
+
+  def frame_ancestors
+    configured = redis_get("embed_frame_ancestors").presence
+    # Fails CLOSED. If Redis is unreachable we deny framing rather than guess at a
+    # partner list — the wrong direction here silently opens the route to anyone.
+    configured || "'none'"
+  end
+
+  def poll_ttl
+    redis_get("event_status_ttl").to_i.clamp(5_000, 300_000)
+  end
+
+  # This route is loaded inside seven third-party pages. A Redis blip should degrade it,
+  # not 500 it.
+  def redis_get(key)
+    Dacsports.redis.get(key)
+  rescue Redis::BaseError, Errno::ECONNREFUSED => e
+    Rails.logger.warn("[embed] redis unavailable for #{key}: #{e.message}")
+    nil
+  end
+
+  def track_visit(event)
+    return unless params[:session_id].present?
+    return unless EventVisit::TRACKED_STATUSES.include?(visit_status(event))
+
+    source, origin = verified_embed_source
+
+    EventVisitJob.perform_async(
+      params[:session_id],
+      event.id,
+      visit_status(event),
+      params[:started_at],
+      Time.now.utc.iso8601(6),
+      source,
+      origin
+    )
+  end
+
+  def visit_status(event)
+    event.replay_available? ? "vod" : event.status
+  end
+
+  # Partner identifier.
+  #
+  # Only the initial page load carries the partner's origin in Referer. The poller's
+  # request is made from inside the frame, so its Referer is this route's own URL — so
+  # attribution has to be captured on the way in and carried forward, or every embed
+  # visit gets credited to us instead of the partner.
+  #
+  # Carried in a signed cookie rather than echoed through the page, so it is not
+  # something a hostile parent can set to another property's name. The cookie is
+  # partitioned by top-level site along with the visitor cookie, so one viewer watching
+  # on two different partner sites is attributed correctly on each.
+  def embed_source
+    origin = partner_origin
+    origin.present? ? "embed:#{origin}" : "embed"
+  end
+
+  # The referring origin, but only when it is actually somebody else. An in-frame poll
+  # is same-origin, and if the source cookie was dropped (a viewer blocking third-party
+  # cookies) we would otherwise record dacsports.net itself as the partner and quietly
+  # invent traffic for a property that does not exist.
+  def partner_origin
+    origin = referrer_origin
+    return nil if origin.blank?
+    return nil if origin == request.base_url
+
+    origin
   end
 
   def referrer_origin
