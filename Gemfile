@@ -30,6 +30,9 @@ gem "device_detector"
 # Video streaming
 gem "mux_ruby"
 
+# Signed playback tokens for Mux (mux_ruby does not sign JWTs)
+gem "jwt"
+
 # Error tracking
 gem "sentry-ruby"
 gem "sentry-rails"

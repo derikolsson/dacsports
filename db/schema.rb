@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_01_15_020104) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_20_081951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,8 +41,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_020104) do
     t.datetime "last_seen_at", precision: nil
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "source", default: "dsn", null: false
+    t.string "referrer_origin"
     t.index ["event_id"], name: "index_event_visits_on_event_id"
-    t.index ["session_id", "event_id", "event_status"], name: "index_event_visits_unique_session_event", unique: true
+    t.index ["session_id", "event_id", "event_status", "source"], name: "index_event_visits_unique_session_event_source", unique: true
     t.index ["session_id"], name: "index_event_visits_on_session_id"
   end
 
@@ -68,6 +70,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_01_15_020104) do
     t.string "mux_replay_playback_id"
     t.decimal "replay_start_time", precision: 10, scale: 2
     t.decimal "replay_end_time", precision: 10, scale: 2
+    t.string "mux_live_signed_playback_id"
+    t.string "mux_replay_signed_playback_id"
+    t.string "mux_asset_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
   end
 
