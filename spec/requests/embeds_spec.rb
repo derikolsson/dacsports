@@ -402,6 +402,24 @@ RSpec.describe "Embeds", type: :request do
       expect(response.body).to include("dac-sports-network")
     end
 
+    # Without a cover the browser paints its own "refused to connect" page for the whole
+    # wait, so an unapproved partner sees grey browser chrome first and our message
+    # second.
+    it "covers the frame from the first paint" do
+      get embed_script_path
+
+      expect(response.body).to include("DAC SPORTS NETWORK")
+      expect(response.body).to include("z-index:1")
+    end
+
+    # The frame is lazily loaded, so one below the fold does not start fetching until
+    # scrolled to. Starting the clock on insertion would call it unauthorized while it
+    # was only waiting its turn.
+    it "waits until the embed is on screen before deciding it failed" do
+      get embed_script_path
+      expect(response.body).to include("IntersectionObserver")
+    end
+
     it "sets the iframe allow attribute, without which fullscreen and PiP die silently" do
       get embed_script_path
 

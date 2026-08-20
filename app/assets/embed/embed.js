@@ -128,59 +128,92 @@
   );
   iframe.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;";
 
+  // A branded cover sits over the frame from the first paint.
+  //
+  // Without it the browser paints its own "refused to connect" page for however long we
+  // wait before deciding the frame is not coming — so a partner who is not approved
+  // sees grey browser chrome first and our message second. The cover means they only
+  // ever see ours, and it doubles as a loading state on a slow connection.
+  var cover = document.createElement("div");
+  cover.setAttribute("role", "note");
+  cover.style.cssText =
+    "position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;" +
+    "align-items:center;justify-content:center;gap:.5rem;padding:1.5rem;text-align:center;" +
+    "background:#0b0b0c;color:#f5f5f5;" +
+    "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
+
+  var brand = document.createElement("div");
+  brand.textContent = "DAC SPORTS NETWORK";
+  brand.style.cssText =
+    "font-size:1.05rem;letter-spacing:.1em;color:#f5f5f5;font-weight:700;";
+  cover.appendChild(brand);
+
   wrapper.appendChild(iframe);
+  wrapper.appendChild(cover);
 
   // The frame reports in once it renders. Silence means it never got to run — most
-  // often because this page is not on the approved list yet, but equally a network
-  // failure or a bad slug. Either way the partner gets an explanation rather than a
-  // black rectangle they cannot diagnose.
+  // often because this page is not on the approved list, but equally a network failure
+  // or a bad slug.
   var READY_TIMEOUT_MS = 6000;
   var settled = false;
+  var timer = null;
 
   function onMessage(event) {
     if (event.origin !== origin) return;
     var data = event.data;
     if (!data || data.source !== "dac-sports-network" || data.type !== "ready") return;
-    settled = true;
-    window.removeEventListener("message", onMessage);
+    reveal();
   }
 
-  window.addEventListener("message", onMessage);
-
-  setTimeout(function () {
+  function reveal() {
     if (settled) return;
+    settled = true;
+    clearTimeout(timer);
     window.removeEventListener("message", onMessage);
-    showUnavailable();
-  }, READY_TIMEOUT_MS);
+    if (cover.parentNode) cover.parentNode.removeChild(cover);
+  }
 
   function showUnavailable() {
-    wrapper.removeChild(iframe);
-
-    var panel = document.createElement("div");
-    panel.setAttribute("role", "note");
-    panel.style.cssText =
-      "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;" +
-      "justify-content:center;gap:.5rem;padding:1.5rem;text-align:center;background:#0b0b0c;" +
-      "color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
-
-    var brand = document.createElement("div");
-    brand.textContent = "DAC SPORTS NETWORK";
-    brand.style.cssText =
-      "font-size:1.05rem;letter-spacing:.1em;color:#f5f5f5;font-weight:700;";
+    if (settled) return;
+    settled = true;
+    window.removeEventListener("message", onMessage);
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
 
     var heading = document.createElement("p");
     heading.textContent = "This page is not authorized to display this content.";
     heading.style.cssText =
       "margin:0;font-size:.85rem;font-weight:400;color:#a1a1aa;max-width:34rem;line-height:1.45;";
-
-    panel.appendChild(brand);
-    panel.appendChild(heading);
-    wrapper.appendChild(panel);
+    cover.appendChild(heading);
   }
+
+  function startTimer() {
+    if (timer || settled) return;
+    timer = setTimeout(showUnavailable, READY_TIMEOUT_MS);
+  }
+
+  window.addEventListener("message", onMessage);
 
   if (script.parentNode) {
     script.parentNode.insertBefore(wrapper, script.nextSibling);
   } else {
     document.body.appendChild(wrapper);
+  }
+
+  // The frame is lazily loaded, so one placed below the fold does not start fetching
+  // until it is scrolled to. Starting the clock on insertion would declare it
+  // unauthorized while it was simply waiting its turn.
+  if (window.IntersectionObserver) {
+    var observer = new IntersectionObserver(function (entries) {
+      for (var i = 0; i < entries.length; i++) {
+        if (entries[i].isIntersecting) {
+          observer.disconnect();
+          startTimer();
+          return;
+        }
+      }
+    });
+    observer.observe(wrapper);
+  } else {
+    startTimer();
   }
 })();
