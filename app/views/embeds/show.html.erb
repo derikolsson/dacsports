@@ -1,0 +1,29 @@
+<% if @tokens.present? %>
+  <%= signed_mux_player(
+        playback_id: @playback_id,
+        tokens: @tokens,
+        title: @event.title,
+        video_id: @event.slug,
+        stream_type: @stream_type,
+        start_time: (@event.replay_start_time unless @event.live?),
+        end_time: (@event.replay_end_time unless @event.live?)
+      ) %>
+<% else %>
+  <%# No token is signed in these states. A reload that re-signed would just hand a
+      fresh token to someone being cut off, so the denial state has to be real. %>
+  <%= render "slate", title: @event.title, message: embed_slate_message(@event) %>
+<% end %>
+
+<script type="module">
+  import { initializeEmbedPolling } from '<%= asset_path("embed_polling.js") %>';
+
+  initializeEmbedPolling({
+    eventSlug: <%= @event.slug.to_json.html_safe %>,
+    eventStatus: <%= (@event.replay_available? ? "vod" : @event.status).to_json.html_safe %>,
+    forceReloadVersion: <%= @event.force_reload_count.to_i %>,
+    visitorId: <%= @visitor_id.to_json.html_safe %>,
+    source: <%= @source.to_json.html_safe %>,
+    enabled: <%= @tokens.present? %>,
+    initialTtl: <%= Dacsports.redis.get('event_status_ttl').to_i %>
+  });
+</script>

@@ -24,6 +24,13 @@ Rails.application.routes.draw do
 
   post "sessions/keepalive", to: "sessions/keepalive#create"
 
+  # Signed player for distribution partners, framed cross-origin from their pages.
+  # embed.js is served through the controller (not public/ or Propshaft) so it can have
+  # a stable URL districts paste once plus a short cache TTL.
+  get "embed.js", to: "embeds#script", as: :embed_script
+  get "embed/:slug", to: "embeds#show", as: :embed
+  post "embed/:slug/status", to: "embeds#status", as: :embed_status
+
   # Internal admin routes
   namespace :internal do
     root "home#index"

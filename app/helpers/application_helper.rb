@@ -33,4 +33,34 @@ module ApplicationHelper
   #{attr_string}
 ></mux-player>).html_safe
   end
+
+  # Signed player for the embed route. Kept separate from mux_player rather than
+  # overloading it: this is a parallel render path, and the on-site player must not be
+  # able to regress when the embed changes.
+  #
+  # Pinned to @mux/mux-player@2 — v2.3.0+ has Chromecast built in, and the unpinned URL
+  # the on-site helper uses is a live dependency on whatever Mux ships next.
+  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil)
+    attrs = {
+      "playback-id" => playback_id,
+      "stream-type" => stream_type,
+      "playback-token" => tokens[:playback],
+      "thumbnail-token" => tokens[:thumbnail],
+      "metadata-video-title" => title,
+      "metadata-video-id" => video_id,
+      "accent-color" => "#dc0028"
+    }
+    # Storyboards are on-demand only; Mux does not generate them for live.
+    attrs["storyboard-token"] = tokens[:storyboard] if tokens[:storyboard].present?
+    attrs["redundant-streams"] = "" if stream_type == "live"
+    attrs["asset-start-time"] = start_time.to_s if start_time.present?
+    attrs["asset-end-time"] = end_time.to_s if end_time.present?
+
+    attr_string = attrs.compact.map { |k, v| v.to_s.empty? ? k : "#{k}=\"#{ERB::Util.html_escape(v)}\"" }.join("\n  ")
+
+    %(<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player@2"></script>
+<mux-player
+  #{attr_string}
+></mux-player>).html_safe
+  end
 end
