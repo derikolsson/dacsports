@@ -111,9 +111,20 @@
 
   // A cross-origin iframe cannot size itself, so it needs an aspect-ratio wrapper or it
   // renders as a fixed-height box that breaks on mobile.
+  //
+  // The wrapper stacks the frame and its cover with grid rather than absolute
+  // positioning, specifically so it does not need position:relative. A positioned
+  // wrapper paints above every non-positioned element on the partner's page, which put
+  // the video on top of their own sticky headers and dropdown menus. A grid container
+  // is left in normal flow and stacks like any other block, so their chrome wins again.
+  //
+  // grid-template is stated explicitly: an auto row will not shrink below the cover's
+  // max-content height, which would let a narrow viewport stretch the box past 16/9.
   var wrapper = document.createElement("div");
   wrapper.setAttribute("data-dac-embed", slug);
-  wrapper.style.cssText = "position:relative;width:100%;aspect-ratio:16/9;background:#000;";
+  wrapper.style.cssText =
+    "display:grid;grid-template:1fr/1fr;width:100%;aspect-ratio:16/9;" +
+    "background:#000;overflow:hidden;";
 
   var iframe = document.createElement("iframe");
   iframe.src = src;
@@ -126,7 +137,9 @@
     "allow",
     "autoplay; fullscreen; picture-in-picture; encrypted-media; remote-playback"
   );
-  iframe.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;";
+  // Both children share the single cell, so the cover lies over the frame.
+  iframe.style.cssText =
+    "grid-area:1/1;width:100%;height:100%;min-width:0;min-height:0;border:0;";
 
   // A branded cover sits over the frame from the first paint.
   //
@@ -138,7 +151,8 @@
   cover.setAttribute("role", "note");
   cover.setAttribute("aria-live", "polite");
   cover.style.cssText =
-    "position:absolute;inset:0;z-index:1;display:flex;flex-direction:column;" +
+    "grid-area:1/1;z-index:1;min-width:0;min-height:0;overflow:auto;" +
+    "display:flex;flex-direction:column;" +
     "align-items:center;justify-content:center;gap:.5rem;padding:1.5rem;text-align:center;" +
     "background:#0b0b0c;color:#f5f5f5;" +
     "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;";
