@@ -49,6 +49,28 @@ RSpec.describe "Internal::Events", type: :request do
     end
   end
 
+  describe "GET /internal/events/new" do
+    # The form's "Resolve signed ID" button targets a member route, which an
+    # unsaved event has no id for. Rendering must not try to build that path.
+    it "renders the form for an unsaved event" do
+      get new_internal_event_path, headers: auth_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include("Resolve signed ID")
+    end
+  end
+
+  describe "GET /internal/events/:id/edit" do
+    it "links the resolve action for a saved event" do
+      event = create(:event)
+
+      get edit_internal_event_path(event), headers: auth_headers
+
+      expect(response).to have_http_status(:ok)
+      expect(response.body).to include(resolve_signed_playback_internal_event_path(event))
+    end
+  end
+
   describe "GET /internal/events/archive" do
     it "shows embed readiness so it can be checked without opening Mux" do
       create(:event, :signed_replay, title: "Provisioned Game")

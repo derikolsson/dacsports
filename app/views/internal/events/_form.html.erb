@@ -110,10 +110,14 @@
       <%= f.label :mux_asset_id, "Mux Asset ID", class: 'form-label' %>
       <div class="input-group">
         <%= f.text_field :mux_asset_id, class: 'form-control', placeholder: 'Paste once the recording is ready' %>
-        <%= link_to "Resolve signed ID",
-              resolve_signed_playback_internal_event_path(f.object),
-              class: "btn btn-outline-secondary#{' disabled' if f.object.new_record?}",
-              data: { turbo_method: :post } %>
+        <% if f.object.persisted? %>
+          <%= link_to "Resolve signed ID",
+                resolve_signed_playback_internal_event_path(f.object),
+                class: "btn btn-outline-secondary",
+                data: { turbo_method: :post } %>
+        <% else %>
+          <%= button_tag "Resolve signed ID", type: "button", class: "btn btn-outline-secondary", disabled: true %>
+        <% end %>
       </div>
       <small class="form-text text-muted">
         Save the asset ID first, then resolve. Mux does not let us change a live stream's
