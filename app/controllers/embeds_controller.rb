@@ -47,14 +47,20 @@ class EmbedsController < ApplicationController
     end
 
     # Deliberately does not honour ?preview=true. Preview is an internal affordance and
-    # must not be reachable from a district page.
-    return render_missing unless @event.visible?
+    # must not be reachable from a district page. The only way in early is a signed
+    # pass minted by the internal preview page for this one slug.
+    @preview = EmbedPreviewPass.valid?(params[:preview_token], @event)
+    return render_missing unless @event.visible? || @preview
 
     @source = embed_source
     @source_token = embed_source_token
-    set_current_session
+    # A preview is an operator checking their own stream, not a viewer. It gets no
+    # session, no visit, and no poller — the poller reloads on any status change and
+    # would also loop on a hidden event's 404.
+    set_current_session unless @preview
     @session_id = Current.session&.id
-    @stream_type = @event.live? ? "live" : "on-demand"
+    @live = playback_mode == :live
+    @stream_type = @live ? "live" : "on-demand"
     @poll_ttl = poll_ttl
     @tokens, @playback_id = signed_playback
 
@@ -130,16 +136,26 @@ class EmbedsController < ApplicationController
     render :missing, status: :not_found
   end
 
-  def signed_playback
-    return [ nil, nil ] unless PLAYABLE_STATUSES.include?(@event.status)
+  # Which source to sign, if any. A preview pass plays the live source of an event
+  # that is not live yet; it never changes what an already-playable event serves.
+  def playback_mode
+    @playback_mode ||=
+      if @event.live? then :live
+      elsif @event.replay_available? then :replay
+      elsif @preview && @event.live_previewable? then :live
+      end
+  end
 
-    playback_id = @event.live? ? @event.mux_live_signed_playback_id
-                              : @event.mux_replay_signed_playback_id
+  def signed_playback
+    return [ nil, nil ] unless playback_mode
+
+    playback_id = playback_mode == :live ? @event.mux_live_signed_playback_id
+                                         : @event.mux_replay_signed_playback_id
     return [ nil, nil ] if playback_id.blank?
     return [ nil, nil ] unless MuxTokenSigner.configured?
 
     signer = MuxTokenSigner.new(playback_restriction_id: embed_restriction_id)
-    [ signer.tokens_for(playback_id, live: @event.live?), playback_id ]
+    [ signer.tokens_for(playback_id, live: playback_mode == :live), playback_id ]
   rescue MuxTokenSigner::MissingSigningKey => e
     Rails.logger.error("[embed] signing unavailable: #{e.message}")
     Sentry.capture_exception(e) if defined?(Sentry)
@@ -365,6 +381,7 @@ class EmbedsController < ApplicationController
       slug: params[:slug],
       status: @event&.status,
       signed: @tokens.present?,
+      preview: (true if @preview),
       referer: request.referer&.truncate(MAX_PARAM_LENGTH),
       sec_fetch_site: request.headers["Sec-Fetch-Site"],
       parent_src: params[:src]&.to_s&.truncate(MAX_PARAM_LENGTH),

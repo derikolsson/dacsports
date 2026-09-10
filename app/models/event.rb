@@ -52,6 +52,16 @@ class Event < ApplicationRecord
     )
   }
 
+  # Events whose live stream can be previewed through the embed before it is live. The
+  # stream is still ahead of these states; once an event has ended there is nothing on
+  # the live playback ID to look at.
+  LIVE_PREVIEWABLE_STATUSES = %w[upcoming technical_difficulties].freeze
+  scope :live_previewable, -> {
+    where(status: LIVE_PREVIEWABLE_STATUSES)
+      .where("mux_live_signed_playback_id IS NOT NULL AND mux_live_signed_playback_id <> ''")
+      .order(:start_at)
+  }
+
   # Helper method for date display
   def event_date
     start_at&.in_time_zone(time_zone)&.to_date
@@ -94,6 +104,12 @@ class Event < ApplicationRecord
   def embeddable?
     (live? && mux_live_signed_playback_id.present?) ||
       (replay_available? && mux_replay_signed_playback_id.present?)
+  end
+
+  # True when the live stream can be checked through the embed ahead of going live:
+  # the signed live ID is in place but the state still shows partners a slate.
+  def live_previewable?
+    LIVE_PREVIEWABLE_STATUSES.include?(status) && mux_live_signed_playback_id.present?
   end
 
   def can_go_live?

@@ -140,6 +140,83 @@ RSpec.describe "Embeds", type: :request do
       end
     end
 
+    # The only early way in: a signed pass minted by the internal preview page, bound to
+    # one slug, so an operator can check the encoder feed before Go Live.
+    describe "with a preview pass" do
+      let(:event) { create(:event, :upcoming, mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID") }
+      let(:pass) { EmbedPreviewPass.generate(event) }
+
+      it "plays the live source of an event that is not live yet" do
+        get embed_path(event.slug), params: { preview_token: pass }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include('playback-id="SIGNEDLIVEPLAYBACKID"')
+        expect(response.body).to include('stream-type="live"')
+        expect(response.body).to include("playback-token=")
+      end
+
+      it "reaches a hidden event" do
+        event.update!(visible: false)
+
+        get embed_path(event.slug), params: { preview_token: pass }
+
+        expect(response).to have_http_status(:ok)
+        expect(response.body).to include("<mux-player")
+      end
+
+      # Polling would reload on the very status change the preview is waiting for, and
+      # a session or visit here would count the operator as a viewer.
+      it "neither polls nor counts a viewer" do
+        expect {
+          get embed_path(event.slug), params: { preview_token: pass }
+        }.not_to change(Session, :count)
+
+        expect(response.body).not_to include("initializeEmbedPolling")
+      end
+
+      it "ignores a pass minted for a different event" do
+        other = create(:event, :upcoming, mux_live_signed_playback_id: "OTHERID")
+
+        get embed_path(event.slug), params: { preview_token: EmbedPreviewPass.generate(other) }
+
+        expect(response.body).not_to include("playback-token=")
+        expect(response.body).to include("embed-slate")
+      end
+
+      it "ignores an expired pass" do
+        expired = EmbedPreviewPass.verifier.generate(event.slug, purpose: EmbedPreviewPass::PURPOSE, expires_at: 1.minute.ago)
+
+        get embed_path(event.slug), params: { preview_token: expired }
+
+        expect(response.body).not_to include("playback-token=")
+      end
+
+      it "ignores a forged pass" do
+        get embed_path(event.slug), params: { preview_token: "not-a-real-pass" }
+
+        expect(response.body).not_to include("playback-token=")
+      end
+
+      # The stream is over; there is nothing on the live ID to look at, and a pass must
+      # never turn an ended event back into a broadcast.
+      it "does not revive an ended event" do
+        ended = create(:event, :ended, mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID")
+
+        get embed_path(ended.slug), params: { preview_token: EmbedPreviewPass.generate(ended) }
+
+        expect(response.body).not_to include("playback-token=")
+      end
+
+      it "leaves a published replay alone" do
+        replay = create(:event, :signed_replay, mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID")
+
+        get embed_path(replay.slug), params: { preview_token: EmbedPreviewPass.generate(replay) }
+
+        expect(response.body).to include('playback-id="SIGNEDREPLAYPLAYBACKID"')
+        expect(response.body).to include('stream-type="on-demand"')
+      end
+    end
+
     describe "visibility" do
       # Preview is an internal affordance and must not be reachable from a partner page.
       it "does not honour ?preview=true on a hidden event" do

@@ -5,8 +5,8 @@
         title: @event.title,
         video_id: @event.slug,
         stream_type: @stream_type,
-        start_time: (@event.replay_start_time unless @event.live?),
-        end_time: (@event.replay_end_time unless @event.live?)
+        start_time: (@event.replay_start_time unless @live),
+        end_time: (@event.replay_end_time unless @live)
       ) %>
 <% else %>
   <%# No token is signed in these states. A reload that re-signed would just hand a
@@ -14,6 +14,9 @@
   <%= render "slate", title: @event.title, message: embed_slate_message(@event) %>
 <% end %>
 
+<%# A preview is a one-off look by an operator, so it does not poll: the poller reloads
+    on any status change, which is exactly what a preview is waiting on. %>
+<% unless @preview %>
 <script type="module">
   import { initializeEmbedPolling } from '<%= asset_path("embed_polling.js") %>';
 
@@ -27,3 +30,4 @@
     initialTtl: <%= @poll_ttl %>
   });
 </script>
+<% end %>

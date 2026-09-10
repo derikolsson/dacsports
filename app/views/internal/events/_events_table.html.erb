@@ -84,6 +84,11 @@
                 <li>
                   <%= link_to 'Preview Page', event_path(event.slug, preview: true), class: 'dropdown-item', target: '_blank' %>
                 </li>
+                <% if event.embeddable? || event.live_previewable? %>
+                  <li>
+                    <%= link_to 'Preview Embed', internal_embed_preview_path(slug: event.slug), class: 'dropdown-item' %>
+                  </li>
+                <% end %>
 
                 <% if event.can_go_live? || event.can_end? || event.can_mark_replay_pending? || event.can_mark_technical_difficulties? || event.can_publish_replay? %>
                   <li><hr class="dropdown-divider"></li>

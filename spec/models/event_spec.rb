@@ -112,6 +112,17 @@ RSpec.describe Event, type: :model do
       end
     end
 
+    describe '.live_previewable' do
+      it 'returns events still ahead of their stream that carry a signed live ID' do
+        soon = create(:event, :upcoming, mux_live_signed_playback_id: 'SIGNEDLIVE')
+        trouble = create(:event, :technical_difficulties, mux_live_signed_playback_id: 'SIGNEDLIVE')
+        over = create(:event, :ended, mux_live_signed_playback_id: 'SIGNEDLIVE')
+
+        expect(Event.live_previewable).to include(soon, trouble)
+        expect(Event.live_previewable).not_to include(over, upcoming_event, live_event)
+      end
+    end
+
     describe '.by_date' do
       it 'orders events by start_at descending' do
         events = Event.by_date

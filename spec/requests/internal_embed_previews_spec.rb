@@ -50,6 +50,57 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
     expect(response.body).not_to include("Unprovisioned")
   end
 
+  describe "live stream preview" do
+    let(:upcoming) do
+      create(:event, :upcoming, title: "Championship Night", mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID")
+    end
+
+    it "frames the live source with a pass for that event only" do
+      get internal_embed_preview_path(slug: upcoming.slug), headers: auth_headers
+
+      expect(response.body).to include("Live stream preview")
+      token = response.body[%r{/embed/#{upcoming.slug}\?preview_token=([^"&]+)}, 1]
+      expect(token).to be_present
+      expect(EmbedPreviewPass.valid?(CGI.unescape(token), upcoming)).to be(true)
+    end
+
+    # The wrapper must never learn about passes; a partner page runs the same script.
+    it "does not load the live preview through embed.js" do
+      get internal_embed_preview_path(slug: upcoming.slug), headers: auth_headers
+
+      expect(response.body).not_to include(%(data-stream="#{upcoming.slug}"))
+    end
+
+    it "lists live streams that can be checked" do
+      upcoming
+      create(:event, :upcoming, title: "No Signed ID Yet")
+
+      get internal_embed_preview_path, headers: auth_headers
+
+      expect(response.body).to include("Live streams to check")
+      expect(response.body).to include("Championship Night")
+      expect(response.body).not_to include("No Signed ID Yet")
+    end
+
+    it "falls back to a live preview when nothing is embeddable" do
+      upcoming
+
+      get internal_embed_preview_path, headers: auth_headers
+
+      expect(response.body).to include("Live stream preview")
+      expect(response.body).not_to include("No event is embeddable right now")
+    end
+
+    it "previews an event that is already live the ordinary way" do
+      live = create(:event, :signed_live)
+
+      get internal_embed_preview_path(slug: live.slug), headers: auth_headers
+
+      expect(response.body).not_to include("Live stream preview")
+      expect(response.body).to include(%(data-stream="#{live.slug}"))
+    end
+  end
+
   # The preview frames the embed, and frame-ancestors 'none' would block same-origin
   # framing too — so it has to keep working before any partner is approved.
   it "can frame the embed with no partner sites approved" do

@@ -9,8 +9,18 @@
     An event appears here once it is <em>live</em> or has a <em>published replay</em>
     <strong>and</strong> carries the matching signed playback ID. Until both are true,
     <code>/embed/&lt;slug&gt;</code> shows a holding slate and issues no token.
+    A live stream can still be checked ahead of Go Live once its signed live ID is saved.
   </div>
 <% else %>
+  <% if @live_preview %>
+    <div class="alert alert-info">
+      <strong>Live stream preview.</strong>
+      This event is <em><%= @event.status.titleize %></em>, so partners see a holding
+      slate. The frame below plays the signed live ID through the real embed route on a
+      preview pass that lasts <%= distance_of_time_in_words(EmbedPreviewPass::TTL) %> and
+      is good for this event only. If the encoder is sending, it plays here.
+    </div>
+  <% end %>
   <div class="row">
     <div class="col-lg-8">
       <div class="card mb-4">
@@ -21,23 +31,46 @@
               <div class="text-muted small">
                 <%= @event.sport %>
                 &middot; <%= @event.event_date&.strftime("%A, %B %-d, %Y") %>
-                &middot; <span class="badge bg-<%= @event.live? ? 'success' : 'primary' %>"><%= @event.status.titleize %></span>
+                &middot; <span class="badge bg-<%= @event.live? ? 'success' : (@live_preview ? 'secondary' : 'primary') %>"><%= @event.status.titleize %></span>
               </div>
             </div>
-            <%= link_to "Open directly", embed_path(@event.slug), class: "btn btn-sm btn-outline-secondary", target: "_blank", rel: "noopener" %>
+            <%= link_to "Open directly",
+                  (@live_preview ? embed_path(@event.slug, preview_token: @preview_token) : embed_path(@event.slug)),
+                  class: "btn btn-sm btn-outline-secondary", target: "_blank", rel: "noopener" %>
           </div>
 
-          <%# Loaded through embed.js rather than a hand-written iframe, so this exercises
-              the real delivery path: the wrapper, its sizing, the allow attribute, and
-              the signed route behind it. %>
-          <div id="embed-preview-frame"></div>
-          <script src="<%= embed_script_url(host: request.host_with_port, protocol: request.protocol) %>"
-                  data-stream="<%= @event.slug %>"></script>
+          <% if @live_preview %>
+            <%# Framed directly rather than through embed.js: the wrapper never carries a
+                preview pass, so a partner page has no way to ask for one. The frame's
+                sizing and allow attribute mirror the wrapper's so what plays here plays
+                there. %>
+            <div id="embed-preview-frame"
+                 style="display:grid;grid-template:1fr/1fr;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;">
+              <iframe src="<%= embed_path(@event.slug, preview_token: @preview_token) %>"
+                      title="DAC Sports Network"
+                      allowfullscreen
+                      allow="autoplay; fullscreen; picture-in-picture; encrypted-media; remote-playback"
+                      style="grid-area:1/1;width:100%;height:100%;min-width:0;min-height:0;border:0;"></iframe>
+            </div>
 
-          <p class="small text-muted mt-3 mb-0">
-            This is the wrapper partners paste, running against the live signed route.
-            If it plays here, the signing and playback restriction are working.
-          </p>
+            <p class="small text-muted mt-3 mb-0">
+              This is the signed route partners' frames will load once the event goes
+              live, playing the live source early. The pass stays out of the snippet, so
+              nothing here reaches a partner page.
+            </p>
+          <% else %>
+            <%# Loaded through embed.js rather than a hand-written iframe, so this exercises
+                the real delivery path: the wrapper, its sizing, the allow attribute, and
+                the signed route behind it. %>
+            <div id="embed-preview-frame"></div>
+            <script src="<%= embed_script_url(host: request.host_with_port, protocol: request.protocol) %>"
+                    data-stream="<%= @event.slug %>"></script>
+
+            <p class="small text-muted mt-3 mb-0">
+              This is the wrapper partners paste, running against the live signed route.
+              If it plays here, the signing and playback restriction are working.
+            </p>
+          <% end %>
         </div>
       </div>
 
@@ -60,7 +93,7 @@
           <ul class="list-unstyled small mb-0">
             <li class="mb-2">
               <strong>Signed playback ID</strong><br>
-              <code class="text-break"><%= @event.live? ? @event.mux_live_signed_playback_id : @event.mux_replay_signed_playback_id %></code>
+              <code class="text-break"><%= (@event.live? || @live_preview) ? @event.mux_live_signed_playback_id : @event.mux_replay_signed_playback_id %></code>
             </li>
             <li class="mb-2">
               <strong>Frame-ancestors</strong><br>
@@ -79,6 +112,25 @@
           </ul>
         </div>
       </div>
+
+      <% if @live_previews.any? %>
+        <div class="card mb-4">
+          <div class="card-body">
+            <h2 class="h6 text-uppercase text-muted mb-3">Live streams to check</h2>
+            <ul class="list-unstyled small mb-0">
+              <% @live_previews.each do |other| %>
+                <li class="mb-1">
+                  <%= link_to internal_embed_preview_path(slug: other.slug),
+                        class: (other.id == @event.id ? "fw-bold text-decoration-none" : "text-decoration-none") do %>
+                    <%= other.title %>
+                    <span class="text-muted">&middot; <%= other.event_date&.strftime("%b %-d") %> &middot; <%= other.status.titleize %></span>
+                  <% end %>
+                </li>
+              <% end %>
+            </ul>
+          </div>
+        </div>
+      <% end %>
 
       <% if @recent.many? %>
         <div class="card">
