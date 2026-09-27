@@ -1,0 +1,27 @@
+<h1 class="mb-4">Invite someone</h1>
+
+<div class="col-lg-6">
+  <%= render "internal/shared/errors", record: @user %>
+
+  <%= form_with model: [ :internal, @user ] do |f| %>
+    <div class="mb-3">
+      <%= f.label :email_address, "Email", class: "form-label" %>
+      <%= f.email_field :email_address, required: true, autofocus: true, class: "form-control" %>
+      <small class="form-text text-muted">They'll get an email with a link to set up their account. It expires in 7 days.</small>
+    </div>
+    <div class="mb-3">
+      <%= f.label :name, class: "form-label" %>
+      <%= f.text_field :name, class: "form-control" %>
+      <small class="form-text text-muted">Optional. They can change it when they accept.</small>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <%= f.check_box :admin, class: "form-check-input" %>
+      <%= f.label :admin, "Admin", class: "form-check-label" %>
+      <div class="form-text">Admins can invite people and manage Channels and Sidekiq.</div>
+    </div>
+    <div class="d-flex gap-2">
+      <%= f.submit "Send invitation", class: "btn btn-primary" %>
+      <%= link_to "Cancel", internal_users_path, class: "btn btn-secondary" %>
+    </div>
+  <% end %>
+</div>

@@ -17,6 +17,7 @@
     <div class="container">
       <div class="d-flex justify-content-end align-items-center gap-3 pt-2 small text-body-secondary d-print-none">
         <span>Signed in as <%= current_user.display_name %></span>
+        <%= link_to "Account", edit_internal_account_path, class: "link-secondary" %>
         <%= button_to "Sign out", internal_logout_path, method: :delete, class: "btn btn-link btn-sm p-0 text-body-secondary" %>
       </div>
       <header class="d-flex flex-wrap justify-content-center align-items-center py-3 mb-4 border-bottom d-print-none">
@@ -37,6 +38,7 @@
           <li class="nav-item"><%= link_to "Uploads", internal_uploads_path, class: "nav-link #{'active' if controller_name == 'uploads'}" %></li>
           <li class="nav-item"><%= link_to "Embeds", internal_embed_settings_path, class: "nav-link #{'active' if controller_name.in?(%w[embed_settings embed_previews])}" %></li>
           <% if current_user.admin? %>
+            <li class="nav-item"><%= link_to "Users", internal_users_path, class: "nav-link #{'active' if controller_name == 'users'}" %></li>
             <li class="nav-item"><%= link_to "Sidekiq", '/internal/sidekiq', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
           <% end %>
           <li class="nav-item"><%= link_to "Web Analytics", 'https://app.usefathom.com/share/bpvxynyg/dac+sports+network', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>

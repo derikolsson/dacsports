@@ -1,0 +1,6 @@
+<p style="margin: 0 0 16px;">
+  <%= @inviter ? "#{@inviter.display_name} invited you" : "You've been invited" %> to help run DAC Sports Network.
+</p>
+<p style="margin: 0 0 16px;">Choose a password to finish setting up your account.</p>
+<%= render "auth_mailer/button", url: @url, label: "Accept invitation" %>
+<p style="margin: 0; font-size: 13px; color: #6c757d;">This link works once and expires in 7 days.</p>

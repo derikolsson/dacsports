@@ -1,0 +1,50 @@
+<h1 class="mb-4">Your account</h1>
+
+<%= render "internal/shared/errors", record: current_user %>
+
+<div class="row">
+  <div class="col-lg-6">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Profile</h2>
+        <%= form_with model: current_user, url: internal_account_path, method: :patch do |f| %>
+          <div class="mb-3">
+            <%= f.label :name, class: "form-label" %>
+            <%= f.text_field :name, autocomplete: "name", class: "form-control" %>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" value="<%= current_user.email_address %>" disabled>
+            <small class="form-text text-muted">Ask an admin if this needs to change.</small>
+          </div>
+          <%= f.submit "Save", class: "btn btn-primary" %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Change password</h2>
+        <%= form_with model: current_user, url: internal_account_path, method: :patch do |f| %>
+          <%= hidden_field_tag :password_change, "1" %>
+          <%= hidden_field_tag :email_address, current_user.email_address, autocomplete: "username" %>
+          <div class="mb-3">
+            <%= f.label :current_password, class: "form-label" %>
+            <%= f.password_field :current_password, required: true, autocomplete: "current-password", class: "form-control" %>
+          </div>
+          <div class="mb-3">
+            <%= f.label :password, "New password", class: "form-label" %>
+            <%= f.password_field :password, required: true, autocomplete: "new-password",
+                  minlength: User::MINIMUM_PASSWORD_LENGTH, class: "form-control" %>
+            <small class="form-text text-muted">At least <%= User::MINIMUM_PASSWORD_LENGTH %> characters. You'll be signed out everywhere else.</small>
+          </div>
+          <div class="mb-3">
+            <%= f.label :password_confirmation, "Confirm new password", class: "form-label" %>
+            <%= f.password_field :password_confirmation, required: true, autocomplete: "new-password", class: "form-control" %>
+          </div>
+          <%= f.submit "Change password", class: "btn btn-secondary" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,93 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Users</h1>
+  <%= link_to "Invite someone", new_internal_user_path, class: "btn btn-primary" %>
+</div>
+
+<table class="table table-striped align-middle">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Last signed in</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @active_users.each do |user| %>
+      <tr>
+        <td><%= user.name %><%= " (you)" if user == current_user %></td>
+        <td><%= user.email_address %></td>
+        <td>
+          <% if user.admin? %>
+            <span class="badge text-bg-primary">Admin</span>
+          <% else %>
+            <span class="badge text-bg-secondary">Staff</span>
+          <% end %>
+        </td>
+        <td class="small"><%= user.last_signed_in_at ? "#{time_ago_in_words(user.last_signed_in_at)} ago" : "—" %></td>
+        <td>
+          <% unless user == current_user %>
+            <div class="d-flex gap-2">
+              <%= button_to user.admin? ? "Remove admin" : "Make admin", internal_user_path(user),
+                    method: :patch, params: { user: { admin: user.admin? ? "0" : "1" } },
+                    class: "btn btn-sm btn-secondary" %>
+              <%= button_to "Deactivate", internal_user_path(user), method: :delete,
+                    class: "btn btn-sm btn-danger",
+                    form: { data: { turbo_confirm: "Deactivate #{user.display_name}? They'll be signed out and can't sign in again until reactivated." } } %>
+            </div>
+          <% end %>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<% if @pending_users.any? %>
+  <h2 class="h4 mt-5 mb-3">Pending invitations</h2>
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Invited</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @pending_users.each do |user| %>
+        <tr>
+          <td><%= user.email_address %></td>
+          <td><%= user.admin? ? "Admin" : "Staff" %></td>
+          <td class="small">
+            <%= time_ago_in_words(user.updated_at) %> ago<%= " by #{user.invited_by.display_name}" if user.invited_by %>
+          </td>
+          <td>
+            <div class="d-flex gap-2">
+              <%= button_to "Resend", resend_invitation_internal_user_path(user), class: "btn btn-sm btn-secondary" %>
+              <%= button_to "Revoke", internal_user_path(user), method: :delete,
+                    class: "btn btn-sm btn-danger",
+                    form: { data: { turbo_confirm: "Revoke the invitation for #{user.email_address}?" } } %>
+            </div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
+
+<% if @deactivated_users.any? %>
+  <h2 class="h4 mt-5 mb-3">Deactivated</h2>
+  <table class="table align-middle text-body-secondary">
+    <tbody>
+      <% @deactivated_users.each do |user| %>
+        <tr>
+          <td><%= user.name %></td>
+          <td><%= user.email_address %></td>
+          <td class="small">Deactivated <%= time_ago_in_words(user.deactivated_at) %> ago</td>
+          <td><%= button_to "Reactivate", reactivate_internal_user_path(user), class: "btn btn-sm btn-outline-secondary" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>

@@ -9,6 +9,8 @@ Rails.application.routes.draw do
   # get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
+  mount LetterOpenerWeb::Engine, at: "/letter_opener" if Rails.env.development?
+
   root "events#index"
 
   get "schedule", to: "events#index", as: :schedule
@@ -42,6 +44,15 @@ Rails.application.routes.draw do
     get "login", to: "sessions#new"
     post "login", to: "sessions#create"
     delete "logout", to: "sessions#destroy"
+    resources :invitations, only: [ :show, :update ], param: :token
+
+    resource :account, only: [ :edit, :update ]
+    resources :users, only: [ :index, :new, :create, :update, :destroy ] do
+      member do
+        post :resend_invitation
+        post :reactivate
+      end
+    end
 
     resources :reports, only: [ :index ]
     resource :embed_settings, only: [ :show, :update ]
