@@ -44,4 +44,57 @@ RSpec.describe Channel, type: :model do
       expect { channel.sync_from_mux! }.to raise_error(Channel::SyncError, /LS1/)
     end
   end
+
+  describe '#sync_captions_to_mux!' do
+    let(:channel) { create(:channel, mux_live_stream_id: "LS1", captions_enabled: true) }
+    let(:api) { instance_double(MuxRuby::LiveStreamsApi) }
+    let(:stream) { double(status: "idle", latency_mode: "standard") }
+
+    before do
+      allow(MuxRuby::LiveStreamsApi).to receive(:new).and_return(api)
+      allow(api).to receive(:get_live_stream).with("LS1").and_return(double(data: stream))
+      create(:vocabulary, mux_vocabulary_id: "GLOBALVOCAB")
+    end
+
+    it 'attaches the shared vocabulary, then the channel one' do
+      create(:vocabulary, channel: channel, mux_vocabulary_id: "CHANNELVOCAB")
+      expect(api).to receive(:update_live_stream_generated_subtitles) do |id, request|
+        expect(id).to eq("LS1")
+        expect(request.generated_subtitles.first).to have_attributes(
+          language_code: "en", transcription_vocabulary_ids: %w[GLOBALVOCAB CHANNELVOCAB]
+        )
+      end
+
+      channel.sync_captions_to_mux!
+
+      expect(channel.reload.captions_synced_at).to be_present
+    end
+
+    it 'clears the generated captions when they are turned off' do
+      channel.update_columns(captions_enabled: false)
+      expect(api).to receive(:update_live_stream_generated_subtitles) do |_id, request|
+        expect(request.generated_subtitles).to eq([])
+      end
+
+      channel.sync_captions_to_mux!
+    end
+
+    it 'refuses a low-latency stream' do
+      allow(stream).to receive(:latency_mode).and_return("low")
+
+      expect { channel.sync_captions_to_mux! }.to raise_error(Channel::SyncError, /low-latency/)
+      expect(channel.reload.captions_sync_error).to match(/low-latency/)
+    end
+
+    it 'waits for a live stream to go idle' do
+      allow(stream).to receive(:status).and_return("active")
+      expect { channel.sync_captions_to_mux! }.to raise_error(Channel::StreamActive)
+    end
+  end
+
+  it 'queues a caption sync when captions are switched' do
+    channel = create(:channel)
+    expect { channel.update!(captions_enabled: true) }.to change(SyncChannelCaptionsJob.jobs, :size).by(1)
+    expect { channel.update!(name: "Renamed") }.not_to change(SyncChannelCaptionsJob.jobs, :size)
+  end
 end

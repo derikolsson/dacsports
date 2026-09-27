@@ -1,0 +1,8 @@
+<%# locals: (synced_at:, error:) %>
+<% if error.present? %>
+  <span class="text-danger"><i class="bi bi-exclamation-triangle"></i> <%= error %></span>
+<% elsif synced_at %>
+  <span class="text-success"><i class="bi bi-check-circle"></i> Synced to Mux <%= time_ago_in_words(synced_at) %> ago</span>
+<% else %>
+  <span class="text-muted">Not synced to Mux yet</span>
+<% end %>

@@ -32,6 +32,31 @@
     </dl>
   <% end %>
 
+  <fieldset class="border rounded p-3 mb-3">
+    <legend class="float-none w-auto px-2 fs-6">Captions</legend>
+
+    <div class="form-check form-switch mb-2">
+      <%= f.check_box :captions_enabled, class: "form-check-input" %>
+      <%= f.label :captions_enabled, "Auto-generate English captions", class: "form-check-label" %>
+    </div>
+    <% if @channel.persisted? %>
+      <p class="small mb-3">
+        <%= render "internal/vocabularies/sync_status", synced_at: @channel.captions_synced_at, error: @channel.captions_sync_error %>
+      </p>
+    <% end %>
+
+    <%= f.fields_for :vocabulary do |vf| %>
+      <div class="mb-0">
+        <%= vf.label :phrases, "Extra vocabulary for this channel", class: "form-label" %>
+        <%= vf.text_area :phrases, rows: 5, class: "form-control font-monospace" %>
+        <small class="form-text text-muted">
+          One phrase per line, added on top of the <%= link_to "shared vocabulary", internal_vocabulary_path %>.
+          Captions only change while the stream is idle, and vocabulary changes apply the next time it goes live.
+        </small>
+      </div>
+    <% end %>
+  </fieldset>
+
   <div class="mb-3">
     <%= f.submit class: 'btn btn-primary' %>
     <%= link_to 'Cancel', internal_channels_path, class: 'btn btn-secondary' %>

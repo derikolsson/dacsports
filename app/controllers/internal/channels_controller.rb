@@ -7,6 +7,7 @@ class Internal::ChannelsController < Internal::ApplicationController
 
   def new
     @channel = Channel.new
+    @channel.build_vocabulary
   end
 
   def create
@@ -19,6 +20,7 @@ class Internal::ChannelsController < Internal::ApplicationController
   end
 
   def edit
+    @channel.vocabulary || @channel.build_vocabulary
   end
 
   def update
@@ -44,7 +46,7 @@ class Internal::ChannelsController < Internal::ApplicationController
   end
 
   def channel_params
-    params.require(:channel).permit(:name, :mux_live_stream_id)
+    params.require(:channel).permit(:name, :mux_live_stream_id, :captions_enabled, vocabulary_attributes: [ :id, :phrases ])
   end
 
   # Refreshes the playback IDs from Mux on every save so they can't drift from the stream.

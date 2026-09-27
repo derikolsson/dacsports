@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_27_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_27_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -21,6 +21,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_27_130000) do
     t.string "mux_live_signed_playback_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "captions_enabled", default: false, null: false
+    t.datetime "captions_synced_at"
+    t.string "captions_sync_error"
     t.index ["mux_live_stream_id"], name: "index_channels_on_mux_live_stream_id", unique: true
   end
 
@@ -104,6 +107,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_27_130000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_teams_on_slug", unique: true
+  end
+
+  create_table "vocabularies", force: :cascade do |t|
+    t.bigint "channel_id"
+    t.text "phrases", default: "", null: false
+    t.string "mux_vocabulary_id"
+    t.datetime "synced_at"
+    t.string "sync_error"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["channel_id"], name: "index_vocabularies_on_channel_id", unique: true, nulls_not_distinct: true
   end
 
   add_foreign_key "event_slugs", "events"

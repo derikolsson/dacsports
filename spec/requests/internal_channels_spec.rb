@@ -41,10 +41,40 @@ RSpec.describe "Internal::Channels", type: :request do
       expect(flash[:alert]).to match(/not found/)
     end
 
+    it "saves captions and the channel's own vocabulary" do
+      allow_any_instance_of(Channel).to receive(:sync_from_mux!)
+
+      post internal_channels_path, params: {
+        channel: { name: "Main Court", mux_live_stream_id: "LS1", captions_enabled: "1",
+                   vocabulary_attributes: { phrases: "Main Court" } }
+      }, headers: auth_headers
+
+      channel = Channel.find_by(mux_live_stream_id: "LS1")
+      expect(channel.captions_enabled).to be(true)
+      expect(channel.vocabulary.phrase_list).to eq([ "Main Court" ])
+      expect(SyncChannelCaptionsJob.jobs.size).to eq(1)
+    end
+
+    it "skips an empty channel vocabulary" do
+      allow_any_instance_of(Channel).to receive(:sync_from_mux!)
+
+      post internal_channels_path, params: {
+        channel: { name: "Main Court", mux_live_stream_id: "LS1", vocabulary_attributes: { phrases: "" } }
+      }, headers: auth_headers
+
+      expect(Channel.find_by(mux_live_stream_id: "LS1").vocabulary).to be_nil
+    end
+
     it "re-renders the form when invalid" do
       post internal_channels_path, params: { channel: { name: "" } }, headers: auth_headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
+  end
+
+  it "renders the edit form with caption settings" do
+    channel = create(:channel, captions_enabled: true, captions_sync_error: "The stream is live")
+    get edit_internal_channel_path(channel), headers: auth_headers
+    expect(response.body).to include("Extra vocabulary", "The stream is live")
   end
 
   it "won't delete a channel with events" do

@@ -22,6 +22,9 @@ class Team < ApplicationRecord
   has_many :event_teams, dependent: :destroy
   has_many :events, through: :event_teams
 
+  # Team names feed the shared caption vocabulary.
+  after_commit :sync_caption_vocabulary, if: -> { destroyed? || saved_change_to_name? }
+
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
 
@@ -66,5 +69,11 @@ class Team < ApplicationRecord
 
   def mascot
     team_colors[:mascot]
+  end
+
+  private
+
+  def sync_caption_vocabulary
+    Vocabulary.find_by(channel_id: nil)&.sync_later
   end
 end

@@ -1,0 +1,74 @@
+<h1 class="h3 mb-2">Captions</h1>
+<p class="text-muted mb-4">
+  Mux captions live streams automatically. These phrases make it favor the names and terms we use, so
+  "DAC Sports" doesn't come out as "Dak sports". Changes apply the next time a stream goes live.
+</p>
+
+<div class="row">
+  <div class="col-lg-7">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Shared vocabulary</h2>
+
+        <%= form_with model: @vocabulary, url: internal_vocabulary_path, method: :patch do |f| %>
+          <% if @vocabulary.errors.any? %>
+            <div class="alert alert-danger">
+              <% @vocabulary.errors.full_messages.each do |message| %>
+                <div><%= message %></div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div class="mb-3">
+            <%= f.text_area :phrases, rows: 12, class: "form-control font-monospace",
+                            placeholder: "DAC Sports\nPlayer names\nVenue names" %>
+            <small class="form-text text-muted">
+              One word, name, or phrase per line. Spell them the way captions should show them.
+              Used on every channel with captions on.
+            </small>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center">
+            <%= f.submit "Save", class: "btn btn-primary" %>
+            <small><%= render "sync_status", synced_at: @vocabulary.synced_at, error: @vocabulary.sync_error %></small>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Included automatically</h2>
+        <p class="small text-muted">Team names and mascots, kept in step with the Teams page.</p>
+        <div class="d-flex flex-wrap gap-1">
+          <% @vocabulary.team_phrases.each do |phrase| %>
+            <span class="badge text-bg-light border"><%= phrase %></span>
+          <% end %>
+        </div>
+        <p class="small text-muted mt-3 mb-0">
+          <%= @vocabulary.all_phrases.size %> of <%= Vocabulary::MAX_PHRASES %> phrases used, shared with each channel's own list.
+        </p>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h6 text-uppercase text-muted mb-3">Channels</h2>
+        <ul class="list-unstyled small mb-0">
+          <% @channels.each do |channel| %>
+            <li class="mb-2">
+              <%= link_to channel.name, edit_internal_channel_path(channel) %>:
+              <% if channel.captions_enabled? %>
+                captions on<%= ", plus #{pluralize(channel.vocabulary.phrase_list.size, 'phrase')} of its own" if channel.vocabulary %>
+              <% else %>
+                captions off
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
