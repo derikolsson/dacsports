@@ -32,18 +32,23 @@
           <li class="nav-item"><%= link_to "Dashboard", internal_root_path, class: "nav-link #{'active' if controller_name == 'home'}" %></li>
           <li class="nav-item"><%= link_to "Reports", internal_reports_path, class: "nav-link #{'active' if controller_name == 'reports'}" %></li>
           <li class="nav-item"><%= link_to "Events", internal_events_path, class: "nav-link #{'active' if controller_name == 'events'}" %></li>
-          <li class="nav-item"><%= link_to "Teams", internal_teams_path, class: "nav-link #{'active' if controller_name == 'teams'}" %></li>
-          <% if current_user.admin? %>
-            <li class="nav-item"><%= link_to "Channels", internal_channels_path, class: "nav-link #{'active' if controller_name == 'channels'}" %></li>
-          <% end %>
-          <li class="nav-item"><%= link_to "Captions", internal_vocabulary_path, class: "nav-link #{'active' if controller_name == 'vocabularies'}" %></li>
           <li class="nav-item"><%= link_to "Uploads", internal_uploads_path, class: "nav-link #{'active' if controller_name == 'uploads'}" %></li>
-          <li class="nav-item"><%= link_to "Embeds", internal_embed_settings_path, class: "nav-link #{'active' if controller_name.in?(%w[embed_settings embed_previews])}" %></li>
-          <% if current_user.admin? %>
-            <li class="nav-item"><%= link_to "Users", internal_users_path, class: "nav-link #{'active' if controller_name == 'users'}" %></li>
-            <li class="nav-item"><%= link_to "Sidekiq", '/internal/sidekiq', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
-          <% end %>
-          <li class="nav-item"><%= link_to "Web Analytics", 'https://app.usefathom.com/share/bpvxynyg/dac+sports+network', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
+          <li class="nav-item dropdown">
+            <% manage_controllers = %w[teams channels vocabularies embed_settings embed_previews users] %>
+            <a class="nav-link dropdown-toggle <%= 'active' if controller_name.in?(manage_controllers) %>" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Manage</a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><%= link_to "Teams", internal_teams_path, class: "dropdown-item #{'active' if controller_name == 'teams'}" %></li>
+              <li><%= link_to "Captions", internal_vocabulary_path, class: "dropdown-item #{'active' if controller_name == 'vocabularies'}" %></li>
+              <li><%= link_to "Embeds", internal_embed_settings_path, class: "dropdown-item #{'active' if controller_name.in?(%w[embed_settings embed_previews])}" %></li>
+              <% if current_user.admin? %>
+                <li><hr class="dropdown-divider"></li>
+                <li><h6 class="dropdown-header">Admin</h6></li>
+                <li><%= link_to "Channels", internal_channels_path, class: "dropdown-item #{'active' if controller_name == 'channels'}" %></li>
+                <li><%= link_to "Users", internal_users_path, class: "dropdown-item #{'active' if controller_name == 'users'}" %></li>
+                <li><%= link_to "Sidekiq", '/internal/sidekiq', class: "dropdown-item", target: "_blank", rel: "noopener noreferrer" %></li>
+              <% end %>
+            </ul>
+          </li>
           <li class="nav-item">
             <%= link_to root_path, class: "nav-link" do %>
               Back to Site <i class="bi bi-house-door ms-1"></i>
