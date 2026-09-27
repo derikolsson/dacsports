@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_27_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_27_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -76,11 +76,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_27_120000) do
     t.string "location"
     t.string "round"
     t.datetime "stream_starts_at"
-    t.string "mux_live_playback_id"
     t.string "mux_replay_playback_id"
     t.decimal "replay_start_time", precision: 10, scale: 2
     t.decimal "replay_end_time", precision: 10, scale: 2
-    t.string "mux_live_signed_playback_id"
     t.string "mux_replay_signed_playback_id"
     t.string "mux_asset_id"
     t.bigint "channel_id"
