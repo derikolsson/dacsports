@@ -10,7 +10,7 @@ class Internal::InvitationsController < Internal::ApplicationController
   def update
     if @user.accept_invitation(**params.require(:user).permit(:name, :password, :password_confirmation).to_h.symbolize_keys)
       sign_in(@user)
-      redirect_to edit_internal_account_path, notice: "Welcome aboard!"
+      redirect_to edit_internal_account_path, notice: "Welcome aboard! Add a passkey below to sign in with Face ID, Touch ID, or your phone next time."
     else
       render :show, status: :unprocessable_content
     end

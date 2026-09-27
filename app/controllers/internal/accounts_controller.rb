@@ -1,5 +1,6 @@
 class Internal::AccountsController < Internal::ApplicationController
   def edit
+    @passkeys = current_user.passkeys.order(:created_at)
   end
 
   def update
@@ -32,6 +33,7 @@ class Internal::AccountsController < Internal::ApplicationController
   end
 
   def render_edit
+    @passkeys = current_user.passkeys.order(:created_at)
     render :edit, status: :unprocessable_content
   end
 end

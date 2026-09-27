@@ -47,8 +47,16 @@ Rails.application.routes.draw do
     resources :magic_links, only: [ :new, :create, :show, :update ], param: :token
     resources :passwords, only: [ :new, :create, :edit, :update ], param: :token
     resources :invitations, only: [ :show, :update ], param: :token
+    resource :passkey_session, only: [ :create ] do
+      post :options
+    end
 
     resource :account, only: [ :edit, :update ]
+    resources :passkeys, only: [ :create, :destroy ] do
+      collection do
+        post :options
+      end
+    end
     resources :users, only: [ :index, :new, :create, :update, :destroy ] do
       member do
         post :resend_invitation

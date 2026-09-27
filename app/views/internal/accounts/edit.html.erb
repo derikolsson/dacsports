@@ -2,7 +2,7 @@
 
 <%= render "internal/shared/errors", record: current_user %>
 
-<div class="row">
+<div class="row g-4">
   <div class="col-lg-6">
     <div class="card mb-4">
       <div class="card-body">
@@ -44,6 +44,47 @@
           </div>
           <%= f.submit "Change password", class: "btn btn-secondary" %>
         <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-body">
+        <h2 class="h5 card-title">Passkeys</h2>
+        <p class="text-body-secondary small">
+          Sign in with Face ID, Touch ID, Windows Hello, your phone, or a security key instead of typing a password.
+          Add one for each device you use.
+        </p>
+
+        <% if @passkeys.any? %>
+          <ul class="list-group mb-3">
+            <% @passkeys.each do |passkey| %>
+              <li class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                  <div><i class="bi bi-key me-1"></i> <%= passkey.name %></div>
+                  <small class="text-body-secondary">
+                    Added <%= passkey.created_at.to_date.to_fs(:long) %> ·
+                    <%= passkey.last_used_at ? "last used #{time_ago_in_words(passkey.last_used_at)} ago" : "never used" %>
+                  </small>
+                </div>
+                <%= button_to "Remove", internal_passkey_path(passkey), method: :delete,
+                      class: "btn btn-sm btn-outline-danger",
+                      form: { data: { turbo_confirm: "Remove “#{passkey.name}”? You won't be able to sign in with it anymore." } } %>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+
+        <div data-passkey hidden>
+          <%= form_with url: internal_passkeys_path, data: { passkey_register: true, options_url: options_internal_passkeys_path } do |f| %>
+            <div class="input-group">
+              <%= f.text_field :name, placeholder: "Name, e.g. Work laptop", "aria-label": "Passkey name", class: "form-control" %>
+              <%= f.submit "Add passkey", class: "btn btn-primary" %>
+            </div>
+          <% end %>
+          <div class="text-danger small mt-2" data-passkey-error hidden></div>
+        </div>
       </div>
     </div>
   </div>

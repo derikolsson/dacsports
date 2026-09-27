@@ -8,6 +8,10 @@
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "internal", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <script type="module">
+      import { initializePasskeys } from 'passkeys';
+      initializePasskeys();
+    </script>
   </head>
 
   <body class="bg-body-tertiary">
