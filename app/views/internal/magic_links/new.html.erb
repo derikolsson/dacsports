@@ -1,0 +1,14 @@
+<% content_for :title, "Email a sign-in link" %>
+
+<h1 class="h4 mb-2">Email me a sign-in link</h1>
+<p class="text-body-secondary small">We'll send a link that signs you in without a password. It expires in 15 minutes.</p>
+
+<%= form_with url: internal_magic_links_path do |f| %>
+  <div class="mb-3">
+    <%= f.label :email_address, "Email", class: "form-label" %>
+    <%= f.email_field :email_address, required: true, autofocus: true, autocomplete: "username", class: "form-control" %>
+  </div>
+  <%= f.submit "Send link", class: "btn btn-primary w-100" %>
+<% end %>
+
+<p class="text-center small mt-3 mb-0"><%= link_to "Back to sign in", internal_login_path %></p>

@@ -44,6 +44,8 @@ Rails.application.routes.draw do
     get "login", to: "sessions#new"
     post "login", to: "sessions#create"
     delete "logout", to: "sessions#destroy"
+    resources :magic_links, only: [ :new, :create, :show, :update ], param: :token
+    resources :passwords, only: [ :new, :create, :edit, :update ], param: :token
     resources :invitations, only: [ :show, :update ], param: :token
 
     resource :account, only: [ :edit, :update ]

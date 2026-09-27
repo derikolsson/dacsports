@@ -1,0 +1,20 @@
+<% content_for :title, "Choose a new password" %>
+
+<h1 class="h4 mb-3">Choose a new password</h1>
+
+<%= render "internal/shared/errors", record: @user %>
+
+<%= form_with url: internal_password_path(params[:token]), method: :patch do |f| %>
+  <%= hidden_field_tag :email_address, @user.email_address, autocomplete: "username" %>
+  <div class="mb-3">
+    <%= f.label :password, "New password", class: "form-label" %>
+    <%= f.password_field :password, required: true, autofocus: true, autocomplete: "new-password",
+          minlength: User::MINIMUM_PASSWORD_LENGTH, class: "form-control" %>
+    <small class="form-text text-muted">At least <%= User::MINIMUM_PASSWORD_LENGTH %> characters.</small>
+  </div>
+  <div class="mb-3">
+    <%= f.label :password_confirmation, "Confirm new password", class: "form-label" %>
+    <%= f.password_field :password_confirmation, required: true, autocomplete: "new-password", class: "form-control" %>
+  </div>
+  <%= f.submit "Save password", class: "btn btn-primary w-100" %>
+<% end %>

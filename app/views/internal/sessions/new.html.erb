@@ -9,9 +9,21 @@
           autocomplete: "username", class: "form-control" %>
   </div>
   <div class="mb-3">
-    <%= f.label :password, class: "form-label" %>
+    <div class="d-flex justify-content-between">
+      <%= f.label :password, class: "form-label" %>
+      <%= link_to "Forgot password?", new_internal_password_path, class: "small" %>
+    </div>
     <%= f.password_field :password, required: true, autocomplete: "current-password", class: "form-control" %>
   </div>
   <%= f.submit "Sign in", class: "btn btn-primary w-100" %>
 <% end %>
 
+<div class="d-flex align-items-center gap-2 my-4 text-body-secondary small">
+  <hr class="flex-grow-1 m-0"><span>or</span><hr class="flex-grow-1 m-0">
+</div>
+
+<div class="d-grid gap-2">
+  <%= link_to new_internal_magic_link_path, class: "btn btn-link btn-sm" do %>
+    Email me a sign-in link instead
+  <% end %>
+</div>

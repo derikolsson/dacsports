@@ -11,4 +11,16 @@ RSpec.describe AuthMailer, type: :mailer do
     token = mail.text_part.body.to_s[%r{/internal/invitations/(\S+)}, 1]
     expect(User.find_by_token_for(:invitation, token)).to eq(user)
   end
+
+  it "sends a magic link that signs the user in" do
+    active = create(:user)
+    token = AuthMailer.magic_link(active).text_part.body.to_s[%r{/internal/magic_links/(\S+)}, 1]
+    expect(User.find_active_by_token_for(:magic_link, token)).to eq(active)
+  end
+
+  it "sends a password reset link" do
+    active = create(:user)
+    token = AuthMailer.password_reset(active).text_part.body.to_s[%r{/internal/passwords/(\S+)/edit}, 1]
+    expect(User.find_by_password_reset_token(token)).to eq(active)
+  end
 end

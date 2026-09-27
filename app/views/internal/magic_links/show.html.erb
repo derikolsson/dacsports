@@ -1,0 +1,8 @@
+<% content_for :title, "Sign in" %>
+
+<h1 class="h4 mb-2">Sign in as <%= @user.display_name %>?</h1>
+<p class="text-body-secondary small"><%= @user.email_address %></p>
+
+<%= button_to "Sign in", internal_magic_link_path(params[:token]), method: :patch, class: "btn btn-primary w-100" %>
+
+<p class="text-center small mt-3 mb-0"><%= link_to "Not you? Back to sign in", internal_login_path %></p>
