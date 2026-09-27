@@ -11,15 +11,11 @@
   <% end %>
 
   <div class="mb-3">
-    <%= f.label :name, class: 'form-label' %>
-    <%= f.text_field :name, class: 'form-control', required: true %>
-  </div>
-
-  <div class="mb-3">
     <%= f.label :mux_live_stream_id, "Mux Live Stream ID", class: 'form-label' %>
-    <%= f.text_field :mux_live_stream_id, class: 'form-control' %>
+    <%= f.text_field :mux_live_stream_id, class: 'form-control', required: true %>
     <small class="form-text text-muted">
-      From the Mux dashboard. Saving pulls the public playback ID from the stream and mints a signed one if it has none.
+      From the Mux dashboard. Saving pulls the stream's title and public playback ID, and mints a signed
+      playback ID if it has none. Rename the channel by renaming the stream in Mux, then saving here.
     </small>
   </div>
 

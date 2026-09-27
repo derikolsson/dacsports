@@ -2,11 +2,12 @@ require 'rails_helper'
 
 RSpec.describe Channel, type: :model do
   describe 'validations' do
-    it { is_expected.to validate_presence_of(:name) }
+    it 'needs a Mux live stream ID' do
+      expect(build(:channel, mux_live_stream_id: " ")).not_to be_valid
+    end
 
-    it 'stores a blank stream ID as nil so several unlinked channels can coexist' do
-      create(:channel, mux_live_stream_id: " ")
-      expect(build(:channel, mux_live_stream_id: "")).to be_valid
+    it 'goes by the stream ID until Mux supplies a title' do
+      expect(create(:channel, name: nil, mux_live_stream_id: "LS1").name).to eq("LS1")
     end
 
     it 'rejects a stream ID another channel already has' do
@@ -28,14 +29,25 @@ RSpec.describe Channel, type: :model do
 
     before { allow(MuxRuby::LiveStreamsApi).to receive(:new).and_return(api) }
 
-    it 'stores the public playback ID and the signed one' do
-      stream = double(playback_ids: [ double(policy: "signed", id: "SIGNED"), double(policy: "public", id: "PUBLIC") ])
+    it 'stores the stream title, the public playback ID, and the signed one' do
+      stream = double(meta: double(title: "DAC Sports 1"),
+                      playback_ids: [ double(policy: "signed", id: "SIGNED"), double(policy: "public", id: "PUBLIC") ])
       allow(api).to receive(:get_live_stream).with("LS1").and_return(double(data: stream))
       allow(MuxSignedPlaybackId).to receive(:for_live_stream).with("LS1").and_return("SIGNED")
 
       channel.sync_from_mux!
 
-      expect(channel.reload).to have_attributes(mux_live_playback_id: "PUBLIC", mux_live_signed_playback_id: "SIGNED")
+      expect(channel.reload).to have_attributes(
+        name: "DAC Sports 1", mux_live_playback_id: "PUBLIC", mux_live_signed_playback_id: "SIGNED"
+      )
+    end
+
+    it 'keeps the current name when the stream has no title' do
+      stream = double(meta: nil, playback_ids: [])
+      allow(api).to receive(:get_live_stream).and_return(double(data: stream))
+      allow(MuxSignedPlaybackId).to receive(:for_live_stream).and_return("SIGNED")
+
+      expect { channel.sync_from_mux! }.not_to change { channel.reload.name }
     end
 
     it 'wraps a Mux failure' do

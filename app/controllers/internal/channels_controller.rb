@@ -46,7 +46,7 @@ class Internal::ChannelsController < Internal::ApplicationController
   end
 
   def channel_params
-    params.require(:channel).permit(:name, :mux_live_stream_id, :captions_enabled, vocabulary_attributes: [ :id, :phrases ])
+    params.require(:channel).permit(:mux_live_stream_id, :captions_enabled, vocabulary_attributes: [ :id, :phrases ])
   end
 
   # Refreshes the playback IDs from Mux on every save so they can't drift from the stream.

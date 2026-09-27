@@ -25,16 +25,16 @@ RSpec.describe "Internal::Channels", type: :request do
     it "creates the channel and syncs it from Mux" do
       expect_any_instance_of(Channel).to receive(:sync_from_mux!)
 
-      post internal_channels_path, params: { channel: { name: "Main Court", mux_live_stream_id: "LS1" } }, headers: auth_headers
+      post internal_channels_path, params: { channel: { mux_live_stream_id: "LS1" } }, headers: auth_headers
 
       expect(response).to redirect_to(internal_channels_path)
-      expect(Channel.find_by(mux_live_stream_id: "LS1").name).to eq("Main Court")
+      expect(Channel.find_by(mux_live_stream_id: "LS1")).to be_present
     end
 
     it "keeps the channel but reports a failed sync" do
       allow_any_instance_of(Channel).to receive(:sync_from_mux!).and_raise(Channel::SyncError, "not found")
 
-      post internal_channels_path, params: { channel: { name: "Main Court", mux_live_stream_id: "LS1" } }, headers: auth_headers
+      post internal_channels_path, params: { channel: { mux_live_stream_id: "LS1" } }, headers: auth_headers
 
       channel = Channel.find_by(mux_live_stream_id: "LS1")
       expect(response).to redirect_to(edit_internal_channel_path(channel))
@@ -45,7 +45,7 @@ RSpec.describe "Internal::Channels", type: :request do
       allow_any_instance_of(Channel).to receive(:sync_from_mux!)
 
       post internal_channels_path, params: {
-        channel: { name: "Main Court", mux_live_stream_id: "LS1", captions_enabled: "1",
+        channel: { mux_live_stream_id: "LS1", captions_enabled: "1",
                    vocabulary_attributes: { phrases: "Main Court" } }
       }, headers: auth_headers
 
@@ -59,14 +59,14 @@ RSpec.describe "Internal::Channels", type: :request do
       allow_any_instance_of(Channel).to receive(:sync_from_mux!)
 
       post internal_channels_path, params: {
-        channel: { name: "Main Court", mux_live_stream_id: "LS1", vocabulary_attributes: { phrases: "" } }
+        channel: { mux_live_stream_id: "LS1", vocabulary_attributes: { phrases: "" } }
       }, headers: auth_headers
 
       expect(Channel.find_by(mux_live_stream_id: "LS1").vocabulary).to be_nil
     end
 
     it "re-renders the form when invalid" do
-      post internal_channels_path, params: { channel: { name: "" } }, headers: auth_headers
+      post internal_channels_path, params: { channel: { mux_live_stream_id: "" } }, headers: auth_headers
       expect(response).to have_http_status(:unprocessable_entity)
     end
   end

@@ -1,5 +1,6 @@
 # A Mux live stream the venue encoders push to. Events pick the channel they air on, so
-# the stream's playback IDs live here once rather than being pasted onto every event.
+# the stream's playback IDs live here once rather than being pasted onto every event. The
+# name is the stream's title in Mux, so it reads the same in both places.
 class Channel < ApplicationRecord
   PUBLIC = MuxRuby::PlaybackPolicy::PUBLIC
 
@@ -13,18 +14,22 @@ class Channel < ApplicationRecord
 
   normalizes :mux_live_stream_id, with: ->(id) { id.strip.presence }
 
+  before_validation { self.name = mux_live_stream_id if name.blank? }
+
   validates :name, presence: true
-  validates :mux_live_stream_id, uniqueness: true, allow_nil: true
+  validates :mux_live_stream_id, presence: true, uniqueness: true
 
   scope :alphabetical, -> { order(:name) }
 
   after_commit :sync_captions_later, if: -> { saved_change_to_captions_enabled? }
 
-  # Pulls the public playback ID off the Mux stream and finds (or mints) the signed one.
+  # Pulls the title and public playback ID off the Mux stream and finds (or mints) the
+  # signed one.
   def sync_from_mux!
     raise SyncError, "Set the Mux live stream ID first" if mux_live_stream_id.blank?
 
     stream = MuxRuby::LiveStreamsApi.new.get_live_stream(mux_live_stream_id).data
+    self.name = stream.meta&.title.presence || name
     self.mux_live_playback_id = Array(stream.playback_ids).find { |p| p.policy.to_s == PUBLIC }&.id
     self.mux_live_signed_playback_id = MuxSignedPlaybackId.for_live_stream(mux_live_stream_id)
     save!

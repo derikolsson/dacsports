@@ -18,7 +18,7 @@ namespace :mux do
                        .where(mux_live_playback_id: playback_ids)
                        .or(Channel.where(mux_live_stream_id: nil, mux_live_signed_playback_id: playback_ids))
                        .first ||
-                Channel.new(name: stream.meta&.title.presence || stream.id)
+                Channel.new
       created = channel.new_record?
 
       channel.update!(mux_live_stream_id: stream.id)
