@@ -5,14 +5,14 @@ RSpec.describe "Passkeys", type: :request do
   let(:user) { create(:user) }
   let(:client) { WebAuthn::FakeClient.new(Rails.configuration.x.auth.origin) }
 
-  def json_post(path, params = {})
-    post path, params: params.to_json, headers: { "CONTENT_TYPE" => "application/json", "ACCEPT" => "application/json" }
+  def json_post(path, params = {}, headers = {})
+    post path, params: params.to_json, headers: { "CONTENT_TYPE" => "application/json", "ACCEPT" => "application/json" }.merge(headers)
   end
 
-  def register_passkey(name: "Work laptop", authenticator: client)
+  def register_passkey(authenticator: client)
     json_post options_internal_passkeys_path
     challenge = response.parsed_body["challenge"]
-    json_post internal_passkeys_path, credential: authenticator.create(challenge: challenge).to_json, name: name
+    json_post internal_passkeys_path, credential: authenticator.create(challenge: challenge).to_json
   end
 
   def sign_in_with_passkey(user_handle: user.webauthn_id)
@@ -22,23 +22,44 @@ RSpec.describe "Passkeys", type: :request do
     json_post internal_passkey_session_path, credential: assertion.to_json
   end
 
-  it "registers a passkey for the signed-in user" do
+  it "registers a passkey named after the browser it was made in" do
+    chrome_on_mac = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"
     sign_in_as user
-    register_passkey
+    json_post options_internal_passkeys_path
+    challenge = response.parsed_body["challenge"]
+    json_post internal_passkeys_path, { credential: client.create(challenge: challenge).to_json }, { "User-Agent" => chrome_on_mac }
 
     expect(response).to have_http_status(:ok)
-    expect(user.passkeys.sole).to have_attributes(name: "Work laptop")
+    expect(user.passkeys.sole.name).to eq("Chrome on Mac")
   end
 
-  it "lets a user keep several passkeys and remove one" do
+  it "lets a user keep several passkeys, rename one and remove another" do
     sign_in_as user
-    register_passkey(name: "Laptop")
-    register_passkey(name: "Phone", authenticator: WebAuthn::FakeClient.new(Rails.configuration.x.auth.origin))
+    register_passkey
+    register_passkey(authenticator: WebAuthn::FakeClient.new(Rails.configuration.x.auth.origin))
+    first, second = user.passkeys.order(:id).to_a
 
-    expect(user.passkeys.pluck(:name)).to contain_exactly("Laptop", "Phone")
+    patch internal_passkey_path(first), params: { passkey: { name: "Work laptop" } }
+    expect(first.reload.name).to eq("Work laptop")
 
-    delete internal_passkey_path(user.passkeys.find_by(name: "Laptop"))
-    expect(user.passkeys.pluck(:name)).to eq([ "Phone" ])
+    patch internal_passkey_path(first), params: { passkey: { name: "" } }
+    expect(first.reload.name).to eq("Work laptop")
+
+    delete internal_passkey_path(second)
+    expect(user.passkeys.pluck(:name)).to eq([ "Work laptop" ])
+  end
+
+  it "won't rename someone else's passkey" do
+    sign_in_as user
+    register_passkey
+    passkey = user.passkeys.sole
+
+    delete internal_logout_path
+    sign_in_as create(:user)
+    patch internal_passkey_path(passkey), params: { passkey: { name: "Mine now" } }
+
+    expect(response).to have_http_status(:not_found)
+    expect(passkey.reload.name).not_to eq("Mine now")
   end
 
   it "rejects a registration answering the wrong challenge" do

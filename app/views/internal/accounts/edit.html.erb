@@ -60,17 +60,28 @@
         <% if @passkeys.any? %>
           <ul class="list-group mb-3">
             <% @passkeys.each do |passkey| %>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <div>
-                  <div><i class="bi bi-key me-1"></i> <%= passkey.name %></div>
-                  <small class="text-body-secondary">
-                    Added <%= passkey.created_at.to_date.to_fs(:long) %> ·
-                    <%= passkey.last_used_at ? "last used #{time_ago_in_words(passkey.last_used_at)} ago" : "never used" %>
-                  </small>
+              <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <div><i class="bi bi-key me-1"></i> <%= passkey.name %></div>
+                    <small class="text-body-secondary">
+                      Added <%= passkey.created_at.to_date.to_fs(:long) %> ·
+                      <%= passkey.last_used_at ? "last used #{time_ago_in_words(passkey.last_used_at)} ago" : "never used" %>
+                    </small>
+                  </div>
+                  <%= button_to "Remove", internal_passkey_path(passkey), method: :delete,
+                        class: "btn btn-sm btn-outline-danger",
+                        form: { data: { turbo_confirm: "Remove “#{passkey.name}”? You won't be able to sign in with it anymore." } } %>
                 </div>
-                <%= button_to "Remove", internal_passkey_path(passkey), method: :delete,
-                      class: "btn btn-sm btn-outline-danger",
-                      form: { data: { turbo_confirm: "Remove “#{passkey.name}”? You won't be able to sign in with it anymore." } } %>
+                <details class="mt-1">
+                  <summary class="small text-body-secondary">Rename</summary>
+                  <%= form_with model: passkey, url: internal_passkey_path(passkey), method: :patch, class: "mt-2" do |f| %>
+                    <div class="input-group input-group-sm">
+                      <%= f.text_field :name, required: true, "aria-label": "Passkey name", class: "form-control" %>
+                      <%= f.submit "Save", class: "btn btn-secondary" %>
+                    </div>
+                  <% end %>
+                </details>
               </li>
             <% end %>
           </ul>
@@ -78,10 +89,7 @@
 
         <div data-passkey hidden>
           <%= form_with url: internal_passkeys_path, data: { passkey_register: true, options_url: options_internal_passkeys_path } do |f| %>
-            <div class="input-group">
-              <%= f.text_field :name, placeholder: "Name, e.g. Work laptop", "aria-label": "Passkey name", class: "form-control" %>
-              <%= f.submit "Add passkey", class: "btn btn-primary" %>
-            </div>
+            <%= f.submit "Add passkey", class: "btn btn-primary" %>
           <% end %>
           <div class="text-danger small mt-2" data-passkey-error hidden></div>
         </div>

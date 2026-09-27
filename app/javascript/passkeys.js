@@ -43,10 +43,7 @@ async function register(form) {
   const options = await postJSON(form.dataset.optionsUrl);
   const publicKey = PublicKeyCredential.parseCreationOptionsFromJSON(options);
   const credential = await navigator.credentials.create({ publicKey });
-  const result = await postJSON(form.action, {
-    credential: JSON.stringify(credential.toJSON()),
-    name: new FormData(form).get('name'),
-  });
+  const result = await postJSON(form.action, { credential: JSON.stringify(credential.toJSON()) });
   window.location.assign(result.redirect_to);
 }
 

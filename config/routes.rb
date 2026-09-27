@@ -52,7 +52,7 @@ Rails.application.routes.draw do
     end
 
     resource :account, only: [ :edit, :update ]
-    resources :passkeys, only: [ :create, :destroy ] do
+    resources :passkeys, only: [ :create, :update, :destroy ] do
       collection do
         post :options
       end
