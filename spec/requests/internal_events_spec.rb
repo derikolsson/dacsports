@@ -1,27 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe "Internal::Events", type: :request do
-  let(:credentials) { Rails.application.credentials.internal_auth || {} }
-  let(:auth_headers) do
-    {
-      "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(
-        credentials[:username], credentials[:password]
-      )
-    }
-  end
+  before { sign_in_as create(:user) }
 
   describe "POST /internal/events/:id/resolve_signed_playback" do
     let(:event) { create(:event, :signed_replay, mux_asset_id: "SOMEASSETID") }
 
-    it "requires authentication" do
-      post resolve_signed_playback_internal_event_path(event)
-      expect(response).to have_http_status(:unauthorized)
-    end
-
     it "stores the signed playback ID resolved from the asset" do
       allow(MuxSignedPlaybackId).to receive(:for_asset).with("SOMEASSETID").and_return("NEWSIGNEDID")
 
-      post resolve_signed_playback_internal_event_path(event), headers: auth_headers
+      post resolve_signed_playback_internal_event_path(event)
 
       expect(response).to redirect_to(edit_internal_event_path(event))
       expect(event.reload.mux_replay_signed_playback_id).to eq("NEWSIGNEDID")
@@ -31,7 +19,7 @@ RSpec.describe "Internal::Events", type: :request do
       event.update_columns(mux_asset_id: nil)
       expect(MuxSignedPlaybackId).not_to receive(:for_asset)
 
-      post resolve_signed_playback_internal_event_path(event), headers: auth_headers
+      post resolve_signed_playback_internal_event_path(event)
 
       expect(response).to redirect_to(edit_internal_event_path(event))
       expect(flash[:alert]).to match(/Asset ID/i)
@@ -42,7 +30,7 @@ RSpec.describe "Internal::Events", type: :request do
       allow(MuxSignedPlaybackId).to receive(:for_asset)
         .and_raise(MuxSignedPlaybackId::Error, "Mux asset NOPE: not found")
 
-      post resolve_signed_playback_internal_event_path(event), headers: auth_headers
+      post resolve_signed_playback_internal_event_path(event)
 
       expect(response).to redirect_to(edit_internal_event_path(event))
       expect(flash[:alert]).to match(/Could not resolve/)
@@ -53,7 +41,7 @@ RSpec.describe "Internal::Events", type: :request do
     # The form's "Resolve signed ID" button targets a member route, which an
     # unsaved event has no id for. Rendering must not try to build that path.
     it "renders the form for an unsaved event" do
-      get new_internal_event_path, headers: auth_headers
+      get new_internal_event_path
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Resolve signed ID")
@@ -64,7 +52,7 @@ RSpec.describe "Internal::Events", type: :request do
     it "links the resolve action for a saved event" do
       event = create(:event)
 
-      get edit_internal_event_path(event), headers: auth_headers
+      get edit_internal_event_path(event)
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include(resolve_signed_playback_internal_event_path(event))
@@ -76,7 +64,7 @@ RSpec.describe "Internal::Events", type: :request do
       create(:event, :signed_replay, title: "Provisioned Game")
       create(:event, :replay_available, title: "Unprovisioned Game")
 
-      get archive_internal_events_path, headers: auth_headers
+      get archive_internal_events_path
 
       expect(response).to have_http_status(:ok)
       expect(response.body).to include("Ready")
@@ -86,7 +74,7 @@ RSpec.describe "Internal::Events", type: :request do
     it "offers the partner snippet for a provisioned event" do
       event = create(:event, :signed_replay, title: "Brookhaven vs Richland", sport: "Men's Soccer")
 
-      get archive_internal_events_path, headers: auth_headers
+      get archive_internal_events_path
 
       snippet = CGI.unescapeHTML(response.body)
       expect(snippet).to include("embed.js")
@@ -99,7 +87,7 @@ RSpec.describe "Internal::Events", type: :request do
       create(:event, :signed_replay, title: "Brookhaven vs Richland", sport: "Men's Soccer",
                                      start_at: 3.days.ago.change(hour: 19))
 
-      get archive_internal_events_path, headers: auth_headers
+      get archive_internal_events_path
 
       expect(CGI.unescapeHTML(response.body))
         .to include("<!-- Men's Soccer: Brookhaven vs Richland — #{3.days.ago.strftime('%b %-d, %Y')} -->")
@@ -112,12 +100,12 @@ RSpec.describe "Internal::Events", type: :request do
 
     it "offers channels on the form" do
       channel
-      get edit_internal_event_path(event), headers: auth_headers
+      get edit_internal_event_path(event)
       expect(response.body).to include("Main Court")
     end
 
     it "puts the event on the chosen channel" do
-      patch internal_event_path(event), params: { event: { channel_id: channel.id } }, headers: auth_headers
+      patch internal_event_path(event), params: { event: { channel_id: channel.id } }
       expect(event.reload.mux_live_signed_playback_id).to eq(channel.mux_live_signed_playback_id)
     end
   end

@@ -1,0 +1,17 @@
+<% content_for :title, "Sign in" %>
+
+<h1 class="h4 mb-3">Sign in</h1>
+
+<%= form_with url: internal_login_path do |f| %>
+  <div class="mb-3">
+    <%= f.label :email_address, "Email", class: "form-label" %>
+    <%= f.email_field :email_address, value: params[:email_address], required: true, autofocus: true,
+          autocomplete: "username", class: "form-control" %>
+  </div>
+  <div class="mb-3">
+    <%= f.label :password, class: "form-label" %>
+    <%= f.password_field :password, required: true, autocomplete: "current-password", class: "form-control" %>
+  </div>
+  <%= f.submit "Sign in", class: "btn btn-primary w-100" %>
+<% end %>
+

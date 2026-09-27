@@ -82,3 +82,11 @@ header {
     &.copied { color: #198754; }
   }
 }
+
+.auth-card {
+  max-width: 26rem;
+
+  .logo {
+    height: 4rem;
+  }
+}

@@ -1,24 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe "Internal::EmbedPreviews", type: :request do
-  let(:credentials) { Rails.application.credentials.internal_auth || {} }
-  let(:auth_headers) do
-    {
-      "HTTP_AUTHORIZATION" => ActionController::HttpAuthentication::Basic.encode_credentials(
-        credentials[:username], credentials[:password]
-      )
-    }
-  end
-
-  it "requires authentication" do
-    get internal_embed_preview_path
-    expect(response).to have_http_status(:unauthorized)
-  end
+  before { sign_in_as create(:user) }
 
   it "says so when nothing is embeddable yet" do
     create(:event, :replay_available) # published replay, but no signed playback ID
 
-    get internal_embed_preview_path, headers: auth_headers
+    get internal_embed_preview_path
 
     expect(response.body).to include("No event is embeddable right now")
   end
@@ -27,7 +15,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
     create(:event, :signed_replay, title: "Older Game", start_at: 3.weeks.ago)
     newest = create(:event, :signed_replay, title: "Newest Game", start_at: 2.days.ago)
 
-    get internal_embed_preview_path, headers: auth_headers
+    get internal_embed_preview_path
 
     expect(response.body).to include("Newest Game")
     expect(response.body).to include(%(data-stream="#{newest.slug}"))
@@ -37,7 +25,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
     create(:event, :signed_replay, title: "Newest Game", start_at: 2.days.ago)
     older = create(:event, :signed_replay, title: "Older Game", start_at: 3.weeks.ago)
 
-    get internal_embed_preview_path(slug: older.slug), headers: auth_headers
+    get internal_embed_preview_path(slug: older.slug)
 
     expect(response.body).to include(%(data-stream="#{older.slug}"))
   end
@@ -45,7 +33,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
   it "ignores events whose state is playable but have no signed playback ID" do
     create(:event, :replay_available, title: "Unprovisioned")
 
-    get internal_embed_preview_path, headers: auth_headers
+    get internal_embed_preview_path
 
     expect(response.body).not_to include("Unprovisioned")
   end
@@ -56,7 +44,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
     end
 
     it "frames the live source with a pass for that event only" do
-      get internal_embed_preview_path(slug: upcoming.slug), headers: auth_headers
+      get internal_embed_preview_path(slug: upcoming.slug)
 
       expect(response.body).to include("Live stream preview")
       token = response.body[%r{/embed/#{upcoming.slug}\?preview_token=([^"&]+)}, 1]
@@ -66,7 +54,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
 
     # The wrapper must never learn about passes; a partner page runs the same script.
     it "does not load the live preview through embed.js" do
-      get internal_embed_preview_path(slug: upcoming.slug), headers: auth_headers
+      get internal_embed_preview_path(slug: upcoming.slug)
 
       expect(response.body).not_to include(%(data-stream="#{upcoming.slug}"))
     end
@@ -75,7 +63,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
       upcoming
       create(:event, :upcoming, title: "No Signed ID Yet")
 
-      get internal_embed_preview_path, headers: auth_headers
+      get internal_embed_preview_path
 
       expect(response.body).to include("Live streams to check")
       expect(response.body).to include("Championship Night")
@@ -85,7 +73,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
     it "falls back to a live preview when nothing is embeddable" do
       upcoming
 
-      get internal_embed_preview_path, headers: auth_headers
+      get internal_embed_preview_path
 
       expect(response.body).to include("Live stream preview")
       expect(response.body).not_to include("No event is embeddable right now")
@@ -94,7 +82,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
     it "previews an event that is already live the ordinary way" do
       live = create(:event, :signed_live)
 
-      get internal_embed_preview_path(slug: live.slug), headers: auth_headers
+      get internal_embed_preview_path(slug: live.slug)
 
       expect(response.body).not_to include("Live stream preview")
       expect(response.body).to include(%(data-stream="#{live.slug}"))

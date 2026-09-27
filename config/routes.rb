@@ -35,7 +35,13 @@ Rails.application.routes.draw do
   # Internal admin routes
   namespace :internal do
     root "home#index"
-    mount Sidekiq::Web => "/sidekiq"
+
+    constraints(AdminConstraint) { mount Sidekiq::Web => "/sidekiq" }
+    get "sidekiq(/*path)", to: redirect("/internal")
+
+    get "login", to: "sessions#new"
+    post "login", to: "sessions#create"
+    delete "logout", to: "sessions#destroy"
 
     resources :reports, only: [ :index ]
     resource :embed_settings, only: [ :show, :update ]

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Sign in" %> | DAC Sports Network</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag "internal", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="bg-body-tertiary">
+    <main class="auth-card mx-auto px-3 py-5">
+      <div class="text-center mb-4">
+        <%= image_tag 'logo.png', alt: 'Dallas Athletic Conference Logo', class: 'logo' %>
+        <div class="fs-4 mt-2">DAC Sports Network</div>
+      </div>
+
+      <% if flash[:notice] %>
+        <div class="alert alert-success"><%= flash[:notice] %></div>
+      <% end %>
+      <% if flash[:alert] %>
+        <div class="alert alert-danger"><%= flash[:alert] %></div>
+      <% end %>
+
+      <div class="card shadow-sm">
+        <div class="card-body p-4">
+          <%= yield %>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

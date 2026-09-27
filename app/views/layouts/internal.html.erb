@@ -15,6 +15,10 @@
 
   <body>
     <div class="container">
+      <div class="d-flex justify-content-end align-items-center gap-3 pt-2 small text-body-secondary d-print-none">
+        <span>Signed in as <%= current_user.display_name %></span>
+        <%= button_to "Sign out", internal_logout_path, method: :delete, class: "btn btn-link btn-sm p-0 text-body-secondary" %>
+      </div>
       <header class="d-flex flex-wrap justify-content-center align-items-center py-3 mb-4 border-bottom d-print-none">
         <%= link_to internal_root_path, class: 'd-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none title-link' do %>
           <%= image_tag 'logo.png', alt: 'Dallas Athletic Conference Logo', class: 'logo' %>
@@ -26,11 +30,15 @@
           <li class="nav-item"><%= link_to "Reports", internal_reports_path, class: "nav-link #{'active' if controller_name == 'reports'}" %></li>
           <li class="nav-item"><%= link_to "Events", internal_events_path, class: "nav-link #{'active' if controller_name == 'events'}" %></li>
           <li class="nav-item"><%= link_to "Teams", internal_teams_path, class: "nav-link #{'active' if controller_name == 'teams'}" %></li>
-          <li class="nav-item"><%= link_to "Channels", internal_channels_path, class: "nav-link #{'active' if controller_name == 'channels'}" %></li>
+          <% if current_user.admin? %>
+            <li class="nav-item"><%= link_to "Channels", internal_channels_path, class: "nav-link #{'active' if controller_name == 'channels'}" %></li>
+          <% end %>
           <li class="nav-item"><%= link_to "Captions", internal_vocabulary_path, class: "nav-link #{'active' if controller_name == 'vocabularies'}" %></li>
           <li class="nav-item"><%= link_to "Uploads", internal_uploads_path, class: "nav-link #{'active' if controller_name == 'uploads'}" %></li>
           <li class="nav-item"><%= link_to "Embeds", internal_embed_settings_path, class: "nav-link #{'active' if controller_name.in?(%w[embed_settings embed_previews])}" %></li>
-          <li class="nav-item"><%= link_to "Sidekiq", '/internal/sidekiq', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
+          <% if current_user.admin? %>
+            <li class="nav-item"><%= link_to "Sidekiq", '/internal/sidekiq', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
+          <% end %>
           <li class="nav-item"><%= link_to "Web Analytics", 'https://app.usefathom.com/share/bpvxynyg/dac+sports+network', class: "nav-link", target: "_blank", rel: "noopener noreferrer" %></li>
           <li class="nav-item">
             <%= link_to root_path, class: "nav-link" do %>

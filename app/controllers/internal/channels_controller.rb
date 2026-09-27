@@ -1,4 +1,5 @@
 class Internal::ChannelsController < Internal::ApplicationController
+  before_action :require_admin
   before_action :set_channel, only: [ :edit, :update, :destroy ]
 
   def index

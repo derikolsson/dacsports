@@ -1,8 +1,11 @@
 class Internal::ApplicationController < ActionController::Base
-  http_basic_authenticate_with(
-    name: Rails.application.credentials.dig(:internal_auth, :username),
-    password: Rails.application.credentials.dig(:internal_auth, :password)
-  )
+  include Authentication
 
   layout "internal"
+
+  private
+
+  def require_admin
+    redirect_to internal_root_path, alert: "Only admins can do that." unless current_user.admin?
+  end
 end
