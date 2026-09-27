@@ -24,7 +24,7 @@ module EmbedsHelper
   def embed_slate_message(event)
     case event.status
     when "upcoming"
-      starts = event.start_at&.in_time_zone(event.time_zone)&.strftime("%A, %B %-d at %-I:%M %p %Z")
+      starts = event.stream_begins_at&.strftime("%A, %B %-d at %-I:%M %p %Z")
       starts.present? ? "This stream begins #{starts}." : "This stream hasn't started yet."
     when "ended"
       "This broadcast has concluded."

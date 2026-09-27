@@ -213,6 +213,21 @@ RSpec.describe Event, type: :model do
     end
   end
 
+  describe '#stream_begins_at' do
+    let(:game_time) { Time.zone.parse('2026-10-03 19:00 UTC') }
+
+    it 'is the stream start when one is set' do
+      event = build(:event, start_at: game_time, stream_starts_at: game_time - 30.minutes, time_zone: 'America/Chicago')
+      expect(event.stream_begins_at).to eq(game_time - 30.minutes)
+      expect(event.stream_begins_at.time_zone.name).to eq('America/Chicago')
+    end
+
+    it 'falls back to the game time' do
+      event = build(:event, start_at: game_time, stream_starts_at: nil)
+      expect(event.stream_begins_at).to eq(game_time)
+    end
+  end
+
   describe '#sport_emoji' do
     it "returns soccer emoji for Men's Soccer" do
       event = build(:event, sport: "Men's Soccer")

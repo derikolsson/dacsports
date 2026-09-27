@@ -67,6 +67,13 @@ class Event < ApplicationRecord
     start_at&.in_time_zone(time_zone)&.to_date
   end
 
+  # When viewers should expect the stream, in the event's zone. The stream usually opens
+  # ahead of the game, so this is the stream start when one is set and the game time
+  # otherwise.
+  def stream_begins_at
+    (stream_starts_at || start_at)&.in_time_zone(time_zone)
+  end
+
   # Sport emoji helper
   def sport_emoji
     return "" if sport.blank?
