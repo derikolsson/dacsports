@@ -1,0 +1,44 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1>Channels</h1>
+  <%= link_to 'New Channel', new_internal_channel_path, class: 'btn btn-primary' %>
+</div>
+
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Mux Live Stream</th>
+      <th>Playback IDs</th>
+      <th>Events</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @channels.each do |channel| %>
+      <tr>
+        <td><%= channel.name %></td>
+        <td>
+          <% if channel.mux_live_stream_id.present? %>
+            <code><%= channel.mux_live_stream_id %></code>
+          <% else %>
+            <span class="badge text-bg-warning">Not linked</span>
+          <% end %>
+        </td>
+        <td>
+          <div class="small">Public: <code><%= channel.mux_live_playback_id.presence || "—" %></code></div>
+          <div class="small">Signed: <code><%= channel.mux_live_signed_playback_id.presence || "—" %></code></div>
+        </td>
+        <td><%= channel.events.size %></td>
+        <td>
+          <div class="d-flex gap-2">
+            <%= link_to 'Edit', edit_internal_channel_path(channel), class: 'btn btn-sm btn-secondary' %>
+            <%= button_to 'Delete', internal_channel_path(channel),
+                method: :delete, class: 'btn btn-sm btn-danger',
+                data: { confirm: 'Are you sure? This cannot be undone.' },
+                disabled: channel.events.any? %>
+          </div>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

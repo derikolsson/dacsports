@@ -10,9 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_20_081951) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_27_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "channels", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "mux_live_stream_id"
+    t.string "mux_live_playback_id"
+    t.string "mux_live_signed_playback_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["mux_live_stream_id"], name: "index_channels_on_mux_live_stream_id", unique: true
+  end
 
   create_table "event_slugs", force: :cascade do |t|
     t.bigint "event_id", null: false
@@ -73,6 +83,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_20_081951) do
     t.string "mux_live_signed_playback_id"
     t.string "mux_replay_signed_playback_id"
     t.string "mux_asset_id"
+    t.bigint "channel_id"
+    t.index ["channel_id"], name: "index_events_on_channel_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
   end
 

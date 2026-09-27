@@ -49,7 +49,7 @@ FactoryBot.define do
       status { :live }
       start_at { 1.hour.ago }
       live_embed_code { nil }
-      mux_live_signed_playback_id { "SIGNEDLIVEPLAYBACKID" }
+      channel
     end
 
     trait :signed_replay do

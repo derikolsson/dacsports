@@ -105,4 +105,20 @@ RSpec.describe "Internal::Events", type: :request do
         .to include("<!-- Men's Soccer: Brookhaven vs Richland — #{3.days.ago.strftime('%b %-d, %Y')} -->")
     end
   end
+
+  describe "channel selection" do
+    let(:channel) { create(:channel, name: "Main Court") }
+    let(:event) { create(:event) }
+
+    it "offers channels on the form" do
+      channel
+      get edit_internal_event_path(event), headers: auth_headers
+      expect(response.body).to include("Main Court")
+    end
+
+    it "puts the event on the chosen channel" do
+      patch internal_event_path(event), params: { event: { channel_id: channel.id } }, headers: auth_headers
+      expect(event.reload.mux_live_signed_playback_id).to eq(channel.mux_live_signed_playback_id)
+    end
+  end
 end

@@ -3,14 +3,14 @@ class Internal::EventsController < Internal::ApplicationController
 
   def index
     today_start = Time.current.beginning_of_day
-    @events = Event.includes(event_teams: :team)
+    @events = Event.includes(:channel, event_teams: :team)
                    .where("start_at >= ?", today_start)
                    .order(:start_at)
   end
 
   def archive
     today_start = Time.current.beginning_of_day
-    @events = Event.includes(event_teams: :team)
+    @events = Event.includes(:channel, event_teams: :team)
                    .where("start_at < ?", today_start)
                    .order(start_at: :desc)
   end
@@ -115,8 +115,8 @@ class Internal::EventsController < Internal::ApplicationController
   def event_params
     params.require(:event).permit(
       :title, :slug, :start_at, :stream_starts_at, :time_zone,
-      :mux_live_playback_id, :mux_replay_playback_id,
-      :mux_live_signed_playback_id, :mux_replay_signed_playback_id, :mux_asset_id,
+      :channel_id, :mux_replay_playback_id,
+      :mux_replay_signed_playback_id, :mux_asset_id,
       :replay_start_time, :replay_end_time,
       :live_embed_code, :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round,

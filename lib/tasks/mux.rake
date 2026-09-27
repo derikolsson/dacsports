@@ -1,6 +1,6 @@
 namespace :mux do
-  desc "Add signed playback IDs to the Mux live streams (idempotent)"
-  task provision_live_streams: :environment do
+  desc "Link every Mux live stream to a Channel, minting signed playback IDs (idempotent)"
+  task import_channels: :environment do
     service = MuxSignedPlaybackId.new
     streams = MuxRuby::LiveStreamsApi.new.list_live_streams(limit: 100).data
 
@@ -10,13 +10,26 @@ namespace :mux do
     end
 
     streams.each do |stream|
-      signed_id = service.for_live_stream(stream.id)
-      policies  = Array(stream.playback_ids).map { |p| p.policy.to_s }.uniq.sort
+      playback_ids = Array(stream.playback_ids).map(&:id)
 
-      puts "live stream #{stream.id}"
+      # Channels backfilled from events know the playback IDs but not the stream ID.
+      channel = Channel.find_by(mux_live_stream_id: stream.id) ||
+                Channel.where(mux_live_stream_id: nil)
+                       .where(mux_live_playback_id: playback_ids)
+                       .or(Channel.where(mux_live_stream_id: nil, mux_live_signed_playback_id: playback_ids))
+                       .first ||
+                Channel.new(name: stream.meta&.title.presence || stream.id)
+      created = channel.new_record?
+
+      channel.update!(mux_live_stream_id: stream.id)
+      channel.sync_from_mux!
+
+      puts "live stream #{stream.id} -> #{created ? 'new' : 'existing'} channel \"#{channel.name}\""
       puts "  status          : #{stream.status}"
-      puts "  playback IDs    : #{policies.join(', ')}"
-      puts "  signed playback : #{signed_id}"
+      puts "  latency mode    : #{stream.latency_mode}"
+      puts "  public playback : #{channel.mux_live_playback_id || 'none'}"
+      puts "  signed playback : #{channel.mux_live_signed_playback_id}"
+      puts "  events          : #{channel.events.count}"
 
       unless service.recordings_signed?(stream.id)
         puts "  WARNING: new_asset_settings.playback_policies does not include 'signed'."
@@ -24,6 +37,11 @@ namespace :mux do
         puts "           from this stream arrive public-only. Paste the asset ID on the"
         puts "           event and the app will mint a signed playback ID for it."
       end
+    end
+
+    unlinked = Channel.where(mux_live_stream_id: nil)
+    if unlinked.any?
+      puts "\nWARNING: these channels matched no Mux stream: #{unlinked.pluck(:name).join(', ')}"
     end
 
     puts "\nDone. Existing public playback IDs were left in place — the on-site player"
@@ -42,7 +60,6 @@ namespace :mux do
       abort "mux.signing_key_id / mux.signing_key_private are not both set in credentials."
     end
 
-    MuxSignedPlaybackId.configure!
     local  = MuxTokenSigner.credentials[:signing_key_id]
     remote = MuxRuby::SigningKeysApi.new.list_signing_keys(limit: 100).data.map(&:id)
 

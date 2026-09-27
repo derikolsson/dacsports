@@ -11,23 +11,12 @@ class MuxSignedPlaybackId
 
   class Error < StandardError; end
 
-  def self.configure!
-    MuxRuby.configure do |config|
-      config.username = Rails.application.credentials.dig(:mux, :token_id)
-      config.password = Rails.application.credentials.dig(:mux, :token_secret)
-    end
-  end
-
   def self.for_live_stream(live_stream_id)
     new.for_live_stream(live_stream_id)
   end
 
   def self.for_asset(asset_id)
     new.for_asset(asset_id)
-  end
-
-  def initialize
-    self.class.configure!
   end
 
   def for_live_stream(live_stream_id)

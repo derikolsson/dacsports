@@ -143,7 +143,7 @@ RSpec.describe "Embeds", type: :request do
     # The only early way in: a signed pass minted by the internal preview page, bound to
     # one slug, so an operator can check the encoder feed before Go Live.
     describe "with a preview pass" do
-      let(:event) { create(:event, :upcoming, mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID") }
+      let(:event) { create(:event, :upcoming, channel: create(:channel)) }
       let(:pass) { EmbedPreviewPass.generate(event) }
 
       it "plays the live source of an event that is not live yet" do
@@ -175,7 +175,7 @@ RSpec.describe "Embeds", type: :request do
       end
 
       it "ignores a pass minted for a different event" do
-        other = create(:event, :upcoming, mux_live_signed_playback_id: "OTHERID")
+        other = create(:event, :upcoming, channel: create(:channel, mux_live_signed_playback_id: "OTHERID"))
 
         get embed_path(event.slug), params: { preview_token: EmbedPreviewPass.generate(other) }
 
@@ -200,7 +200,7 @@ RSpec.describe "Embeds", type: :request do
       # The stream is over; there is nothing on the live ID to look at, and a pass must
       # never turn an ended event back into a broadcast.
       it "does not revive an ended event" do
-        ended = create(:event, :ended, mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID")
+        ended = create(:event, :ended, channel: create(:channel))
 
         get embed_path(ended.slug), params: { preview_token: EmbedPreviewPass.generate(ended) }
 
@@ -208,7 +208,7 @@ RSpec.describe "Embeds", type: :request do
       end
 
       it "leaves a published replay alone" do
-        replay = create(:event, :signed_replay, mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID")
+        replay = create(:event, :signed_replay, channel: create(:channel))
 
         get embed_path(replay.slug), params: { preview_token: EmbedPreviewPass.generate(replay) }
 

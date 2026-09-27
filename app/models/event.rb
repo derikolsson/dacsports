@@ -1,10 +1,14 @@
 class Event < ApplicationRecord
   # Associations
+  belongs_to :channel, optional: true
   has_many :event_visits, dependent: :destroy
   has_many :event_slugs, dependent: :destroy
   has_many :event_teams, dependent: :destroy
   has_many :teams, through: :event_teams
   accepts_nested_attributes_for :event_teams, allow_destroy: true, reject_if: proc { |attrs| attrs["team_id"].blank? }
+
+  # The live stream's playback IDs come from the channel the event airs on.
+  delegate :mux_live_playback_id, :mux_live_signed_playback_id, to: :channel, allow_nil: true
 
   # Available sports
   SPORTS = [
@@ -46,9 +50,9 @@ class Event < ApplicationRecord
   # to be playable AND the matching signed playback ID has to exist. Anything else shows
   # a slate and signs no token.
   scope :embeddable, -> {
-    visible.where(
-      "(status = 'live' AND mux_live_signed_playback_id IS NOT NULL AND mux_live_signed_playback_id <> '') OR " \
-      "(status = 'replay_available' AND mux_replay_signed_playback_id IS NOT NULL AND mux_replay_signed_playback_id <> '')"
+    visible.left_joins(:channel).where(
+      "(events.status = 'live' AND channels.mux_live_signed_playback_id IS NOT NULL AND channels.mux_live_signed_playback_id <> '') OR " \
+      "(events.status = 'replay_available' AND events.mux_replay_signed_playback_id IS NOT NULL AND events.mux_replay_signed_playback_id <> '')"
     )
   }
 
@@ -57,8 +61,9 @@ class Event < ApplicationRecord
   # the live playback ID to look at.
   LIVE_PREVIEWABLE_STATUSES = %w[upcoming technical_difficulties].freeze
   scope :live_previewable, -> {
-    where(status: LIVE_PREVIEWABLE_STATUSES)
-      .where("mux_live_signed_playback_id IS NOT NULL AND mux_live_signed_playback_id <> ''")
+    joins(:channel)
+      .where(status: LIVE_PREVIEWABLE_STATUSES)
+      .where("channels.mux_live_signed_playback_id IS NOT NULL AND channels.mux_live_signed_playback_id <> ''")
       .order(:start_at)
   }
 
@@ -188,8 +193,8 @@ class Event < ApplicationRecord
 
   def bump_force_reload_count
     if title_changed? || live_embed_code_changed? || replay_embed_code_changed? ||
-       mux_live_playback_id_changed? || mux_replay_playback_id_changed? ||
-       mux_live_signed_playback_id_changed? || mux_replay_signed_playback_id_changed? ||
+       channel_id_changed? || mux_replay_playback_id_changed? ||
+       mux_replay_signed_playback_id_changed? ||
        status_changed?
       self.force_reload_count += 1
     end

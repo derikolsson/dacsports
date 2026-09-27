@@ -41,6 +41,7 @@ Rails.application.routes.draw do
     resource :embed_settings, only: [ :show, :update ]
     resource :embed_preview, only: [ :show ]
     resources :teams
+    resources :channels, except: [ :show ]
     resources :events do
       collection do
         get :archive

@@ -38,8 +38,7 @@ RSpec.describe Event, type: :model do
     # error lands on :base rather than on one attribute.
     context 'when status is live' do
       it 'is invalid with no live video source' do
-        event = build(:event, :live, live_embed_code: nil, mux_live_playback_id: nil,
-                                     mux_live_signed_playback_id: nil)
+        event = build(:event, :live, live_embed_code: nil, channel: nil)
 
         expect(event).not_to be_valid
         expect(event.errors[:base]).to include(/Live video source required/)
@@ -50,7 +49,8 @@ RSpec.describe Event, type: :model do
       end
 
       it 'accepts a public playback ID as the source' do
-        event = build(:event, :live, live_embed_code: nil, mux_live_playback_id: "PUBLICID")
+        event = build(:event, :live, live_embed_code: nil,
+                                     channel: build(:channel, mux_live_signed_playback_id: nil))
         expect(event).to be_valid
       end
     end
@@ -114,9 +114,9 @@ RSpec.describe Event, type: :model do
 
     describe '.live_previewable' do
       it 'returns events still ahead of their stream that carry a signed live ID' do
-        soon = create(:event, :upcoming, mux_live_signed_playback_id: 'SIGNEDLIVE')
-        trouble = create(:event, :technical_difficulties, mux_live_signed_playback_id: 'SIGNEDLIVE')
-        over = create(:event, :ended, mux_live_signed_playback_id: 'SIGNEDLIVE')
+        soon = create(:event, :upcoming, channel: create(:channel))
+        trouble = create(:event, :technical_difficulties, channel: create(:channel))
+        over = create(:event, :ended, channel: create(:channel))
 
         expect(Event.live_previewable).to include(soon, trouble)
         expect(Event.live_previewable).not_to include(over, upcoming_event, live_event)

@@ -52,7 +52,7 @@ RSpec.describe "Internal::EmbedPreviews", type: :request do
 
   describe "live stream preview" do
     let(:upcoming) do
-      create(:event, :upcoming, title: "Championship Night", mux_live_signed_playback_id: "SIGNEDLIVEPLAYBACKID")
+      create(:event, :upcoming, title: "Championship Night", channel: create(:channel))
     end
 
     it "frames the live source with a pass for that event only" do

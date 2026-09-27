@@ -4,12 +4,6 @@ class Internal::UploadsController < Internal::ApplicationController
   end
 
   def create_upload_url
-    # Configure Mux client
-    MuxRuby.configure do |config|
-      config.username = Rails.application.credentials.dig(:mux, :token_id)
-      config.password = Rails.application.credentials.dig(:mux, :token_secret)
-    end
-
     # Create asset settings
     create_asset_request = MuxRuby::CreateAssetRequest.new
     create_asset_request.playback_policy = [ MuxRuby::PlaybackPolicy::PUBLIC ]
