@@ -19,7 +19,7 @@ FactoryBot.define do
     trait :live do
       status { :live }
       start_at { 1.hour.ago }
-      live_embed_code { "<iframe src='https://example.com/live'></iframe>" }
+      channel
     end
 
     trait :ended do
@@ -35,7 +35,7 @@ FactoryBot.define do
     trait :technical_difficulties do
       status { :technical_difficulties }
       start_at { 1.hour.ago }
-      live_embed_code { "<iframe src='https://example.com/live'></iframe>" }
+      channel
     end
 
     trait :replay_available do
@@ -48,7 +48,6 @@ FactoryBot.define do
     trait :signed_live do
       status { :live }
       start_at { 1.hour.ago }
-      live_embed_code { nil }
       channel
     end
 

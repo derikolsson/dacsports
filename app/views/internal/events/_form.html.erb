@@ -81,17 +81,12 @@
 
   <fieldset class="border rounded p-3 mb-3">
     <legend class="float-none w-auto px-2 fs-6">Live Stream</legend>
-    <div class="mb-3">
+    <div class="mb-0">
       <%= f.label :channel_id, "Channel", class: 'form-label' %>
       <%= f.collection_select :channel_id, Channel.alphabetical, :id, :name, { include_blank: "None" }, class: 'form-select' %>
       <small class="form-text text-muted">
         The Mux live stream this event airs on. Manage streams under <%= link_to "Channels", internal_channels_path %>.
       </small>
-    </div>
-    <div class="mb-0">
-      <%= f.label :live_embed_code, "Custom Embed Code (HTML)", class: 'form-label' %>
-      <%= f.text_area :live_embed_code, rows: 3, class: 'form-control' %>
-      <small class="form-text text-muted">Use for non-Mux sources. Takes precedence over the channel's stream.</small>
     </div>
   </fieldset>
 

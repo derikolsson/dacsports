@@ -100,18 +100,6 @@ class Event < ApplicationRecord
     end
   end
 
-  # Display helpers
-  def current_embed_code
-    case status
-    when "live"
-      live_embed_code
-    when "replay_available"
-      replay_embed_code
-    else
-      nil
-    end
-  end
-
   # True when /embed/:slug will serve a signed player for this event.
   def embeddable?
     (live? && mux_live_signed_playback_id.present?) ||
@@ -192,7 +180,7 @@ class Event < ApplicationRecord
   private
 
   def bump_force_reload_count
-    if title_changed? || live_embed_code_changed? || replay_embed_code_changed? ||
+    if title_changed? || replay_embed_code_changed? ||
        channel_id_changed? || mux_replay_playback_id_changed? ||
        mux_replay_signed_playback_id_changed? ||
        status_changed?
@@ -201,7 +189,7 @@ class Event < ApplicationRecord
   end
 
   def has_live_video_source?
-    live_embed_code.present? || mux_live_playback_id.present? || mux_live_signed_playback_id.present?
+    mux_live_playback_id.present? || mux_live_signed_playback_id.present?
   end
 
   def has_replay_video_source?
@@ -210,7 +198,7 @@ class Event < ApplicationRecord
 
   def live_video_source_present
     unless has_live_video_source?
-      errors.add(:base, "Live video source required (embed code or Mux playback ID)")
+      errors.add(:base, "Live video source required (pick a channel)")
     end
   end
 

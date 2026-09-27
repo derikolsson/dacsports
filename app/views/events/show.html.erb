@@ -10,13 +10,9 @@
     <div class="watch-video-section">
       <% case @event.status %>
       <% when 'upcoming' %>
-        <% if @preview_mode && (@event.live_embed_code.present? || @event.mux_live_playback_id.present?) %>
+        <% if @preview_mode && @event.mux_live_playback_id.present? %>
           <div class="watch-video-player">
-            <% if @event.live_embed_code.present? %>
-              <%= @event.live_embed_code.html_safe %>
-            <% elsif @event.mux_live_playback_id.present? %>
-              <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true) %>
-            <% end %>
+            <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true) %>
           </div>
         <% else %>
           <div class="watch-video-placeholder">
@@ -26,9 +22,7 @@
 
       <% when 'live' %>
         <div class="watch-video-player">
-          <% if @event.live_embed_code.present? %>
-            <%= @event.live_embed_code.html_safe %>
-          <% elsif @event.mux_live_playback_id.present? %>
+          <% if @event.mux_live_playback_id.present? %>
             <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true) %>
           <% end %>
         </div>

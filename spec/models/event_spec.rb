@@ -38,7 +38,7 @@ RSpec.describe Event, type: :model do
     # error lands on :base rather than on one attribute.
     context 'when status is live' do
       it 'is invalid with no live video source' do
-        event = build(:event, :live, live_embed_code: nil, channel: nil)
+        event = build(:event, :live, channel: nil)
 
         expect(event).not_to be_valid
         expect(event.errors[:base]).to include(/Live video source required/)
@@ -49,7 +49,7 @@ RSpec.describe Event, type: :model do
       end
 
       it 'accepts a public playback ID as the source' do
-        event = build(:event, :live, live_embed_code: nil,
+        event = build(:event, :live,
                                      channel: build(:channel, mux_live_signed_playback_id: nil))
         expect(event).to be_valid
       end
@@ -131,34 +131,17 @@ RSpec.describe Event, type: :model do
     end
   end
 
-  describe '#current_embed_code' do
-    it 'returns live_embed_code when status is live' do
-      event = build(:event, :live)
-      expect(event.current_embed_code).to eq(event.live_embed_code)
-    end
-
-    it 'returns replay_embed_code when status is replay_available' do
-      event = build(:event, :replay_available)
-      expect(event.current_embed_code).to eq(event.replay_embed_code)
-    end
-
-    it 'returns nil for other statuses' do
-      event = build(:event, :upcoming)
-      expect(event.current_embed_code).to be_nil
-    end
-  end
-
   describe 'state transitions' do
     describe '#go_live!' do
-      let(:event) { create(:event, :upcoming, live_embed_code: '<iframe>live</iframe>') }
+      let(:event) { create(:event, :upcoming, channel: create(:channel)) }
 
       it 'transitions from upcoming to live' do
         expect(event.go_live!).to be true
         expect(event.reload.status).to eq('live')
       end
 
-      it 'returns false when live_embed_code is not present' do
-        event.update_column(:live_embed_code, nil)
+      it 'returns false without a channel' do
+        event.update_column(:channel_id, nil)
         expect(event.go_live!).to be false
         expect(event.reload.status).to eq('upcoming')
       end
@@ -290,15 +273,15 @@ RSpec.describe Event, type: :model do
     end
 
     it 'increments force_reload_count when status changes' do
-      event.update(live_embed_code: '<iframe>live</iframe>')
+      event.update(channel: create(:channel))
       expect {
         event.go_live!
       }.to change { event.force_reload_count }.by(1)
     end
 
-    it 'increments force_reload_count when live_embed_code changes' do
+    it 'increments force_reload_count when the channel changes' do
       expect {
-        event.update(live_embed_code: '<iframe>new</iframe>')
+        event.update(channel: create(:channel))
       }.to change { event.force_reload_count }.by(1)
     end
 

@@ -53,7 +53,7 @@ class Internal::EventsController < Internal::ApplicationController
     if @event.go_live!
       redirect_to internal_events_path, notice: "Event is now live!"
     else
-      redirect_to internal_events_path, alert: "Could not go live. Check that live embed code is present."
+      redirect_to internal_events_path, alert: "Could not go live. Pick a channel for the event first."
     end
   end
 
@@ -118,7 +118,7 @@ class Internal::EventsController < Internal::ApplicationController
       :channel_id, :mux_replay_playback_id,
       :mux_replay_signed_playback_id, :mux_asset_id,
       :replay_start_time, :replay_end_time,
-      :live_embed_code, :replay_embed_code, :status, :visible,
+      :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round,
       event_teams_attributes: [ :id, :team_id, :_destroy ]
     )
