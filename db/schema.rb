@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_28_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_28_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,6 +88,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_28_120000) do
     t.index ["slug"], name: "index_events_on_slug", unique: true
   end
 
+  create_table "passkeys", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "external_id", null: false
+    t.string "public_key", null: false
+    t.bigint "sign_count", default: 0, null: false
+    t.string "name", null: false
+    t.datetime "last_used_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["external_id"], name: "index_passkeys_on_external_id", unique: true
+    t.index ["user_id"], name: "index_passkeys_on_user_id"
+  end
+
   create_table "sessions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "visitor_id", null: false
     t.datetime "last_seen_at", precision: nil
@@ -106,6 +119,31 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_28_120000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_teams_on_slug", unique: true
+  end
+
+  create_table "user_sessions", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "ip_address"
+    t.string "user_agent"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["user_id"], name: "index_user_sessions_on_user_id"
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string "email_address", null: false
+    t.string "name"
+    t.string "password_digest"
+    t.boolean "admin", default: false, null: false
+    t.bigint "invited_by_id"
+    t.datetime "invitation_accepted_at"
+    t.datetime "deactivated_at"
+    t.datetime "last_signed_in_at"
+    t.string "webauthn_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["webauthn_id"], name: "index_users_on_webauthn_id", unique: true
   end
 
   create_table "vocabularies", force: :cascade do |t|
