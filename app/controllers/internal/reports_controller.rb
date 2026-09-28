@@ -47,6 +47,8 @@ class Internal::ReportsController < Internal::ApplicationController
       end
     end
 
+    @traffic_sources = Rails.cache.fetch("#{cache_key}/traffic", expires_in: 10.minutes) { @query.traffic_sources }
+
     unless @source == ReportsQuery::ON_SITE
       @top_pages = Rails.cache.fetch("#{cache_key}/pages", expires_in: 10.minutes) { @query.top_pages }
     end

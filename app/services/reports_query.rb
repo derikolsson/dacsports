@@ -262,6 +262,27 @@ class ReportsQuery
       .map { |url, title, views| { url: url, title: title, views: views } }
   end
 
+  # What sent viewers, most views first: [{ source:, campaign:, views: }]. A UTM source
+  # wins over the referring site when both are known.
+  #
+  # On-site, that's how the session arrived; on partner sites, how the viewer reached
+  # the partner page. Visits from before this was recorded are left out.
+  def traffic_sources(limit: 10)
+    on_site = source == ON_SITE
+    referrer = on_site ? "sessions.landing_referrer_host" : "event_visits.host_referrer_origin"
+    utm = on_site ? "sessions" : "event_visits"
+    recorded = on_site ? "sessions.landing_path IS NOT NULL" : "event_visits.page_url IS NOT NULL"
+    label = "COALESCE(#{utm}.utm_source, #{referrer}, '(direct or unknown)')"
+
+    scoped_visits
+      .where(recorded)
+      .group(Arel.sql(label), "#{utm}.utm_campaign")
+      .order(Arel.sql("COUNT(DISTINCT event_visits.session_id) DESC"))
+      .limit(limit)
+      .pluck(Arel.sql(label), "#{utm}.utm_campaign", Arel.sql("COUNT(DISTINCT event_visits.session_id)"))
+      .map { |name, campaign, views| { source: name, campaign: campaign, views: views } }
+  end
+
   # The most live viewers watching an event at the same moment, keyed by event id.
   #
   # Each visit is open from its start to the last poll that saw it, so walking those

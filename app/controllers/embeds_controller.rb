@@ -338,6 +338,12 @@ class EmbedsController < ApplicationController
   # dacsports.net. Those are separate visitors by browser design. Count uniques per
   # property; do not sum them into a total.
   #
+  # An embed session "arrives" from the partner page every time; that context is kept
+  # per visit instead (EmbedPageContext), so the session records none.
+  def session_arrival
+    {}
+  end
+
   # Overrides SessionManagement's source of visitor identity for this route only. The
   # site cookie is SameSite=Lax and is simply not sent here, so leaving it in place
   # minted a brand new Session on every single frame load.

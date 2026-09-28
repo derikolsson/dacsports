@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_28_160000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_28_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -120,6 +120,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_28_160000) do
     t.string "device_type"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "landing_referrer_host"
+    t.string "landing_path"
+    t.string "utm_source"
+    t.string "utm_medium"
+    t.string "utm_campaign"
     t.index ["visitor_id"], name: "index_sessions_on_visitor_id"
   end
 

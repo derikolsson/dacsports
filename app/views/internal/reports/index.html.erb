@@ -263,6 +263,34 @@
   </div>
 <% end %>
 
+<div class="card mb-4">
+  <div class="card-header">
+    <h5 class="mb-0">Traffic Sources</h5>
+  </div>
+  <div class="card-body">
+    <p class="text-muted small">
+      <%= @source == ReportsQuery::ON_SITE ? "Where viewers came from when they arrived on dacsports.net." : "Where viewers came from when they arrived on the partner page." %>
+      A UTM source is shown when the link had one; otherwise the referring site.
+    </p>
+    <% if @traffic_sources.empty? %>
+      <p class="text-muted mb-0">No traffic sources recorded in the selected period.</p>
+    <% else %>
+      <table class="table table-sm table-hover mb-0">
+        <thead><tr><th>Source</th><th>Campaign</th><th class="text-end">Views</th></tr></thead>
+        <tbody>
+          <% @traffic_sources.each do |row| %>
+            <tr>
+              <td class="text-break"><%= row[:source] %></td>
+              <td class="text-break"><%= row[:campaign] || content_tag(:span, "—", class: "text-muted") %></td>
+              <td class="text-end"><%= number_with_delimiter(row[:views]) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+</div>
+
 <% if @top_pages %>
   <div class="card mb-4">
     <div class="card-header">

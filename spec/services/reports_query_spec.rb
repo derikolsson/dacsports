@@ -361,4 +361,29 @@ RSpec.describe ReportsQuery do
       ])
     end
   end
+
+  describe '#traffic_sources' do
+    it 'groups on-site views by how the session arrived' do
+      on_site_visit.session.update!(landing_path: "/", landing_referrer_host: "www.google.com")
+      tagged = create(:session, landing_path: "/events/final", landing_referrer_host: "www.google.com",
+                                utm_source: "newsletter", utm_campaign: "homecoming")
+      create(:event_visit, :vod, event: event, session: tagged, started_at: 1.day.ago)
+
+      expect(described_class.new(**range).traffic_sources).to contain_exactly(
+        { source: "www.google.com", campaign: nil, views: 1 },
+        { source: "newsletter", campaign: "homecoming", views: 1 }
+      )
+    end
+
+    it 'groups partner views by how the viewer reached the partner page' do
+      partner_visit.update!(page_url: "https://northlake.example.edu/live", host_referrer_origin: "https://www.facebook.com")
+
+      expect(described_class.new(**range, source: described_class::ALL_PARTNERS).traffic_sources)
+        .to eq([ { source: "https://www.facebook.com", campaign: nil, views: 1 } ])
+    end
+
+    it 'leaves out visits from before sources were recorded' do
+      expect(described_class.new(**range).traffic_sources).to eq([])
+    end
+  end
 end

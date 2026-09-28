@@ -21,7 +21,8 @@ module SessionManagement
       user_session = Session.create!(
         visitor_id: visitor_id,
         user_agent: request.user_agent,
-        last_seen_at: Time.current
+        last_seen_at: Time.current,
+        **session_arrival
       )
       user_session.parse_user_agent! if user_session.user_agent.present?
     else
@@ -32,6 +33,22 @@ module SessionManagement
     Current.session = user_session
     Current.request_id = request.uuid
     Current.ip_address = request.ip
+  end
+
+  # Where a new session came from: the referring site (never our own), the page it
+  # landed on, and any UTM tags. Overridden where the request isn't a real arrival.
+  def session_arrival
+    referrer_host = URI.parse(request.referer.to_s).host if request.referer.present?
+
+    {
+      landing_referrer_host: (referrer_host unless referrer_host == request.host),
+      landing_path: request.path,
+      utm_source: params[:utm_source],
+      utm_medium: params[:utm_medium],
+      utm_campaign: params[:utm_campaign]
+    }.transform_values { |value| value.presence&.to_s&.truncate(255) }
+  rescue URI::InvalidURIError
+    {}
   end
 
   def get_or_create_visitor_id
