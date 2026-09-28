@@ -3,10 +3,11 @@ class Internal::ReportsController < Internal::ApplicationController
     parse_date_range
     @partner_options = ReportsQuery.partner_sources
     parse_source
+    @basis = ReportsQuery::BASES.include?(params[:basis]) ? params[:basis] : ReportsQuery::ACTIVITY
 
-    # Source is part of the cache key, or switching audience would serve the previous
-    # audience's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v2/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}"
+    # Source and basis are part of the cache key, or switching either would serve the
+    # previous selection's numbers. Versioned because the cached hashes changed shape.
+    cache_key = "reports/v3/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}/#{@basis}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       query.summary_stats
@@ -47,6 +48,6 @@ class Internal::ReportsController < Internal::ApplicationController
   end
 
   def query
-    @query ||= ReportsQuery.new(start_date: @start_date, end_date: @end_date, source: @source)
+    @query ||= ReportsQuery.new(start_date: @start_date, end_date: @end_date, source: @source, basis: @basis)
   end
 end

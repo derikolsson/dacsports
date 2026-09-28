@@ -115,11 +115,69 @@ RSpec.describe ReportsQuery do
 
     # The source filter belongs in the LEFT JOIN's ON clause; in WHERE it would drop
     # every event that has no matching visit.
-    it 'still lists events with no visits from that partner' do
+    it 'still lists aired events with no visits from that partner' do
       quiet = create(:event, :replay_available, start_at: 3.days.ago)
-      other = described_class.new(**range, source: "embed:https://someone-else.org")
+      other = described_class.new(**range, source: "embed:https://someone-else.org",
+                                           basis: described_class::AIRED)
 
       expect(other.per_event_stats.map { |r| r["id"] }).to include(quiet.id)
+    end
+  end
+
+  # "Last 30 days" has to mean viewing in the last 30 days. It used to mean events that
+  # aired then, which hid this month's replays of older games.
+  describe 'date basis' do
+    let(:old_event) { create(:event, :replay_available, start_at: 100.days.ago) }
+
+    let!(:recent_replay) do
+      create(:event_visit, :vod, event: old_event, started_at: 1.day.ago)
+    end
+
+    let!(:replay_before_range) do
+      create(:event_visit, :vod, event: event, started_at: 20.days.ago)
+    end
+
+    context 'by viewing activity (the default)' do
+      subject(:report) { described_class.new(**range) }
+
+      it 'counts viewing in the period, whenever the event aired' do
+        expect(report.summary_stats[:vod]).to eq(users: 2, views: 2)
+      end
+
+      it 'lists only events viewed in the period, with counts that add up to the summary' do
+        rows = report.per_event_stats
+
+        expect(rows.map { |r| r["id"] }).to contain_exactly(event.id, old_event.id)
+        expect(rows.sum { |r| r["vod_all_views"] }).to eq(report.summary_stats[:vod][:views])
+      end
+
+      it 'leaves out earlier viewing of events in the period' do
+        row = report.per_event_stats.find { |r| r["id"] == event.id }
+        expect(row["vod_all_views"]).to eq(1)
+      end
+
+      it 'uses the server time when the browser sent none' do
+        recent_replay.update_columns(started_at: nil, created_at: 100.days.ago)
+
+        expect(report.summary_stats[:vod][:views]).to eq(1)
+      end
+    end
+
+    context 'by events aired' do
+      subject(:report) { described_class.new(**range, basis: described_class::AIRED) }
+
+      it 'counts all viewing of events that aired in the period' do
+        row = report.per_event_stats.find { |r| r["id"] == event.id }
+        expect(row["vod_all_views"]).to eq(2)
+      end
+
+      it 'leaves out events that aired earlier' do
+        expect(report.per_event_stats.map { |r| r["id"] }).not_to include(old_event.id)
+      end
+    end
+
+    it 'falls back to viewing activity for an unknown basis' do
+      expect(described_class.new(**range, basis: "bogus")).to be_activity
     end
   end
 end

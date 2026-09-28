@@ -9,11 +9,31 @@ RSpec.describe "Internal::Reports", type: :request do
     create(:event_visit, :vod, :embedded, event: event, started_at: 1.day.ago)
 
     get internal_reports_path(start_date: 120.days.ago.to_date, end_date: Date.current,
-                              source: "embed:https://northlake.example.edu")
+                              source: "embed:https://northlake.example.edu", basis: "aired")
 
     expect(response).to have_http_status(:ok)
     expect(response.body).to include("District Championship", "VOD - All")
     expect(response.body).to include("0 within 30 days of the event")
     expect(response.body).to match(%r{vod-all group-start">1</td>})
+  end
+
+  it "counts this period's replays of older events by default, and says so" do
+    event = create(:event, :replay_available, title: "Spring Final", start_at: 100.days.ago)
+    create(:event_visit, :vod, event: event, started_at: 1.day.ago)
+
+    get internal_reports_path
+
+    expect(response.body).to include("Spring Final", "including replays of events that aired earlier")
+    expect(response.body).not_to include("VOD - 30D")
+  end
+
+  it "hides those replays when counting by events aired" do
+    event = create(:event, :replay_available, title: "Spring Final", start_at: 100.days.ago)
+    create(:event_visit, :vod, event: event, started_at: 1.day.ago)
+
+    get internal_reports_path(basis: "aired")
+
+    expect(response.body).not_to include("Spring Final")
+    expect(response.body).to include("No events aired in the selected period.")
   end
 end

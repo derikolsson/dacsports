@@ -1,5 +1,5 @@
 class ReportsQuery
-  attr_reader :start_date, :end_date, :source
+  attr_reader :start_date, :end_date, :source, :basis
 
   # Audience the figures cover:
   #
@@ -13,14 +13,34 @@ class ReportsQuery
   ON_SITE = EventVisit::DEFAULT_SOURCE
   ALL_PARTNERS = "partners".freeze
 
-  def initialize(start_date:, end_date:, source: ON_SITE)
+  # What the date range selects:
+  #
+  #   "activity" viewing that happened in the range, whenever the event aired (default)
+  #   "aired"    all viewing, ever, of events that aired in the range
+  #
+  # The range used to mean "aired" without saying so, and read as "activity" to
+  # everyone — so last month's replays of older games silently went missing.
+  ACTIVITY = "activity".freeze
+  AIRED = "aired".freeze
+  BASES = [ ACTIVITY, AIRED ].freeze
+
+  # started_at comes from the browser and was once nullable; created_at is the
+  # server's first sighting.
+  VISIT_START = "COALESCE(%{table}.started_at, %{table}.created_at)".freeze
+
+  def initialize(start_date:, end_date:, source: ON_SITE, basis: ACTIVITY)
     @start_date = start_date.beginning_of_day
     @end_date = end_date.end_of_day
     @source = source.presence || ON_SITE
+    @basis = BASES.include?(basis) ? basis : ACTIVITY
   end
 
   def all_partners?
     source == ALL_PARTNERS
+  end
+
+  def activity?
+    basis == ACTIVITY
   end
 
   # Partner properties that actually have traffic, for the report's picker.
@@ -99,10 +119,11 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN s.visitor_id END) AS vod_all_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN ev.session_id END) AS vod_all_views
       FROM events e
-      LEFT JOIN event_visits ev ON ev.event_id = e.id AND #{source_predicate}
+      LEFT JOIN event_visits ev ON ev.event_id = e.id AND #{source_predicate} AND #{visit_range_predicate}
       LEFT JOIN sessions s ON s.id = ev.session_id
-      WHERE e.start_at BETWEEN :start_date AND :end_date
+      WHERE #{event_range_predicate}
       GROUP BY e.id, e.title, e.start_at, e.sport
+      #{"HAVING COUNT(ev.id) > 0" if activity?}
       ORDER BY e.start_at ASC
     SQL
 
@@ -119,10 +140,27 @@ class ReportsQuery
     all_partners? ? "ev.source <> :on_site" : "ev.source = :source"
   end
 
+  # Under "activity" the range limits which visits count, so it joins alongside the
+  # source — rows then add up to the summary. Under "aired" it limits which events
+  # appear, and every visit to them counts.
+  def visit_range_predicate
+    return "TRUE" unless activity?
+
+    "#{format(VISIT_START, table: 'ev')} BETWEEN :start_date AND :end_date"
+  end
+
+  def event_range_predicate
+    activity? ? "TRUE" : "e.start_at BETWEEN :start_date AND :end_date"
+  end
+
   def scoped_visits
-    base = EventVisit
-      .joins(:session, :event)
-      .where(events: { start_at: start_date..end_date })
+    base = EventVisit.joins(:session, :event)
+    base =
+      if activity?
+        base.where("#{format(VISIT_START, table: 'event_visits')} BETWEEN ? AND ?", start_date, end_date)
+      else
+        base.where(events: { start_at: start_date..end_date })
+      end
 
     all_partners? ? base.embedded : base.where(source: source)
   end

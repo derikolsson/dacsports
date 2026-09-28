@@ -4,8 +4,11 @@
     Web Analytics <i class="bi bi-box-arrow-up-right ms-1"></i>
   <% end %>
 </div>
+<% activity = @basis == ReportsQuery::ACTIVITY %>
+<% range_label = "#{@start_date.strftime("%b %-d, %Y")} – #{@end_date.strftime("%b %-d, %Y")}" %>
 <h1 class="mb-4 d-none d-print-block">
-  DAC Sports Network – Viewership: <%= @start_date.strftime("%b %-d, %Y") %> – <%= @end_date.strftime("%b %-d, %Y") %>
+  DAC Sports Network – Viewership: <%= range_label %>
+  <small class="d-block fs-6 text-muted"><%= activity ? "Viewing that happened in this period" : "All viewing of events that aired in this period" %></small>
 </h1>
 
 <div class="card mb-4 d-print-none">
@@ -32,15 +35,31 @@
               class: "form-select" %>
       </div>
       <div class="col-auto">
+        <span class="form-label d-block">Count by</span>
+        <div class="btn-group" role="group" aria-label="Count by">
+          <%= radio_button_tag :basis, ReportsQuery::ACTIVITY, activity, class: "btn-check", autocomplete: "off" %>
+          <%= label_tag "basis_#{ReportsQuery::ACTIVITY}", "Viewing activity", class: "btn btn-outline-primary" %>
+          <%= radio_button_tag :basis, ReportsQuery::AIRED, !activity, class: "btn-check", autocomplete: "off" %>
+          <%= label_tag "basis_#{ReportsQuery::AIRED}", "Events aired", class: "btn btn-outline-primary" %>
+        </div>
+      </div>
+      <div class="col-auto">
         <%= submit_tag "Apply", class: "btn btn-primary" %>
       </div>
       <div class="col-auto">
-        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "All Time", internal_reports_path(start_date: "2020-01-01", end_date: Date.current, source: @source), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "All Time", internal_reports_path(start_date: "2020-01-01", end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
       </div>
     <% end %>
+    <p class="form-text mb-0 mt-3">
+      <% if activity %>
+        Counting viewing that happened <%= range_label %>, including replays of events that aired earlier.
+      <% else %>
+        Counting all viewing, whenever it happened, of events that aired <%= range_label %>.
+      <% end %>
+    </p>
   </div>
 </div>
 
@@ -141,44 +160,48 @@
   </div>
 </div>
 
+<%
+  # Under "activity" every count is already limited to the period, so the days-after-air
+  # windows would only be slices of it; they belong to the "aired" view.
+  columns = [ [ "Live", "table-danger", "live_unique_viewers", "live_views" ] ]
+  columns +=
+    if activity
+      [ [ "VOD", "vod-all", "vod_all_viewers", "vod_all_views" ] ]
+    else
+      [
+        [ "VOD - 1D", "vod-1d", "vod_1d_viewers", "vod_1d_views" ],
+        [ "VOD - 7D", "vod-7d", "vod_7d_viewers", "vod_7d_views" ],
+        [ "VOD - 30D", "vod-30d", "vod_30d_viewers", "vod_30d_views" ],
+        [ "VOD - All", "vod-all", "vod_all_viewers", "vod_all_views" ]
+      ]
+    end
+%>
 <div class="card mb-5">
   <div class="card-header">
     <h5 class="mb-0">Breakdown per Event</h5>
   </div>
   <div class="card-body">
     <% if @event_stats.empty? %>
-      <p class="text-muted mb-0">No events found in selected date range.</p>
+      <p class="text-muted mb-0"><%= activity ? "No viewing in the selected period." : "No events aired in the selected period." %></p>
     <% else %>
       <div class="table-responsive">
         <table class="table table-bordered table-hover mb-0 event-breakdown-table" style="--bs-border-color: #adb5bd;">
           <colgroup>
             <col class="event-col">
-            <col class="data-col"><col class="data-col">
-            <col class="data-col"><col class="data-col">
-            <col class="data-col"><col class="data-col">
-            <col class="data-col"><col class="data-col">
-            <col class="data-col"><col class="data-col">
+            <% columns.each do %><col class="data-col"><col class="data-col"><% end %>
           </colgroup>
           <thead>
             <tr>
               <th rowspan="2" class="align-bottom">Event</th>
-              <th colspan="2" class="text-center table-danger group-start">Live</th>
-              <th colspan="2" class="text-center vod-1d group-start">VOD - 1D</th>
-              <th colspan="2" class="text-center vod-7d group-start">VOD - 7D</th>
-              <th colspan="2" class="text-center vod-30d group-start">VOD - 30D</th>
-              <th colspan="2" class="text-center vod-all group-start">VOD - All</th>
+              <% columns.each do |label, css, _, _| %>
+                <th colspan="2" class="text-center <%= css %> group-start"><%= label %></th>
+              <% end %>
             </tr>
             <tr>
-              <th class="text-end table-danger group-start">Viewers</th>
-              <th class="text-end table-danger">Views</th>
-              <th class="text-end vod-1d group-start">Viewers</th>
-              <th class="text-end vod-1d">Views</th>
-              <th class="text-end vod-7d group-start">Viewers</th>
-              <th class="text-end vod-7d">Views</th>
-              <th class="text-end vod-30d group-start">Viewers</th>
-              <th class="text-end vod-30d">Views</th>
-              <th class="text-end vod-all group-start">Viewers</th>
-              <th class="text-end vod-all">Views</th>
+              <% columns.each do |_, css, _, _| %>
+                <th class="text-end <%= css %> group-start">Viewers</th>
+                <th class="text-end <%= css %>">Views</th>
+              <% end %>
             </tr>
           </thead>
           <tbody>
@@ -189,16 +212,10 @@
                   <br>
                   <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %><%= " · #{event["sport"]}" if event["sport"].present? %></small>
                 </td>
-                <td class="text-end table-danger group-start"><%= event["live_unique_viewers"] || 0 %></td>
-                <td class="text-end table-danger"><%= event["live_views"] || 0 %></td>
-                <td class="text-end vod-1d group-start"><%= event["vod_1d_viewers"] || 0 %></td>
-                <td class="text-end vod-1d"><%= event["vod_1d_views"] || 0 %></td>
-                <td class="text-end vod-7d group-start"><%= event["vod_7d_viewers"] || 0 %></td>
-                <td class="text-end vod-7d"><%= event["vod_7d_views"] || 0 %></td>
-                <td class="text-end vod-30d group-start"><%= event["vod_30d_viewers"] || 0 %></td>
-                <td class="text-end vod-30d"><%= event["vod_30d_views"] || 0 %></td>
-                <td class="text-end vod-all group-start"><%= event["vod_all_viewers"] || 0 %></td>
-                <td class="text-end vod-all"><%= event["vod_all_views"] || 0 %></td>
+                <% columns.each do |_, css, viewers, views| %>
+                  <td class="text-end <%= css %> group-start"><%= event[viewers] || 0 %></td>
+                  <td class="text-end <%= css %>"><%= event[views] || 0 %></td>
+                <% end %>
               </tr>
             <% end %>
           </tbody>
