@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_28_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_28_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -57,8 +57,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_28_130000) do
     t.string "source", default: "dsn", null: false
     t.string "referrer_origin"
     t.index ["event_id"], name: "index_event_visits_on_event_id"
+    t.index ["last_seen_at"], name: "index_event_visits_on_last_seen_at"
     t.index ["session_id", "event_id", "event_status", "source"], name: "index_event_visits_unique_session_event_source", unique: true
     t.index ["session_id"], name: "index_event_visits_on_session_id"
+    t.index ["source", "started_at"], name: "index_event_visits_on_source_and_started_at"
   end
 
   create_table "events", force: :cascade do |t|
