@@ -27,10 +27,10 @@ html, body {
   table-layout: fixed;
   width: 100%;
 
-  col.event-col { width: 28%; }
-  col.data-col  { width: 9%; }
+  col.event-col { width: 20%; }
+  col.data-col  { width: 8%; }
 
-  // Stronger dividers between Live / VOD-1D / VOD-7D / VOD-30D groups
+  // Stronger dividers between Live / VOD-1D / VOD-7D / VOD-30D / VOD-All groups
   th.group-start,
   td.group-start {
     border-left: 2px solid #6c757d;
@@ -43,6 +43,8 @@ html, body {
   td.vod-7d  { background-color: #cfe2ff; }
   th.vod-30d,
   td.vod-30d { background-color: #a8c8f0; }
+  th.vod-all,
+  td.vod-all { background-color: #8ab4e8; }
 }
 
 @media print {

@@ -5,8 +5,8 @@ class Internal::ReportsController < Internal::ApplicationController
     parse_source
 
     # Source is part of the cache key, or switching audience would serve the previous
-    # audience's numbers.
-    cache_key = "reports/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}"
+    # audience's numbers. Versioned because the cached hashes changed shape.
+    cache_key = "reports/v2/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       query.summary_stats

@@ -61,6 +61,36 @@ RSpec.describe ReportsQuery do
     end
   end
 
+  # A partner page can feature a game long after it was played. Those views used to be
+  # dropped by a 30-day cap, so a partner's report read zero while the rows existed.
+  describe 'replay views long after the event' do
+    subject(:report) { described_class.new(**range, source: "embed:https://northlake.example.edu") }
+
+    let(:range) { { start_date: 120.days.ago.to_date, end_date: Date.current } }
+    let(:old_event) { create(:event, :replay_available, start_at: 100.days.ago) }
+
+    let!(:late_visit) do
+      create(:event_visit, :vod, :embedded, event: old_event,
+                                            session: create(:session, device_type: "tablet"),
+                                            started_at: 1.day.ago)
+    end
+
+    it 'counts them in the summary, and keeps the 30-day figure separate' do
+      expect(report.summary_stats[:vod]).to eq(users: 2, views: 2)
+      expect(report.summary_stats[:vod_30d]).to eq(users: 1, views: 1)
+    end
+
+    it 'includes their devices in the breakdown' do
+      expect(report.device_breakdown.keys).to match_array([ "Phone", "Tablet" ])
+    end
+
+    it 'counts them per event under all-time, not under 30 days' do
+      row = report.per_event_stats.find { |r| r["id"] == old_event.id }
+      expect(row["vod_30d_views"]).to eq(0)
+      expect(row["vod_all_views"]).to eq(1)
+    end
+  end
+
   describe '.partner_sources' do
     it 'lists partner properties with traffic, labelled by origin' do
       expect(described_class.partner_sources)

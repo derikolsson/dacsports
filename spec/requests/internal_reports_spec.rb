@@ -1,0 +1,19 @@
+require 'rails_helper'
+
+RSpec.describe "Internal::Reports", type: :request do
+  before { sign_in_as create(:user, :admin) }
+
+  # The case that read zero: a partner page featuring a game months after it was played.
+  it "shows a partner's replay views of an old event" do
+    event = create(:event, :replay_available, title: "District Championship", start_at: 100.days.ago)
+    create(:event_visit, :vod, :embedded, event: event, started_at: 1.day.ago)
+
+    get internal_reports_path(start_date: 120.days.ago.to_date, end_date: Date.current,
+                              source: "embed:https://northlake.example.edu")
+
+    expect(response).to have_http_status(:ok)
+    expect(response.body).to include("District Championship", "VOD - All")
+    expect(response.body).to include("0 within 30 days of the event")
+    expect(response.body).to match(%r{vod-all group-start">1</td>})
+  end
+end

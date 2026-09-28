@@ -69,7 +69,7 @@
       <div class="card-body">
         <h5 class="card-title">VOD Users</h5>
         <p class="display-6"><%= number_with_delimiter(@summary[:vod][:users]) %></p>
-        <small class="text-muted">30-day window</small>
+        <small class="text-muted"><%= number_with_delimiter(@summary[:vod_30d][:users]) %> within 30 days of the event</small>
       </div>
     </div>
   </div>
@@ -78,7 +78,7 @@
       <div class="card-body">
         <h5 class="card-title">VOD Views</h5>
         <p class="display-6"><%= number_with_delimiter(@summary[:vod][:views]) %></p>
-        <small class="text-muted">30-day window</small>
+        <small class="text-muted"><%= number_with_delimiter(@summary[:vod_30d][:views]) %> within 30 days of the event</small>
       </div>
     </div>
   </div>
@@ -157,6 +157,7 @@
             <col class="data-col"><col class="data-col">
             <col class="data-col"><col class="data-col">
             <col class="data-col"><col class="data-col">
+            <col class="data-col"><col class="data-col">
           </colgroup>
           <thead>
             <tr>
@@ -165,6 +166,7 @@
               <th colspan="2" class="text-center vod-1d group-start">VOD - 1D</th>
               <th colspan="2" class="text-center vod-7d group-start">VOD - 7D</th>
               <th colspan="2" class="text-center vod-30d group-start">VOD - 30D</th>
+              <th colspan="2" class="text-center vod-all group-start">VOD - All</th>
             </tr>
             <tr>
               <th class="text-end table-danger group-start">Viewers</th>
@@ -175,6 +177,8 @@
               <th class="text-end vod-7d">Views</th>
               <th class="text-end vod-30d group-start">Viewers</th>
               <th class="text-end vod-30d">Views</th>
+              <th class="text-end vod-all group-start">Viewers</th>
+              <th class="text-end vod-all">Views</th>
             </tr>
           </thead>
           <tbody>
@@ -193,6 +197,8 @@
                 <td class="text-end vod-7d"><%= event["vod_7d_views"] || 0 %></td>
                 <td class="text-end vod-30d group-start"><%= event["vod_30d_viewers"] || 0 %></td>
                 <td class="text-end vod-30d"><%= event["vod_30d_views"] || 0 %></td>
+                <td class="text-end vod-all group-start"><%= event["vod_all_viewers"] || 0 %></td>
+                <td class="text-end vod-all"><%= event["vod_all_views"] || 0 %></td>
               </tr>
             <% end %>
           </tbody>

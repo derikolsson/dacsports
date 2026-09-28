@@ -38,8 +38,13 @@ class ReportsQuery
     live_stats = scoped_visits
       .where(event_status: "live")
 
+    # Replay views are counted however long after the event they happen. A partner
+    # page can feature a game months later, and capping at 30 days hid every one of
+    # those views. The 30-day figure is kept alongside for comparison with older reports.
     vod_stats = scoped_visits
       .where(event_status: "vod")
+
+    vod_30d_stats = vod_stats
       .where("event_visits.started_at <= events.start_at + INTERVAL '30 days'")
 
     {
@@ -50,13 +55,16 @@ class ReportsQuery
       vod: {
         users: vod_stats.distinct.count("sessions.visitor_id"),
         views: vod_stats.distinct.count("event_visits.session_id")
+      },
+      vod_30d: {
+        users: vod_30d_stats.distinct.count("sessions.visitor_id"),
+        views: vod_30d_stats.distinct.count("event_visits.session_id")
       }
     }
   end
 
   def device_breakdown
     raw_counts = scoped_visits
-      .where("event_visits.event_status = 'live' OR (event_visits.event_status = 'vod' AND event_visits.started_at <= events.start_at + INTERVAL '30 days')")
       .group("sessions.device_type", "event_visits.event_status")
       .distinct
       .count("event_visits.session_id")
@@ -66,7 +74,6 @@ class ReportsQuery
 
   def os_breakdown
     raw_counts = scoped_visits
-      .where("event_visits.event_status = 'live' OR (event_visits.event_status = 'vod' AND event_visits.started_at <= events.start_at + INTERVAL '30 days')")
       .group("sessions.os_name", "event_visits.event_status")
       .distinct
       .count("event_visits.session_id")
@@ -88,7 +95,9 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '7 days' THEN s.visitor_id END) AS vod_7d_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '7 days' THEN ev.session_id END) AS vod_7d_views,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN s.visitor_id END) AS vod_30d_viewers,
-        COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN ev.session_id END) AS vod_30d_views
+        COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN ev.session_id END) AS vod_30d_views,
+        COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN s.visitor_id END) AS vod_all_viewers,
+        COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN ev.session_id END) AS vod_all_views
       FROM events e
       LEFT JOIN event_visits ev ON ev.event_id = e.id AND #{source_predicate}
       LEFT JOIN sessions s ON s.id = ev.session_id
