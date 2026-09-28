@@ -1,7 +1,7 @@
 class EventVisitJob
   include Sidekiq::Job
 
-  def perform(session_id, event_id, event_status, started_at, seen_at, source = nil, referrer_origin = nil)
+  def perform(session_id, event_id, event_status, started_at, seen_at, source = nil, referrer_origin = nil, played_at = nil)
     source = source.presence || EventVisit::DEFAULT_SOURCE
     seen_at = Time.zone.parse(seen_at.to_s)
 
@@ -18,7 +18,8 @@ class EventVisitJob
     visit.referrer_origin ||= referrer_origin
 
     # Set started_at only on first creation
-    visit.started_at ||= trusted_started_at(started_at, seen_at)
+    visit.started_at ||= trusted_time(started_at, seen_at)
+    visit.first_played_at ||= trusted_time(played_at, seen_at) if played_at.present?
 
     # Update last_seen_at (only if newer)
     visit.last_seen_at = seen_at unless visit.last_seen_at.present? && visit.last_seen_at > seen_at
@@ -35,11 +36,10 @@ class EventVisitJob
 
   private
 
-  # started_at comes from the browser's clock, which can be missing, unparseable or
-  # skewed into the future. Reports filter on it, so never let it land after the
-  # server's own timestamp.
-  def trusted_started_at(started_at, seen_at)
-    parsed = Time.zone.parse(started_at.to_s) if started_at.present?
+  # Browser timestamps can be missing, unparseable or skewed into the future. Reports
+  # filter on them, so never let one land after the server's own timestamp.
+  def trusted_time(value, seen_at)
+    parsed = Time.zone.parse(value.to_s) if value.present?
     parsed.nil? || parsed > seen_at ? seen_at : parsed
   rescue ArgumentError
     seen_at

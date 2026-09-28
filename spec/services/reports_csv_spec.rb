@@ -23,7 +23,7 @@ RSpec.describe ReportsCsv do
   it 'includes the summary and one row per event' do
     expect(rows).to include([ "VOD", "1", "1" ])
     expect(rows.last).to eq([ "Spring Final", event.start_at.in_time_zone("America/Chicago").strftime("%Y-%m-%d %H:%M"),
-                              "Women's Soccer", "0", "0.5", "0", "0", "1", "1" ])
+                              "Women's Soccer", "0", "0.5", "0", "0", "0", "0", "1", "1" ])
   end
 
   context 'counting by events aired' do

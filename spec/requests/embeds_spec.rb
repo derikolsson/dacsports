@@ -310,7 +310,7 @@ RSpec.describe "Embeds", type: :request do
 
       expect(EventVisitJob).to receive(:perform_async).with(
         anything, event.id, "vod", anything, anything,
-        "embed:https://northlake.example.edu", "https://northlake.example.edu"
+        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything
       )
 
       # As the in-frame poller does: same-origin, no partner referer, no cookies needed.
@@ -324,7 +324,7 @@ RSpec.describe "Embeds", type: :request do
     # token is only ever minted server-side from a Referer we actually saw.
     it "rejects a forged source token rather than trusting it" do
       expect(EventVisitJob).to receive(:perform_async).with(
-        anything, event.id, "vod", anything, anything, "embed", nil
+        anything, event.id, "vod", anything, anything, "embed", nil, anything
       )
 
       post embed_status_path(event.slug),
@@ -335,7 +335,7 @@ RSpec.describe "Embeds", type: :request do
 
     it "records no partner when no token is supplied" do
       expect(EventVisitJob).to receive(:perform_async).with(
-        anything, event.id, "vod", anything, anything, "embed", nil
+        anything, event.id, "vod", anything, anything, "embed", nil, anything
       )
 
       post embed_status_path(event.slug),
@@ -353,12 +353,22 @@ RSpec.describe "Embeds", type: :request do
 
       expect(EventVisitJob).to receive(:perform_async).with(
         anything, event.id, "vod", anything, anything,
-        "embed:https://northlake.example.edu", "https://northlake.example.edu"
+        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything
       )
 
       reset!  # drops the cookie jar
       post embed_status_path(event.slug),
            params: { session_id: session_id, enabled: "true", source_token: token },
+           as: :json
+    end
+
+    it "passes on when the player first played" do
+      expect(EventVisitJob).to receive(:perform_async).with(
+        anything, event.id, "vod", anything, anything, "embed", nil, "2026-09-28T12:00:00Z"
+      )
+
+      post embed_status_path(event.slug),
+           params: { session_id: session.id, enabled: "true", played_at: "2026-09-28T12:00:00Z" },
            as: :json
     end
 

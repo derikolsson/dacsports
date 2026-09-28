@@ -12,12 +12,17 @@ export function initializeEmbedPolling({
 }) {
   const startedAt = new Date().toISOString();
   const pageLoadedAt = Date.now();
+  // Set once, on the player's first play. The page being open doesn't mean anything
+  // played, so this is what separates plays from page opens.
+  let playedAt = null;
+  let lastPoll = null;
   const minTtl = 5000;
 
   let timer = null;
 
   function poll(timeout, currentStatus, currentVersion) {
     clearTimeout(timer);
+    lastPoll = [timeout, currentStatus, currentVersion];
 
     fetch(`/embed/${encodeURIComponent(eventSlug)}/status`, {
       method: 'POST',
@@ -27,6 +32,7 @@ export function initializeEmbedPolling({
         session_id: sessionId,
         event_status: eventStatus,
         started_at: startedAt,
+        played_at: playedAt,
         source_token: sourceToken,
         enabled: enabled ? 'true' : 'false'
       })
@@ -60,6 +66,14 @@ export function initializeEmbedPolling({
         timer = setTimeout(() => poll(next, currentStatus, currentVersion), next);
       });
   }
+
+  // Report the first play straight away rather than on the next poll, which can be a
+  // while off; the viewer may be gone by then.
+  document.querySelector('mux-player')?.addEventListener('play', () => {
+    if (playedAt) return;
+    playedAt = new Date().toISOString();
+    if (lastPoll) poll(...lastPoll);
+  });
 
   poll(Math.max(minTtl, initialTtl || minTtl), eventStatus, forceReloadVersion);
 }

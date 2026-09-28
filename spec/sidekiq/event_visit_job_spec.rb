@@ -49,4 +49,28 @@ RSpec.describe EventVisitJob do
       expect { perform(nil) }.not_to(change { session.reload.last_seen_at })
     end
   end
+
+  describe 'first play' do
+    def perform_with(played_at)
+      described_class.new.perform(session.id, event.id, "live", nil, seen_at.iso8601(6), nil, nil, played_at)
+    end
+
+    it 'is empty until the player plays' do
+      perform_with(nil)
+      expect(EventVisit.last.first_played_at).to be_nil
+    end
+
+    it 'records the first play and keeps it' do
+      perform_with(2.minutes.ago.utc.iso8601)
+      first = EventVisit.last.first_played_at
+
+      perform_with(1.minute.ago.utc.iso8601)
+      expect(EventVisit.last.first_played_at).to eq(first)
+    end
+
+    it 'never lands after the server time' do
+      perform_with(1.hour.from_now.utc.iso8601)
+      expect(EventVisit.last.first_played_at).to eq(seen_at)
+    end
+  end
 end

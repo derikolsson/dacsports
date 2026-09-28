@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_28_140000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_28_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,7 +56,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_28_140000) do
     t.datetime "updated_at", null: false
     t.string "source", default: "dsn", null: false
     t.string "referrer_origin"
+    t.datetime "first_played_at"
     t.index ["event_id"], name: "index_event_visits_on_event_id"
+    t.index ["first_played_at"], name: "index_event_visits_on_first_played_at"
     t.index ["last_seen_at"], name: "index_event_visits_on_last_seen_at"
     t.index ["session_id", "event_id", "event_status", "source"], name: "index_event_visits_unique_session_event_source", unique: true
     t.index ["session_id"], name: "index_event_visits_on_session_id"

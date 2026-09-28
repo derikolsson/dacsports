@@ -148,6 +148,22 @@
       </div>
     </div>
   </div>
+  <div class="col-md-6">
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title mb-0">Play Rate</h5>
+        <small class="text-muted d-block mb-2">Views where the video actually played, rather than the page just being open.</small>
+        <% plays = @summary[:plays] %>
+        <% if plays[:pct] %>
+          <p class="display-6 mb-1"><%= plays[:pct] %>%</p>
+          <small class="text-muted d-block"><%= number_with_delimiter(plays[:plays]) %> of <%= number_with_delimiter(plays[:views]) %> views since play tracking began <%= plays[:since].strftime("%b %-d, %Y") %></small>
+        <% else %>
+          <p class="display-6 mb-1 text-muted">—</p>
+          <small class="text-muted d-block"><%= plays[:since] ? "No views in this period since play tracking began." : "Play tracking hasn't recorded a play yet." %></small>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="row mb-4">
@@ -260,7 +276,7 @@
         <table class="table table-bordered table-hover mb-0 event-breakdown-table" style="--bs-border-color: #adb5bd;">
           <colgroup>
             <col class="event-col">
-            <col class="data-col"><col class="data-col">
+            <col class="data-col"><col class="data-col"><col class="data-col">
             <% columns.each do %><col class="data-col"><col class="data-col"><% end %>
           </colgroup>
           <thead>
@@ -268,6 +284,7 @@
               <th rowspan="2" class="align-bottom"><%= event_sort_link "Event", "title" %> <small class="fw-normal">· <%= event_sort_link "Aired", "start_at" %></small></th>
               <th rowspan="2" class="align-bottom text-end" title="Most people watching live at the same moment"><%= event_sort_link "Peak live", "live_peak" %></th>
               <th rowspan="2" class="align-bottom text-end" title="Estimated from how long pages with the player stayed open"><%= event_sort_link "Est. hours", "player_minutes" %></th>
+              <th rowspan="2" class="align-bottom text-end" title="Views where the video actually played, since play tracking began"><%= event_sort_link "Play rate", "plays" %></th>
               <% columns.each do |label, css, _, _| %>
                 <th colspan="2" class="text-center <%= css %> group-start"><%= label %></th>
               <% end %>
@@ -289,6 +306,7 @@
                 </td>
                 <td class="text-end"><%= number_with_delimiter(event["live_peak"]) %></td>
                 <td class="text-end"><%= number_with_delimiter((event["player_minutes"].to_f / 60).round(1)) %></td>
+                <td class="text-end"><%= event["play_tracked_views"].positive? ? number_to_percentage(event["plays"] * 100.0 / event["play_tracked_views"], precision: 0) : "—" %></td>
                 <% columns.each do |_, css, viewers, views| %>
                   <td class="text-end <%= css %> group-start"><%= event[viewers] || 0 %></td>
                   <td class="text-end <%= css %>"><%= event[views] || 0 %></td>
@@ -301,6 +319,7 @@
               <td>Total of <%= pluralize(@event_stats.size, "event") %></td>
               <td></td>
               <td class="text-end"><%= number_with_delimiter((@event_stats.sum { |e| e["player_minutes"].to_f } / 60).round(1)) %></td>
+              <td></td>
               <% columns.each do |_, css, viewers, views| %>
                 <td class="text-end <%= css %> group-start"><%= number_with_delimiter(@event_stats.sum { |e| e[viewers].to_i }) %></td>
                 <td class="text-end <%= css %>"><%= number_with_delimiter(@event_stats.sum { |e| e[views].to_i }) %></td>

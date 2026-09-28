@@ -272,7 +272,8 @@ class EmbedsController < ApplicationController
       params[:started_at],
       Time.now.utc.iso8601(6),
       source,
-      origin
+      origin,
+      params[:played_at]
     )
   end
 

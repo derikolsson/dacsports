@@ -51,7 +51,10 @@ class EventsController < ApplicationController
         params[:event_id],
         params[:event_status],
         params[:started_at],
-        Time.now.utc.iso8601(6)
+        Time.now.utc.iso8601(6),
+        nil,
+        nil,
+        params[:played_at]
       )
     end
 

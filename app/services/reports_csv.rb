@@ -38,12 +38,12 @@ class ReportsCsv
   private
 
   def event_header
-    [ "Event", "Aired (Central)", "Sport", "Peak live (at once)", "Est. hours with player open" ] +
+    [ "Event", "Aired (Central)", "Sport", "Peak live (at once)", "Est. hours with player open", "Plays", "Views with play tracking" ] +
       @query.event_columns.values.flat_map { |label| [ "#{label} viewers", "#{label} views" ] }
   end
 
   def event_row(row)
-    [ row["title"], row["start_at"]&.in_time_zone("America/Chicago")&.strftime("%Y-%m-%d %H:%M"), row["sport"], row["live_peak"].to_i, (row["player_minutes"].to_f / 60).round(1) ] +
+    [ row["title"], row["start_at"]&.in_time_zone("America/Chicago")&.strftime("%Y-%m-%d %H:%M"), row["sport"], row["live_peak"].to_i, (row["player_minutes"].to_f / 60).round(1), row["plays"].to_i, row["play_tracked_views"].to_i ] +
       @query.event_columns.keys.flat_map { |key| [ row["#{key}_viewers"].to_i, row["#{key}_views"].to_i ] }
   end
 end

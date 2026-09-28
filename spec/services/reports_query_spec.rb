@@ -325,4 +325,23 @@ RSpec.describe ReportsQuery do
       expect(long[:dates].first).to eq(Date.new(2025, 12, 29))
     end
   end
+
+  describe 'play rate' do
+    subject(:report) { described_class.new(**range) }
+
+    it 'is unknown before any play has been recorded' do
+      expect(report.summary_stats[:plays]).to include(since: nil, pct: nil)
+    end
+
+    it 'counts views that played, leaving out visits from before tracking began' do
+      on_site_visit.update_columns(created_at: 5.days.ago)
+      create(:event_visit, :vod, event: event, started_at: 1.day.ago, first_played_at: 1.day.ago)
+      create(:event_visit, :vod, event: event, started_at: 1.day.ago)
+
+      expect(report.summary_stats[:plays]).to include(plays: 1, views: 2, pct: 50)
+
+      row = report.per_event_stats.find { |r| r["id"] == event.id }
+      expect([ row["plays"], row["play_tracked_views"] ]).to eq([ 1, 2 ])
+    end
+  end
 end

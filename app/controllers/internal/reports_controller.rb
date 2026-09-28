@@ -15,7 +15,7 @@ class Internal::ReportsController < Internal::ApplicationController
 
     # Every filter is part of the cache key, or changing one would serve the previous
     # selection's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v8/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
+    cache_key = "reports/v9/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       @query.summary_stats
@@ -84,7 +84,7 @@ class Internal::ReportsController < Internal::ApplicationController
   # Sorted in Ruby: the rows are cached, one per event, and few enough that re-querying
   # per column would only cost cache hits. Only columns the table shows are allowed.
   def sort_event_stats
-    sortable = [ "start_at", "title", "live_peak", "player_minutes" ] +
+    sortable = [ "start_at", "title", "live_peak", "player_minutes", "plays" ] +
       @query.event_columns.keys.flat_map { |key| [ "#{key}_viewers", "#{key}_views" ] }
     @sort = sortable.include?(params[:sort]) ? params[:sort] : "start_at"
     @direction = params[:direction] == "desc" ? "desc" : "asc"

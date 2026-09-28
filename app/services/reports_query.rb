@@ -38,6 +38,15 @@ class ReportsQuery
     @team_id = team_id.presence&.to_i
   end
 
+  # When the first play was recorded, which is when play tracking started. Nothing
+  # before it can tell a play from a page left open.
+  def self.play_tracking_since
+    EventVisit.minimum(:first_played_at)
+  end
+
+  # Stands in for "no play tracking yet" in SQL, so no visit qualifies.
+  NEVER = Time.utc(9999, 1, 1)
+
   # Per-event column groups: each key has "<key>_viewers" and "<key>_views" in
   # per_event_stats rows.
   EVENT_COLUMNS = {
@@ -105,6 +114,7 @@ class ReportsQuery
         views: scoped_visits.distinct.count("event_visits.session_id")
       },
       player: player_time,
+      plays: play_rate,
       live: {
         users: live_stats.distinct.count("sessions.visitor_id"),
         views: live_stats.distinct.count("event_visits.session_id")
@@ -155,7 +165,9 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN ev.session_id END) AS vod_30d_views,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN s.visitor_id END) AS vod_all_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN ev.session_id END) AS vod_all_views,
-        COALESCE(SUM(#{player_seconds('ev')}), 0) / 60.0 AS player_minutes
+        COALESCE(SUM(#{player_seconds('ev')}), 0) / 60.0 AS player_minutes,
+        COUNT(ev.first_played_at) AS plays,
+        COUNT(ev.id) FILTER (WHERE ev.created_at >= :play_since) AS play_tracked_views
       FROM events e
       LEFT JOIN event_visits ev ON ev.event_id = e.id AND #{source_predicate} AND #{visit_range_predicate}
       LEFT JOIN sessions s ON s.id = ev.session_id
@@ -166,7 +178,8 @@ class ReportsQuery
     SQL
 
     rows = ActiveRecord::Base.connection.exec_query(
-      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source, on_site: ON_SITE, sport: sport, team_id: team_id } ])
+      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source, on_site: ON_SITE, sport: sport, team_id: team_id,
+                  play_since: self.class.play_tracking_since || NEVER } ])
     ).to_a
 
     peaks = peak_live_concurrency
@@ -279,6 +292,18 @@ class ReportsQuery
   end
 
   def connection = ActiveRecord::Base.connection
+
+  # Of the views since play tracking began, how many pressed play (or autoplayed).
+  # Earlier visits can't say, so they're left out rather than counted as not playing.
+  def play_rate
+    since = self.class.play_tracking_since
+    return { since: nil, plays: 0, views: 0, pct: nil } unless since
+
+    tracked = scoped_visits.where("event_visits.created_at >= ?", since)
+    plays = tracked.where.not(first_played_at: nil).count
+    views = tracked.count
+    { since: since.to_date, plays: plays, views: views, pct: views.positive? ? (plays * 100.0 / views).round : nil }
+  end
 
   def player_seconds(table)
     "GREATEST(EXTRACT(EPOCH FROM (#{table}.last_seen_at - #{format(VISIT_START, table: table)})), 0)"
