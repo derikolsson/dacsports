@@ -263,6 +263,34 @@
   </div>
 <% end %>
 
+<% if @top_pages %>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Top Partner Pages</h5>
+    </div>
+    <div class="card-body">
+      <% if @top_pages.empty? %>
+        <p class="text-muted mb-0">No partner pages recorded in the selected period.</p>
+      <% else %>
+        <table class="table table-sm table-hover mb-0">
+          <thead><tr><th>Page</th><th class="text-end">Views</th></tr></thead>
+          <tbody>
+            <% @top_pages.each do |page| %>
+              <tr>
+                <td class="text-break">
+                  <%= page[:title].presence || page[:url] %><br>
+                  <small><%= link_to page[:url], page[:url], target: "_blank", rel: "noopener noreferrer nofollow", class: "text-muted" %></small>
+                </td>
+                <td class="text-end"><%= number_with_delimiter(page[:views]) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <% columns = @query.event_columns.map { |key, label| [ label, key == "live" ? "table-danger" : key.tr("_", "-"), "#{key}_viewers", "#{key}_views" ] } %>
 <div class="card mb-5">
   <div class="card-header">

@@ -47,6 +47,10 @@ class Internal::ReportsController < Internal::ApplicationController
       end
     end
 
+    unless @source == ReportsQuery::ON_SITE
+      @top_pages = Rails.cache.fetch("#{cache_key}/pages", expires_in: 10.minutes) { @query.top_pages }
+    end
+
     sort_event_stats
 
     respond_to do |format|

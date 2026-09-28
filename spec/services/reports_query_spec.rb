@@ -344,4 +344,21 @@ RSpec.describe ReportsQuery do
       expect([ row["plays"], row["play_tracked_views"] ]).to eq([ 1, 2 ])
     end
   end
+
+  describe '#top_pages' do
+    subject(:report) { described_class.new(**range, source: described_class::ALL_PARTNERS) }
+
+    it 'ranks partner pages by views' do
+      2.times do
+        create(:event_visit, :vod, :embedded, event: event, started_at: 1.day.ago,
+                                              page_url: "https://northlake.example.edu/live", page_title: "Live")
+      end
+      create(:event_visit, :vod, :embedded, event: event, started_at: 1.day.ago, page_url: "https://northlake.example.edu/")
+
+      expect(report.top_pages).to eq([
+        { url: "https://northlake.example.edu/live", title: "Live", views: 2 },
+        { url: "https://northlake.example.edu/", title: nil, views: 1 }
+      ])
+    end
+  end
 end

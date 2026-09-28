@@ -34,7 +34,8 @@ class EmbedsController < ApplicationController
   PLAYABLE_STATUSES = %w[live replay_available].freeze
 
   # Parent-page values arrive from the wrapper and are attacker-controllable. They are
-  # logged, never rendered.
+  # logged, and stored only after EmbedPageContext checks them against the Referer;
+  # anywhere they're shown, they're escaped like any other text.
   MAX_PARAM_LENGTH = 2048
 
   def show
@@ -173,20 +174,23 @@ class EmbedsController < ApplicationController
   # Signed rather than a plain param so a parent page cannot claim another property's
   # traffic — the value is only ever minted server-side from the Referer we actually saw.
   def embed_source_token
-    verifier.generate({ source: embed_source, origin: partner_origin }, expires_in: 24.hours)
+    page = EmbedPageContext.from(src: params[:src], title: params[:title], ref: params[:ref],
+                                 partner_origin: partner_origin)
+    verifier.generate({ source: embed_source, origin: partner_origin, page: page }, expires_in: 24.hours)
   end
 
-  # [source, origin] from the token the poller echoed back, or the unattributed default.
+  # [source, origin, page] from the token the poller echoed back, or the unattributed
+  # default.
   def verified_embed_source
     raw = params[:source_token].presence
-    return [ "embed", nil ] if raw.blank?
+    return [ "embed", nil, {} ] if raw.blank?
 
     # The verifier's JSON serializer round-trips symbol keys as strings.
     payload = verifier.verify(raw).with_indifferent_access
-    [ payload[:source].presence || "embed", payload[:origin].presence ]
+    [ payload[:source].presence || "embed", payload[:origin].presence, payload[:page].to_h ]
   rescue ActiveSupport::MessageVerifier::InvalidSignature
     Rails.logger.warn("[embed] rejected an invalid source token")
-    [ "embed", nil ]
+    [ "embed", nil, {} ]
   end
 
   def verifier
@@ -263,7 +267,7 @@ class EmbedsController < ApplicationController
     return unless params[:session_id].present?
     return unless EventVisit::TRACKED_STATUSES.include?(visit_status(event))
 
-    source, origin = verified_embed_source
+    source, origin, page = verified_embed_source
 
     EventVisitJob.perform_async(
       params[:session_id],
@@ -273,7 +277,8 @@ class EmbedsController < ApplicationController
       Time.now.utc.iso8601(6),
       source,
       origin,
-      params[:played_at]
+      params[:played_at],
+      page.presence
     )
   end
 

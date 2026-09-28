@@ -73,4 +73,18 @@ RSpec.describe EventVisitJob do
       expect(EventVisit.last.first_played_at).to eq(seen_at)
     end
   end
+
+  describe 'partner page' do
+    def perform_with(page)
+      described_class.new.perform(session.id, event.id, "vod", nil, seen_at.iso8601(6),
+                                  "embed:https://northlake.example.edu", "https://northlake.example.edu", nil, page)
+    end
+
+    it 'is kept from the first save and not overwritten' do
+      perform_with("page_url" => "https://northlake.example.edu/live", "utm_source" => "email", "id" => "x")
+      perform_with("page_url" => "https://northlake.example.edu/other")
+
+      expect(EventVisit.last).to have_attributes(page_url: "https://northlake.example.edu/live", utm_source: "email")
+    end
+  end
 end

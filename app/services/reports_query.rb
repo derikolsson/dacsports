@@ -249,6 +249,19 @@ class ReportsQuery
     end
   end
 
+  # Partner pages that embed views happened on, most viewed first:
+  # [{ url:, title:, views: }]. Visits from before pages were recorded are left out.
+  def top_pages(limit: 10)
+    scoped_visits
+      .where.not(page_url: nil)
+      .group("event_visits.page_url")
+      .order(Arel.sql("COUNT(DISTINCT event_visits.session_id) DESC"))
+      .limit(limit)
+      .pluck("event_visits.page_url", Arel.sql("MAX(event_visits.page_title)"),
+             Arel.sql("COUNT(DISTINCT event_visits.session_id)"))
+      .map { |url, title, views| { url: url, title: title, views: views } }
+  end
+
   # The most live viewers watching an event at the same moment, keyed by event id.
   #
   # Each visit is open from its start to the last poll that saw it, so walking those

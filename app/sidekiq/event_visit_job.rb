@@ -1,7 +1,11 @@
 class EventVisitJob
   include Sidekiq::Job
 
-  def perform(session_id, event_id, event_status, started_at, seen_at, source = nil, referrer_origin = nil, played_at = nil)
+  # The partner page context an embed visit can carry (see EmbedPageContext).
+  PAGE_ATTRIBUTES = %w[page_url page_title host_referrer_origin utm_source utm_medium utm_campaign].freeze
+
+  def perform(session_id, event_id, event_status, started_at, seen_at, source = nil, referrer_origin = nil, played_at = nil,
+              page = nil)
     source = source.presence || EventVisit::DEFAULT_SOURCE
     seen_at = Time.zone.parse(seen_at.to_s)
 
@@ -16,6 +20,7 @@ class EventVisitJob
     )
 
     visit.referrer_origin ||= referrer_origin
+    visit.assign_attributes(page.to_h.slice(*PAGE_ATTRIBUTES)) if visit.new_record?
 
     # Set started_at only on first creation
     visit.started_at ||= trusted_time(started_at, seen_at)

@@ -310,7 +310,7 @@ RSpec.describe "Embeds", type: :request do
 
       expect(EventVisitJob).to receive(:perform_async).with(
         anything, event.id, "vod", anything, anything,
-        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything
+        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything, anything
       )
 
       # As the in-frame poller does: same-origin, no partner referer, no cookies needed.
@@ -324,7 +324,7 @@ RSpec.describe "Embeds", type: :request do
     # token is only ever minted server-side from a Referer we actually saw.
     it "rejects a forged source token rather than trusting it" do
       expect(EventVisitJob).to receive(:perform_async).with(
-        anything, event.id, "vod", anything, anything, "embed", nil, anything
+        anything, event.id, "vod", anything, anything, "embed", nil, anything, nil
       )
 
       post embed_status_path(event.slug),
@@ -335,7 +335,7 @@ RSpec.describe "Embeds", type: :request do
 
     it "records no partner when no token is supplied" do
       expect(EventVisitJob).to receive(:perform_async).with(
-        anything, event.id, "vod", anything, anything, "embed", nil, anything
+        anything, event.id, "vod", anything, anything, "embed", nil, anything, nil
       )
 
       post embed_status_path(event.slug),
@@ -353,7 +353,7 @@ RSpec.describe "Embeds", type: :request do
 
       expect(EventVisitJob).to receive(:perform_async).with(
         anything, event.id, "vod", anything, anything,
-        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything
+        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything, anything
       )
 
       reset!  # drops the cookie jar
@@ -362,9 +362,26 @@ RSpec.describe "Embeds", type: :request do
            as: :json
     end
 
+    it "carries the partner page from the page load to the visit" do
+      get embed_path(event.slug, src: "https://northlake.example.edu/live?utm_source=email", title: "Watch Live"),
+          headers: { "Referer" => "https://northlake.example.edu/live" }
+      token = response.body[/sourceToken: "([^"]+)"/, 1]
+
+      expect(EventVisitJob).to receive(:perform_async).with(
+        anything, event.id, "vod", anything, anything,
+        "embed:https://northlake.example.edu", "https://northlake.example.edu", anything,
+        { "page_url" => "https://northlake.example.edu/live?utm_source=email", "page_title" => "Watch Live",
+          "utm_source" => "email" }
+      )
+
+      post embed_status_path(event.slug),
+           params: { session_id: Session.last.id, enabled: "true", source_token: token },
+           as: :json
+    end
+
     it "passes on when the player first played" do
       expect(EventVisitJob).to receive(:perform_async).with(
-        anything, event.id, "vod", anything, anything, "embed", nil, "2026-09-28T12:00:00Z"
+        anything, event.id, "vod", anything, anything, "embed", nil, "2026-09-28T12:00:00Z", nil
       )
 
       post embed_status_path(event.slug),

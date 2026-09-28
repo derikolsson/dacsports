@@ -117,4 +117,14 @@ RSpec.describe "Internal::Reports", type: :request do
 
     expect(response.body).to include("3 hours", "vs 2 previous period")
   end
+
+  it "lists partner pages, escaping what the partner page supplied" do
+    event = create(:event, :replay_available, start_at: 3.days.ago)
+    create(:event_visit, :vod, :embedded, event: event, started_at: 1.day.ago,
+                                          page_url: "https://northlake.example.edu/live", page_title: "<b>Live</b>")
+
+    get internal_reports_path(source: "partners")
+
+    expect(response.body).to include("Top Partner Pages", "&lt;b&gt;Live&lt;/b&gt;")
+  end
 end
