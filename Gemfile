@@ -27,6 +27,9 @@ gem "redis", ">= 5.0"
 # Browser/OS tracking
 gem "device_detector"
 
+# Report exports (no longer a default gem as of Ruby 3.4)
+gem "csv"
+
 # Video streaming
 gem "mux_ruby"
 

@@ -4,29 +4,38 @@ class Internal::ReportsController < Internal::ApplicationController
     @partner_options = ReportsQuery.partner_sources
     parse_source
     @basis = ReportsQuery::BASES.include?(params[:basis]) ? params[:basis] : ReportsQuery::ACTIVITY
+    @query = ReportsQuery.new(start_date: @start_date, end_date: @end_date, source: @source, basis: @basis)
 
     # Source and basis are part of the cache key, or switching either would serve the
     # previous selection's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v4/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}/#{@basis}"
+    cache_key = "reports/v5/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}/#{@basis}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
-      query.summary_stats
+      @query.summary_stats
     end
 
     @previous_summary = Rails.cache.fetch("#{cache_key}/previous_summary", expires_in: 10.minutes) do
-      query.previous_period&.summary_stats
+      @query.previous_period&.summary_stats
     end
 
     @device_breakdown = Rails.cache.fetch("#{cache_key}/devices", expires_in: 10.minutes) do
-      query.device_breakdown
+      @query.device_breakdown
     end
 
     @os_breakdown = Rails.cache.fetch("#{cache_key}/os", expires_in: 10.minutes) do
-      query.os_breakdown
+      @query.os_breakdown
     end
 
     @event_stats = Rails.cache.fetch("#{cache_key}/events", expires_in: 10.minutes) do
-      query.per_event_stats
+      @query.per_event_stats
+    end
+
+    respond_to do |format|
+      format.html
+      format.csv do
+        csv = ReportsCsv.new(@query, audience: audience_label, summary: @summary, event_stats: @event_stats)
+        send_data csv.to_csv, filename: csv.filename, type: "text/csv"
+      end
     end
   end
 
@@ -41,6 +50,15 @@ class Internal::ReportsController < Internal::ApplicationController
       else
         ReportsQuery::ON_SITE
       end
+    @audience_label = audience_label
+  end
+
+  def audience_label
+    case @source
+    when ReportsQuery::ON_SITE then "dacsports.net"
+    when ReportsQuery::ALL_PARTNERS then "All partner sites"
+    else @partner_options.to_a.find { |(_, v)| v == @source }&.first || @source
+    end
   end
 
   def parse_date_range
@@ -49,9 +67,5 @@ class Internal::ReportsController < Internal::ApplicationController
   rescue ArgumentError
     @end_date = Date.current
     @start_date = @end_date - 30.days
-  end
-
-  def query
-    @query ||= ReportsQuery.new(start_date: @start_date, end_date: @end_date, source: @source, basis: @basis)
   end
 end

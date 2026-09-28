@@ -132,6 +132,7 @@ GEM
       unicode (>= 0.4.4.5)
     cssbundling-rails (1.4.3)
       railties (>= 6.0.0)
+    csv (3.3.6)
     date (3.4.1)
     debug (1.11.0)
       irb (~> 1.10)
@@ -513,6 +514,7 @@ DEPENDENCIES
   capistrano-sidekiq (~> 2.3)
   capybara
   cssbundling-rails
+  csv
   debug
   device_detector
   factory_bot_rails (~> 6.4)

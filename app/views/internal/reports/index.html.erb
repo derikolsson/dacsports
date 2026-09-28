@@ -1,8 +1,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
   <h1 class="mb-0">Reports</h1>
-  <%= link_to "https://app.usefathom.com/share/bpvxynyg/dac+sports+network", class: "btn btn-outline-secondary", target: "_blank", rel: "noopener noreferrer" do %>
-    Web Analytics <i class="bi bi-box-arrow-up-right ms-1"></i>
-  <% end %>
+  <div>
+    <%= link_to "Export CSV", internal_reports_path(format: :csv, start_date: @start_date.to_date, end_date: @end_date.to_date, source: @source, basis: @basis), class: "btn btn-outline-primary me-2" %>
+    <%= link_to "https://app.usefathom.com/share/bpvxynyg/dac+sports+network", class: "btn btn-outline-secondary", target: "_blank", rel: "noopener noreferrer" do %>
+      Web Analytics <i class="bi bi-box-arrow-up-right ms-1"></i>
+    <% end %>
+  </div>
 </div>
 <% activity = @basis == ReportsQuery::ACTIVITY %>
 <% range_label = "#{@start_date.strftime("%b %-d, %Y")} – #{@end_date.strftime("%b %-d, %Y")}" %>
@@ -172,22 +175,7 @@
   </div>
 </div>
 
-<%
-  # Under "activity" every count is already limited to the period, so the days-after-air
-  # windows would only be slices of it; they belong to the "aired" view.
-  columns = [ [ "Live", "table-danger", "live_unique_viewers", "live_views" ] ]
-  columns +=
-    if activity
-      [ [ "VOD", "vod-all", "vod_all_viewers", "vod_all_views" ] ]
-    else
-      [
-        [ "VOD - 1D", "vod-1d", "vod_1d_viewers", "vod_1d_views" ],
-        [ "VOD - 7D", "vod-7d", "vod_7d_viewers", "vod_7d_views" ],
-        [ "VOD - 30D", "vod-30d", "vod_30d_viewers", "vod_30d_views" ],
-        [ "VOD - All", "vod-all", "vod_all_viewers", "vod_all_views" ]
-      ]
-    end
-%>
+<% columns = @query.event_columns.map { |key, label| [ label, key == "live" ? "table-danger" : key.tr("_", "-"), "#{key}_viewers", "#{key}_views" ] } %>
 <div class="card mb-5">
   <div class="card-header">
     <h5 class="mb-0">Breakdown per Event</h5>

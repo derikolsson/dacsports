@@ -58,4 +58,15 @@ RSpec.describe "Internal::Reports", type: :request do
 
     expect(response.body).to include("▲ 100%")
   end
+
+  it "exports the report as CSV" do
+    event = create(:event, :replay_available, title: "Spring Final", start_at: 3.days.ago)
+    create(:event_visit, :vod, event: event, started_at: 1.day.ago)
+
+    get internal_reports_path(format: :csv)
+
+    expect(response.media_type).to eq("text/csv")
+    expect(response.headers["Content-Disposition"]).to include("dsn-viewership-")
+    expect(response.body).to include("Spring Final")
+  end
 end

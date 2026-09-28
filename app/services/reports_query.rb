@@ -35,6 +35,22 @@ class ReportsQuery
     @basis = BASES.include?(basis) ? basis : ACTIVITY
   end
 
+  # Per-event column groups: each key has "<key>_viewers" and "<key>_views" in
+  # per_event_stats rows.
+  EVENT_COLUMNS = {
+    "live" => "Live",
+    "vod_1d" => "VOD - 1D",
+    "vod_7d" => "VOD - 7D",
+    "vod_30d" => "VOD - 30D",
+    "vod_all" => "VOD - All"
+  }.freeze
+
+  # Under "activity" every count is already limited to the period, so the days-after-air
+  # windows would only be slices of it; they belong to the "aired" view.
+  def event_columns
+    activity? ? { "live" => "Live", "vod_all" => "VOD" } : EVENT_COLUMNS
+  end
+
   # The "All Time" preset starts here; nothing before it can be compared against.
   ALL_TIME_START = Date.new(2020, 1, 1)
 
@@ -121,7 +137,7 @@ class ReportsQuery
         e.title,
         e.start_at,
         e.sport,
-        COUNT(DISTINCT CASE WHEN ev.event_status = 'live' THEN s.visitor_id END) AS live_unique_viewers,
+        COUNT(DISTINCT CASE WHEN ev.event_status = 'live' THEN s.visitor_id END) AS live_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'live' THEN ev.session_id END) AS live_views,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '1 day' THEN s.visitor_id END) AS vod_1d_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '1 day' THEN ev.session_id END) AS vod_1d_views,

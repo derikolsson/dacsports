@@ -10,6 +10,6 @@
       properties. Treat the combined total as views, not people.
     </span>
   <% else %>
-    Showing <strong><%= @partner_options.to_a.find { |(_, v)| v == @source }&.first || @source %></strong> only.
+    Showing <strong><%= @audience_label %></strong> only.
   <% end %>
 </div>
