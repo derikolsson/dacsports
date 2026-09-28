@@ -66,10 +66,41 @@ class DashboardQuery
     { start_date: 6.days.ago.to_date, end_date: Date.current }
   end
 
-  # Viewing sessions in this audience, by each session attribute.
-  def browser_breakdown = session_breakdown(:browser_name).first(10)
-  def os_breakdown = session_breakdown(:os_name).first(10)
-  def device_breakdown = session_breakdown(:device_type)
+  # This audience's most-watched events over the last 7 days, by viewing sessions.
+  def top_events(limit: 5)
+    week_report(source).per_event_stats
+      .map { |row| row.merge("views" => row["live_views"] + row["vod_all_views"]) }
+      .max_by(limit) { |row| row["views"] }
+  end
+
+  def top_partners(limit: 5)
+    week_report(ReportsQuery::ALL_PARTNERS).per_partner_stats.first(limit)
+  end
+
+  def upcoming_events(limit: 5)
+    Event.visible.where(start_at: Time.current..7.days.from_now).order(:start_at).limit(limit)
+  end
+
+  # Today's biggest live audience at a single moment, in this audience: { event:, viewers: }.
+  def peak_today
+    row = ReportsQuery.new(start_date: Date.current, end_date: Date.current, source: source)
+      .per_event_stats.max_by { |r| r["live_peak"] }
+    return unless row && row["live_peak"].positive?
+
+    { title: row["title"], viewers: row["live_peak"] }
+  end
+
+  # Share of this audience's viewing sessions over the last 7 days by device type,
+  # biggest first: [["Phone", 62.5], ...]
+  def device_share
+    week_report(source).device_breakdown.map do |device, stats|
+      [ device, stats[:live_count] + stats[:vod_count] ]
+    end.then do |counts|
+      total = counts.sum(&:last)
+      counts.map { |device, count| [ device, total.positive? ? (count * 100.0 / total).round : 0 ] }
+            .sort_by { |_, pct| -pct }
+    end
+  end
 
   private
 
@@ -85,17 +116,5 @@ class DashboardQuery
 
   def active_visits
     EventVisit.where("last_seen_at > ?", ACTIVE_WINDOW.ago)
-  end
-
-  def audience_visits
-    partners? ? EventVisit.embedded : EventVisit.on_site
-  end
-
-  def session_breakdown(column)
-    audience_visits.joins(:session)
-                   .group("sessions.#{column}")
-                   .distinct
-                   .count("event_visits.session_id")
-                   .sort_by { |_k, v| -v }
   end
 end

@@ -19,7 +19,7 @@ RSpec.describe "Internal::Home", type: :request do
 
     get internal_root_path
 
-    expect(response.body).not_to include("Earlier Game")
+    expect(response.body).to include("No active viewers")
   end
 
   it "includes partner-site viewers in who is watching now" do

@@ -17,8 +17,10 @@ class Internal::HomeController < Internal::ApplicationController
     @trend = Rails.cache.fetch("#{cache_key}/trend", expires_in: 5.minutes) do
       ReportsQuery.new(start_date: 29.days.ago.to_date, end_date: Date.current, source: @source).daily_series
     end
-    @browser_breakdown = Rails.cache.fetch("#{cache_key}/browsers", expires_in: 10.seconds) { query.browser_breakdown }
-    @os_breakdown = Rails.cache.fetch("#{cache_key}/os", expires_in: 10.seconds) { query.os_breakdown }
-    @device_breakdown = Rails.cache.fetch("#{cache_key}/devices", expires_in: 10.seconds) { query.device_breakdown }
+    @peak_today = Rails.cache.fetch("#{cache_key}/peak_today", expires_in: 1.minute) { query.peak_today }
+    @top_events = Rails.cache.fetch("#{cache_key}/top_events", expires_in: 5.minutes) { query.top_events }
+    @top_partners = Rails.cache.fetch("dashboard/v2/top_partners", expires_in: 5.minutes) { query.top_partners }
+    @device_share = Rails.cache.fetch("#{cache_key}/device_share", expires_in: 5.minutes) { query.device_share }
+    @upcoming_events = query.upcoming_events
   end
 end

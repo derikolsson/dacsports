@@ -30,9 +30,34 @@ RSpec.describe DashboardQuery do
     expect(described_class.new.partner_share).to eq(current: 33, previous: 0)
   end
 
-  it 'scopes the device breakdown to the audience' do
-    expect(described_class.new.device_breakdown).to eq([ [ "desktop", 2 ] ])
-    expect(described_class.new(source: ReportsQuery::ALL_PARTNERS).device_breakdown).to eq([ [ "smartphone", 1 ] ])
+  it 'scopes the device share to the audience' do
+    expect(described_class.new.device_share).to eq([ [ "Desktop", 100 ] ])
+    expect(described_class.new(source: ReportsQuery::ALL_PARTNERS).device_share).to eq([ [ "Phone", 100 ] ])
+  end
+
+  it 'ranks this week’s events by views' do
+    quiet = create(:event, :replay_available, title: "Quiet")
+    create(:event_visit, :vod, event: quiet, started_at: 1.day.ago)
+
+    expect(described_class.new.top_events.map { |r| [ r["id"], r["views"] ] }).to eq([ [ event.id, 2 ], [ quiet.id, 1 ] ])
+  end
+
+  it 'ranks partner sites' do
+    expect(described_class.new.top_partners.map { |r| r[:label] }).to eq([ "https://northlake.example.edu" ])
+  end
+
+  it 'lists visible events in the next 7 days, soonest first' do
+    later = create(:event, start_at: 3.days.from_now)
+    sooner = create(:event, start_at: 1.day.from_now)
+    create(:event, start_at: 1.day.from_now, visible: false)
+    create(:event, start_at: 10.days.from_now)
+
+    expect(described_class.new.upcoming_events).to eq([ sooner, later ])
+  end
+
+  it 'reports today’s peak live audience' do
+    event.update!(title: "Tonight")
+    expect(described_class.new.peak_today).to eq(title: "Tonight", viewers: 2)
   end
 
   it 'falls back to dacsports.net for an unknown audience' do

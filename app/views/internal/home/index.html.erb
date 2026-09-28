@@ -14,6 +14,9 @@
         <small class="text-muted d-block mb-2">All audiences, last 3 minutes</small>
         <p class="display-6 mb-1"><%= number_with_delimiter(@active_viewers[:total]) %></p>
         <small class="text-muted"><%= number_with_delimiter(@active_viewers[:on_site]) %> on dacsports.net · <%= number_with_delimiter(@active_viewers[:partners]) %> on partner sites</small>
+        <% if @peak_today %>
+          <small class="text-muted d-block mt-1">Today's peak: <%= number_with_delimiter(@peak_today[:viewers]) %> at once, <%= @peak_today[:title] %></small>
+        <% end %>
       </div>
     </div>
   </div>
@@ -84,61 +87,92 @@
   </div>
 </div>
 
-<div class="row mb-4">
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Top Browsers</h5>
-      </div>
+<div class="row g-3 mb-4">
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="mb-0">Top Events This Week</h5></div>
       <div class="card-body">
-        <table class="table table-sm">
-          <tbody>
-            <% @browser_breakdown.each do |browser, count| %>
-              <tr>
-                <td><%= browser || 'Unknown' %></td>
-                <td class="text-end"><%= count %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-6">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="mb-0">Top Operating Systems</h5>
-      </div>
-      <div class="card-body">
-        <table class="table table-sm">
-          <tbody>
-            <% @os_breakdown.each do |os, count| %>
-              <tr>
-                <td><%= os || 'Unknown' %></td>
-                <td class="text-end"><%= count %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="card mb-4">
-  <div class="card-header">
-    <h5 class="mb-0">Device Types</h5>
-  </div>
-  <div class="card-body">
-    <table class="table table-sm">
-      <tbody>
-        <% @device_breakdown.each do |device, count| %>
-          <tr>
-            <td><%= device || 'Unknown' %></td>
-            <td class="text-end"><%= count %></td>
-          </tr>
+        <% if @top_events.empty? %>
+          <p class="text-muted mb-0">No viewing in the last 7 days.</p>
+        <% else %>
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Event</th><th class="text-end">Views</th><th class="text-end">Viewers</th></tr></thead>
+            <tbody>
+              <% @top_events.each do |event| %>
+                <tr>
+                  <td><%= event["title"] %><br><small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %-d") %><%= " · #{event["sport"]}" if event["sport"].present? %></small></td>
+                  <td class="text-end"><%= number_with_delimiter(event["views"]) %></td>
+                  <td class="text-end"><%= number_with_delimiter(event["live_viewers"] + event["vod_all_viewers"]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+          <small class="text-muted d-block mt-2">Viewers add live and replay audiences, so someone who watched both counts twice.</small>
         <% end %>
-      </tbody>
-    </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="mb-0">Top Partner Sites This Week</h5></div>
+      <div class="card-body">
+        <% if @top_partners.empty? %>
+          <p class="text-muted mb-0">No partner viewing in the last 7 days.</p>
+        <% else %>
+          <table class="table table-sm mb-0">
+            <thead><tr><th>Partner site</th><th class="text-end">Views</th><th class="text-end">Share</th></tr></thead>
+            <tbody>
+              <% @top_partners.each do |partner| %>
+                <tr>
+                  <td><%= link_to partner[:label], internal_reports_path(start_date: 6.days.ago.to_date, end_date: Date.current, source: partner[:source]) %></td>
+                  <td class="text-end"><%= number_with_delimiter(partner[:live_views] + partner[:vod_views]) %></td>
+                  <td class="text-end"><%= number_to_percentage(partner[:share], precision: 0) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="mb-0">Coming Up</h5></div>
+      <div class="card-body">
+        <% if @upcoming_events.empty? %>
+          <p class="text-muted mb-0">Nothing scheduled in the next 7 days.</p>
+        <% else %>
+          <ul class="list-unstyled mb-0">
+            <% @upcoming_events.each do |event| %>
+              <li class="d-flex justify-content-between py-1 border-bottom">
+                <span><%= link_to event.title, internal_event_path(event) %><% if event.sport.present? %> <small class="text-muted">· <%= event.sport %></small><% end %></span>
+                <small class="text-muted text-nowrap ms-2"><%= event.start_at.in_time_zone("America/Chicago").strftime("%a %b %-d, %-l:%M%P") %></small>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card h-100">
+      <div class="card-header"><h5 class="mb-0">Audience Devices</h5></div>
+      <div class="card-body">
+        <% if @device_share.empty? %>
+          <p class="text-muted mb-0">No viewing in the last 7 days.</p>
+        <% else %>
+          <% @device_share.each do |device, pct| %>
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span style="width: 5rem"><%= device %></span>
+              <div class="progress flex-grow-1" role="progressbar" aria-label="<%= device %>" aria-valuenow="<%= pct %>" aria-valuemin="0" aria-valuemax="100" style="height: 8px">
+                <div class="progress-bar" style="width: <%= pct %>%"></div>
+              </div>
+              <span class="text-end" style="width: 3rem"><%= pct %>%</span>
+            </div>
+          <% end %>
+          <small class="text-muted">Share of views, last 7 days. Operating systems and more in <%= link_to "Reports", @week_link %>.</small>
+        <% end %>
+      </div>
+    </div>
   </div>
 </div>
