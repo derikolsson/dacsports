@@ -21,4 +21,13 @@ RSpec.describe "Internal::Home", type: :request do
 
     expect(response.body).not_to include("Earlier Game")
   end
+
+  it "includes partner-site viewers in who is watching now" do
+    event = create(:event, :live, title: "Partner Game")
+    create(:event_visit, :live, :embedded, event: event, last_seen_at: 1.minute.ago)
+
+    get internal_root_path
+
+    expect(response.body).to include("Partner Game", "1 on partner sites")
+  end
 end
