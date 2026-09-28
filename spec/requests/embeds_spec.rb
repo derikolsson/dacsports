@@ -389,6 +389,12 @@ RSpec.describe "Embeds", type: :request do
            as: :json
     end
 
+    it "does not record a visit when the frame showed no player" do
+      expect(EventVisitJob).not_to receive(:perform_async)
+
+      post embed_status_path(event.slug), params: { session_id: session.id, enabled: "false" }, as: :json
+    end
+
     it "does not record a visit without a session id" do
       expect(EventVisitJob).not_to receive(:perform_async)
 

@@ -263,7 +263,10 @@ class EmbedsController < ApplicationController
       end
   end
 
+  # Only when the frame actually got a player; the slate shown when signing fails
+  # reports enabled: false, like the on-site poller does.
   def track_visit(event)
+    return unless params[:enabled].to_s == "true"
     return unless params[:session_id].present?
     return unless EventVisit::TRACKED_STATUSES.include?(visit_status(event))
 

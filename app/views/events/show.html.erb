@@ -163,7 +163,7 @@
       eventId: '<%= @event.id %>',
       eventStatus: '<%= @event.replay_available? ? "vod" : @event.status %>',
       forceReloadVersion: <%= @event.force_reload_count %>,
-      sessionId: '<%= Current.session.id %>',
+      sessionId: '<%= Current.session&.id %>',
       enabled: <%= @event.live? || @event.replay_available? %>,
       initialTtl: <%= Dacsports.redis.get('event_status_ttl').to_i %>
     });

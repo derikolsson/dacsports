@@ -8,6 +8,13 @@ module SessionManagement
   private
 
   def set_current_session
+    Current.request_id = request.uuid
+    Current.ip_address = request.ip
+
+    # Crawlers and link previews aren't viewers. With no session they record no visits,
+    # and they don't inflate session counts.
+    return if bot_request?
+
     visitor_id = get_or_create_visitor_id
 
     # Find most recent session for this visitor
@@ -31,8 +38,10 @@ module SessionManagement
     end
 
     Current.session = user_session
-    Current.request_id = request.uuid
-    Current.ip_address = request.ip
+  end
+
+  def bot_request?
+    request.user_agent.present? && DeviceDetector.new(request.user_agent).bot?
   end
 
   # Where a new session came from: the referring site (never our own), the page it

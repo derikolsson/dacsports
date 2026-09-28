@@ -31,4 +31,12 @@ RSpec.describe "Session arrival", type: :request do
 
     expect(Session.last).to have_attributes(landing_path: nil, utm_source: nil, landing_referrer_host: nil)
   end
+
+  it "gives crawlers no session" do
+    expect {
+      get root_path, headers: { "User-Agent" => "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" }
+    }.not_to change(Session, :count)
+
+    expect(response).to have_http_status(:ok)
+  end
 end
