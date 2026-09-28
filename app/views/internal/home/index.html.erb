@@ -46,6 +46,9 @@
   </div>
 </div>
 
+<%= render "internal/shared/viewers_trend", series: @trend,
+           title: "Last 30 Days on #{@source == ReportsQuery::ON_SITE ? "dacsports.net" : "Partner Sites"}" %>
+
 <div class="card mb-4">
   <div class="card-header">
     <h5 class="mb-0">Currently Watching</h5>

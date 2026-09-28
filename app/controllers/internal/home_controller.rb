@@ -11,6 +11,9 @@ class Internal::HomeController < Internal::ApplicationController
     end
 
     @counts = Rails.cache.fetch("#{cache_key}/counts", expires_in: 10.seconds) { query.audience_counts }
+    @trend = Rails.cache.fetch("#{cache_key}/trend", expires_in: 5.minutes) do
+      ReportsQuery.new(start_date: 29.days.ago.to_date, end_date: Date.current, source: @source).daily_series
+    end
     @browser_breakdown = Rails.cache.fetch("#{cache_key}/browsers", expires_in: 10.seconds) { query.browser_breakdown }
     @os_breakdown = Rails.cache.fetch("#{cache_key}/os", expires_in: 10.seconds) { query.os_breakdown }
     @device_breakdown = Rails.cache.fetch("#{cache_key}/devices", expires_in: 10.seconds) { query.device_breakdown }

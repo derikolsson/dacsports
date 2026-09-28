@@ -25,6 +25,10 @@ class Internal::ReportsController < Internal::ApplicationController
       @query.previous_period&.summary_stats
     end
 
+    @trend = Rails.cache.fetch("#{cache_key}/trend", expires_in: 10.minutes) do
+      @query.daily_series
+    end
+
     @device_breakdown = Rails.cache.fetch("#{cache_key}/devices", expires_in: 10.minutes) do
       @query.device_breakdown
     end

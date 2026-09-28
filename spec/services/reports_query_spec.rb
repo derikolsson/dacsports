@@ -296,4 +296,33 @@ RSpec.describe ReportsQuery do
       expect(row["player_minutes"].to_f).to be_within(0.01).of(40)
     end
   end
+
+  describe '#daily_series' do
+    subject(:series) { described_class.new(start_date: Date.new(2026, 3, 1), end_date: Date.new(2026, 3, 3)).daily_series }
+
+    let(:march_event) { create(:event, :replay_available, start_at: Time.zone.local(2026, 2, 1)) }
+
+    it 'buckets by the local day, not the UTC one' do
+      # 11:30pm in Chicago on March 1 is already March 2 in UTC.
+      create(:event_visit, :vod, event: march_event, started_at: Time.zone.local(2026, 3, 1, 23, 30))
+
+      expect(series[:dates]).to eq([ Date.new(2026, 3, 1), Date.new(2026, 3, 2), Date.new(2026, 3, 3) ])
+      expect(series[:vod]).to eq([ 1, 0, 0 ])
+    end
+
+    it 'counts each viewer once per day' do
+      session = create(:session)
+      create(:event_visit, :live, event: march_event, session: session, started_at: Time.zone.local(2026, 3, 2, 12))
+      other = create(:session, visitor_id: session.visitor_id)
+      create(:event_visit, :live, event: march_event, session: other, started_at: Time.zone.local(2026, 3, 2, 18))
+
+      expect(series[:live]).to eq([ 0, 1, 0 ])
+    end
+
+    it 'switches to weeks for long periods' do
+      long = described_class.new(start_date: Date.new(2026, 1, 1), end_date: Date.new(2026, 6, 30)).daily_series
+      expect(long[:interval]).to eq("week")
+      expect(long[:dates].first).to eq(Date.new(2025, 12, 29))
+    end
+  end
 end

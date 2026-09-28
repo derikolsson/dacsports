@@ -1,0 +1,27 @@
+<%# Unique viewers over time, live vs VOD, from ReportsQuery#daily_series. %>
+<% label_format = series[:interval] == "week" ? "Week of %b %-d" : "%b %-d" %>
+<% labels = series[:dates].map { |d| d.strftime(label_format) } %>
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-baseline">
+    <h5 class="mb-0"><%= title %></h5>
+    <small class="text-muted">Unique viewers per <%= series[:interval] %></small>
+  </div>
+  <div class="card-body">
+    <div style="height: 240px"
+         data-controller="chart"
+         data-chart-config-value="<%= { labels: labels, series: [ { label: "Live", data: series[:live] }, { label: "VOD", data: series[:vod] } ] }.to_json %>">
+      <p class="text-muted">Loading chart…</p>
+    </div>
+    <details class="mt-2 d-print-none">
+      <summary class="small text-muted">Show as table</summary>
+      <table class="table table-sm mt-2 mb-0">
+        <thead><tr><th><%= series[:interval].capitalize %></th><th class="text-end">Live</th><th class="text-end">VOD</th></tr></thead>
+        <tbody>
+          <% labels.each_with_index do |label, i| %>
+            <tr><td><%= label %></td><td class="text-end"><%= series[:live][i] %></td><td class="text-end"><%= series[:vod][i] %></td></tr>
+          <% end %>
+        </tbody>
+      </table>
+    </details>
+  </div>
+</div>

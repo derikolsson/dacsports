@@ -169,6 +169,42 @@ class ReportsQuery
     rows.each { |row| row["live_peak"] = peaks.fetch(row["id"], 0) }
   end
 
+  # Unique viewers per day (per week for long periods), split live and VOD, bucketed by
+  # when the viewing happened.
+  #
+  #   { interval: "day", dates: [Date, ...], live: [Integer, ...], vod: [Integer, ...] }
+  #
+  # Bucket boundaries are local midnights computed here and quoted by Active Record,
+  # which stores timestamps in the server's zone (default_timezone = :local). Converting
+  # in SQL would have to guess that zone.
+  def daily_series
+    interval = (end_date.to_date - start_date.to_date) > 120 ? "week" : "day"
+    step = interval == "week" ? 7 : 1
+    first = interval == "week" ? start_date.to_date.beginning_of_week : start_date.to_date
+    dates = (first..end_date.to_date).step(step).to_a
+
+    buckets = dates.map do |date|
+      from = date.in_time_zone.beginning_of_day
+      to = (date + step).in_time_zone.beginning_of_day
+      "(#{connection.quote(date)}::date, #{connection.quote(from)}::timestamp, #{connection.quote(to)}::timestamp)"
+    end
+    start = format(VISIT_START, table: "event_visits")
+
+    counts = scoped_visits
+      .joins("JOIN (VALUES #{buckets.join(', ')}) AS buckets(day, from_at, to_at) " \
+             "ON #{start} >= buckets.from_at AND #{start} < buckets.to_at")
+      .group("buckets.day", "event_visits.event_status")
+      .distinct
+      .count("sessions.visitor_id")
+
+    {
+      interval: interval,
+      dates: dates,
+      live: dates.map { |date| counts[[ date, "live" ]] || 0 },
+      vod: dates.map { |date| counts[[ date, "vod" ]] || 0 }
+    }
+  end
+
   # One row per partner property, biggest first, with its share of all partner views.
   # Only meaningful for the "all partners" audience; each property is its own row
   # because a viewer can't be recognised from one property to the next.
@@ -237,6 +273,8 @@ class ReportsQuery
 
     { minutes: minutes.round, per_visit: visits.positive? ? (minutes / visits).round(1) : 0 }
   end
+
+  def connection = ActiveRecord::Base.connection
 
   def player_seconds(table)
     "GREATEST(EXTRACT(EPOCH FROM (#{table}.last_seen_at - #{format(VISIT_START, table: table)})), 0)"
