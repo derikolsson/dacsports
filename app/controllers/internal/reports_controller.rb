@@ -3,19 +3,18 @@ class Internal::ReportsController < Internal::ApplicationController
     parse_date_range
     @partner_options = ReportsQuery.partner_sources
     parse_source
-    @basis = ReportsQuery::BASES.include?(params[:basis]) ? params[:basis] : ReportsQuery::ACTIVITY
     @teams = Team.order(:name)
     @sport = params[:sport] if Event::SPORTS.include?(params[:sport])
     @team = @teams.find_by(id: params[:team_id]) if params[:team_id].present?
 
     # Everything but the dates, for links that change only the period.
-    @filters = { source: @source, basis: @basis, sport: @sport, team_id: @team&.id }.compact
+    @filters = { source: @source, sport: @sport, team_id: @team&.id }.compact
 
     @query = ReportsQuery.new(start_date: @start_date, end_date: @end_date, **@filters)
 
     # Every filter is part of the cache key, or changing one would serve the previous
     # selection's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v9/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
+    cache_key = "reports/v10/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       @query.summary_stats
@@ -91,7 +90,7 @@ class Internal::ReportsController < Internal::ApplicationController
   # per column would only cost cache hits. Only columns the table shows are allowed.
   def sort_event_stats
     sortable = [ "start_at", "title", "live_peak", "player_minutes", "plays" ] +
-      @query.event_columns.keys.flat_map { |key| [ "#{key}_viewers", "#{key}_views" ] }
+      ReportsQuery::EVENT_COLUMNS.keys.flat_map { |key| [ "#{key}_viewers", "#{key}_views" ] }
     @sort = sortable.include?(params[:sort]) ? params[:sort] : "start_at"
     @direction = params[:direction] == "desc" ? "desc" : "asc"
 

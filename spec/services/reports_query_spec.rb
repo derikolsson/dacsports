@@ -36,7 +36,7 @@ RSpec.describe ReportsQuery do
 
     it 'excludes partner visits from the per-event breakdown' do
       row = report.per_event_stats.find { |r| r["id"] == event.id }
-      expect(row["vod_30d_viewers"]).to eq(1)
+      expect(row["vod_viewers"]).to eq(1)
     end
   end
 
@@ -70,7 +70,7 @@ RSpec.describe ReportsQuery do
 
     it 'combines partners in the per-event breakdown' do
       row = report.per_event_stats.find { |r| r["id"] == event.id }
-      expect(row["vod_30d_viewers"]).to eq(2)
+      expect(row["vod_viewers"]).to eq(2)
     end
   end
 
@@ -97,10 +97,9 @@ RSpec.describe ReportsQuery do
       expect(report.device_breakdown.keys).to match_array([ "Phone", "Tablet" ])
     end
 
-    it 'counts them per event under all-time, not under 30 days' do
+    it 'counts them per event' do
       row = report.per_event_stats.find { |r| r["id"] == old_event.id }
-      expect(row["vod_30d_views"]).to eq(0)
-      expect(row["vod_all_views"]).to eq(1)
+      expect(row["vod_views"]).to eq(1)
     end
   end
 
@@ -125,21 +124,11 @@ RSpec.describe ReportsQuery do
     it 'reports that partner’s devices' do
       expect(report.device_breakdown.keys).to eq([ "Phone" ])
     end
-
-    # The source filter belongs in the LEFT JOIN's ON clause; in WHERE it would drop
-    # every event that has no matching visit.
-    it 'still lists aired events with no visits from that partner' do
-      quiet = create(:event, :replay_available, start_at: 3.days.ago)
-      other = described_class.new(**range, source: "embed:https://someone-else.org",
-                                           basis: described_class::AIRED)
-
-      expect(other.per_event_stats.map { |r| r["id"] }).to include(quiet.id)
-    end
   end
 
-  # "Last 30 days" has to mean viewing in the last 30 days. It used to mean events that
-  # aired then, which hid this month's replays of older games.
-  describe 'date basis' do
+  # "Last 30 days" means viewing in the last 30 days, for events of any date. It used to
+  # mean events that aired then, which hid this month's replays of older games.
+  describe 'date range' do
     let(:old_event) { create(:event, :replay_available, start_at: 100.days.ago) }
 
     let!(:recent_replay) do
@@ -150,60 +139,46 @@ RSpec.describe ReportsQuery do
       create(:event_visit, :vod, event: event, started_at: 20.days.ago)
     end
 
-    context 'by viewing activity (the default)' do
-      subject(:report) { described_class.new(**range) }
+    subject(:report) { described_class.new(**range) }
 
-      it 'counts viewing in the period, whenever the event aired' do
-        expect(report.summary_stats[:vod]).to eq(users: 2, views: 2)
-      end
-
-      it 'lists only events viewed in the period, with counts that add up to the summary' do
-        rows = report.per_event_stats
-
-        expect(rows.map { |r| r["id"] }).to contain_exactly(event.id, old_event.id)
-        expect(rows.sum { |r| r["vod_all_views"] }).to eq(report.summary_stats[:vod][:views])
-      end
-
-      it 'leaves out earlier viewing of events in the period' do
-        row = report.per_event_stats.find { |r| r["id"] == event.id }
-        expect(row["vod_all_views"]).to eq(1)
-      end
-
-      it 'uses the server time when the browser sent none' do
-        recent_replay.update_columns(started_at: nil, created_at: 100.days.ago)
-
-        expect(report.summary_stats[:vod][:views]).to eq(1)
-      end
+    it 'counts viewing in the period, whenever the event aired' do
+      expect(report.summary_stats[:vod]).to eq(users: 2, views: 2)
     end
 
-    context 'by events aired' do
-      subject(:report) { described_class.new(**range, basis: described_class::AIRED) }
+    it 'lists only events viewed in the period, with counts that add up to the summary' do
+      rows = report.per_event_stats
 
-      it 'counts all viewing of events that aired in the period' do
-        row = report.per_event_stats.find { |r| r["id"] == event.id }
-        expect(row["vod_all_views"]).to eq(2)
-      end
-
-      it 'leaves out events that aired earlier' do
-        expect(report.per_event_stats.map { |r| r["id"] }).not_to include(old_event.id)
-      end
+      expect(rows.map { |r| r["id"] }).to contain_exactly(event.id, old_event.id)
+      expect(rows.sum { |r| r["vod_views"] }).to eq(report.summary_stats[:vod][:views])
     end
 
-    it 'falls back to viewing activity for an unknown basis' do
-      expect(described_class.new(**range, basis: "bogus")).to be_activity
+    it 'leaves out viewing before the period' do
+      row = report.per_event_stats.find { |r| r["id"] == event.id }
+      expect(row["vod_views"]).to eq(1)
+    end
+
+    it 'leaves out events with no viewing in the period' do
+      quiet = create(:event, :replay_available, start_at: 3.days.ago)
+      expect(report.per_event_stats.map { |r| r["id"] }).not_to include(quiet.id)
+    end
+
+    it 'uses the server time when the browser sent none' do
+      recent_replay.update_columns(started_at: nil, created_at: 100.days.ago)
+
+      expect(report.summary_stats[:vod][:views]).to eq(1)
     end
   end
 
   describe '#previous_period' do
-    subject(:previous) { described_class.new(**range, source: described_class::ALL_PARTNERS, basis: described_class::AIRED).previous_period }
+    subject(:previous) { described_class.new(**range, source: described_class::ALL_PARTNERS).previous_period }
 
     it 'covers the same number of days immediately before' do
       expect(previous.start_date.to_date).to eq(21.days.ago.to_date)
       expect(previous.end_date.to_date).to eq(11.days.ago.to_date)
     end
 
-    it 'keeps the audience and basis' do
-      expect([ previous.source, previous.basis ]).to eq([ described_class::ALL_PARTNERS, described_class::AIRED ])
+    it 'keeps the audience' do
+      expect(previous.source).to eq(described_class::ALL_PARTNERS)
     end
 
     it 'is nil for an all-time report' do
@@ -262,13 +237,11 @@ RSpec.describe ReportsQuery do
       expect(report.per_event_stats.map { |r| r["id"] }).to eq([ soccer.id ])
     end
 
-    it 'counts only that team, under either basis' do
-      [ described_class::ACTIVITY, described_class::AIRED ].each do |basis|
-        report = described_class.new(**range, team_id: team.id, basis: basis)
+    it 'counts only that team' do
+      report = described_class.new(**range, team_id: team.id)
 
-        expect(report.summary_stats[:vod][:views]).to eq(1)
-        expect(report.per_event_stats.map { |r| r["id"] }).to eq([ soccer.id ])
-      end
+      expect(report.summary_stats[:vod][:views]).to eq(1)
+      expect(report.per_event_stats.map { |r| r["id"] }).to eq([ soccer.id ])
     end
 
     it 'carries the narrowing into the previous period' do

@@ -13,14 +13,14 @@ class ReportsCsv
 
   def filename
     audience = @audience.parameterize.presence || "audience"
-    "dsn-viewership-#{@query.start_date.to_date}-to-#{@query.end_date.to_date}-#{@query.basis}-#{audience}.csv"
+    "dsn-viewership-#{@query.start_date.to_date}-to-#{@query.end_date.to_date}-#{audience}.csv"
   end
 
   def to_csv
     CSV.generate do |csv|
       csv << [ "DAC Sports Network viewership" ]
       csv << [ "Period", "#{@query.start_date.to_date} to #{@query.end_date.to_date}" ]
-      csv << [ "Counting", @query.activity? ? "Viewing that happened in the period" : "All viewing of events that aired in the period" ]
+      csv << [ "Counting", "Viewing that happened in the period, for events of any date" ]
       csv << [ "Audience", @audience ]
       csv << [ "Sport", @query.sport ] if @query.sport
       csv << [ "Team", @team ] if @team
@@ -39,11 +39,11 @@ class ReportsCsv
 
   def event_header
     [ "Event", "Aired (Central)", "Sport", "Peak live (at once)", "Est. hours with player open", "Plays", "Views with play tracking" ] +
-      @query.event_columns.values.flat_map { |label| [ "#{label} viewers", "#{label} views" ] }
+      ReportsQuery::EVENT_COLUMNS.values.flat_map { |label| [ "#{label} viewers", "#{label} views" ] }
   end
 
   def event_row(row)
     [ row["title"], row["start_at"]&.in_time_zone("America/Chicago")&.strftime("%Y-%m-%d %H:%M"), row["sport"], row["live_peak"].to_i, (row["player_minutes"].to_f / 60).round(1), row["plays"].to_i, row["play_tracked_views"].to_i ] +
-      @query.event_columns.keys.flat_map { |key| [ row["#{key}_viewers"].to_i, row["#{key}_views"].to_i ] }
+      ReportsQuery::EVENT_COLUMNS.keys.flat_map { |key| [ row["#{key}_viewers"].to_i, row["#{key}_views"].to_i ] }
   end
 end

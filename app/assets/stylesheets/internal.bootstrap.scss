@@ -30,21 +30,14 @@ html, body {
   col.event-col { width: 20%; }
   col.data-col  { width: 8%; }
 
-  // Stronger dividers between Live / VOD-1D / VOD-7D / VOD-30D / VOD-All groups
+  // Stronger dividers between the Live and VOD groups
   th.group-start,
   td.group-start {
     border-left: 2px solid #6c757d;
   }
 
-  // Progressive shading so each VOD tier reads as its own block
-  th.vod-1d,
-  td.vod-1d  { background-color: #e7f1ff; }
-  th.vod-7d,
-  td.vod-7d  { background-color: #cfe2ff; }
-  th.vod-30d,
-  td.vod-30d { background-color: #a8c8f0; }
-  th.vod-all,
-  td.vod-all { background-color: #8ab4e8; }
+  th.vod,
+  td.vod { background-color: #cfe2ff; }
 }
 
 @media print {

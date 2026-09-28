@@ -7,11 +7,10 @@
     <% end %>
   </div>
 </div>
-<% activity = @basis == ReportsQuery::ACTIVITY %>
 <% range_label = "#{@start_date.strftime("%b %-d, %Y")} – #{@end_date.strftime("%b %-d, %Y")}" %>
 <h1 class="mb-4 d-none d-print-block">
   DAC Sports Network – Viewership: <%= range_label %><%= " · #{[ @sport, @team&.name ].compact.join(" · ")}" if @sport || @team %>
-  <small class="d-block fs-6 text-muted"><%= activity ? "Viewing that happened in this period" : "All viewing of events that aired in this period" %></small>
+  <small class="d-block fs-6 text-muted">Viewing that happened in this period, for events of any date</small>
 </h1>
 
 <div class="card mb-4 d-print-none">
@@ -46,15 +45,6 @@
         <%= select_tag :team_id, options_from_collection_for_select(@teams, :id, :name, @team&.id), include_blank: "All teams", class: "form-select" %>
       </div>
       <div class="col-auto">
-        <span class="form-label d-block">Count by</span>
-        <div class="btn-group" role="group" aria-label="Count by">
-          <%= radio_button_tag :basis, ReportsQuery::ACTIVITY, activity, class: "btn-check", autocomplete: "off" %>
-          <%= label_tag "basis_#{ReportsQuery::ACTIVITY}", "Viewing activity", class: "btn btn-outline-primary" %>
-          <%= radio_button_tag :basis, ReportsQuery::AIRED, !activity, class: "btn-check", autocomplete: "off" %>
-          <%= label_tag "basis_#{ReportsQuery::AIRED}", "Events aired", class: "btn btn-outline-primary" %>
-        </div>
-      </div>
-      <div class="col-auto">
         <%= submit_tag "Apply", class: "btn btn-primary" %>
       </div>
       <div class="col-auto">
@@ -65,11 +55,7 @@
       </div>
     <% end %>
     <p class="form-text mb-0 mt-3">
-      <% if activity %>
-        Counting viewing that happened <%= range_label %>, including replays of events that aired earlier.
-      <% else %>
-        Counting all viewing, whenever it happened, of events that aired <%= range_label %>.
-      <% end %>
+      Counting viewing that happened <%= range_label %>, including replays of events that aired earlier.
       <% if @sport || @team %>
         Only <%= [ @sport, @team&.name ].compact.join(" · ") %> events.
       <% end %>
@@ -319,14 +305,14 @@
   </div>
 <% end %>
 
-<% columns = @query.event_columns.map { |key, label| [ label, key == "live" ? "table-danger" : key.tr("_", "-"), "#{key}_viewers", "#{key}_views" ] } %>
+<% columns = ReportsQuery::EVENT_COLUMNS.map { |key, label| [ label, key == "live" ? "table-danger" : key, "#{key}_viewers", "#{key}_views" ] } %>
 <div class="card mb-5">
   <div class="card-header">
     <h5 class="mb-0">Breakdown per Event</h5>
   </div>
   <div class="card-body">
     <% if @event_stats.empty? %>
-      <p class="text-muted mb-0"><%= activity ? "No viewing in the selected period." : "No events aired in the selected period." %></p>
+      <p class="text-muted mb-0">No viewing in the selected period.</p>
     <% else %>
       <div class="table-responsive">
         <table class="table table-bordered table-hover mb-0 event-breakdown-table" style="--bs-border-color: #adb5bd;">

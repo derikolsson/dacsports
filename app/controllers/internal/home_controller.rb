@@ -13,7 +13,7 @@ class Internal::HomeController < Internal::ApplicationController
     # Week-long figures barely move minute to minute.
     @week = Rails.cache.fetch("#{cache_key}/week", expires_in: 1.minute) { query.week }
     @partner_share = Rails.cache.fetch("dashboard/v2/partner_share", expires_in: 1.minute) { query.partner_share }
-    @week_link = internal_reports_path(**query.week_range, source: @source, basis: ReportsQuery::ACTIVITY)
+    @week_link = internal_reports_path(**query.week_range, source: @source)
     @trend = Rails.cache.fetch("#{cache_key}/trend", expires_in: 5.minutes) do
       ReportsQuery.new(start_date: 29.days.ago.to_date, end_date: Date.current, source: @source).daily_series
     end

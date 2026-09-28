@@ -69,7 +69,7 @@ class DashboardQuery
   # This audience's most-watched events over the last 7 days, by viewing sessions.
   def top_events(limit: 5)
     week_report(source).per_event_stats
-      .map { |row| row.merge("views" => row["live_views"] + row["vod_all_views"]) }
+      .map { |row| row.merge("views" => row["live_views"] + row["vod_views"]) }
       .max_by(limit) { |row| row["views"] }
   end
 

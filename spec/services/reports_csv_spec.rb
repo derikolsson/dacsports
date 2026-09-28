@@ -2,8 +2,7 @@ require 'rails_helper'
 
 RSpec.describe ReportsCsv do
   let(:event) { create(:event, :replay_available, title: "Spring Final", sport: "Women's Soccer", start_at: 3.days.ago) }
-  let(:query) { ReportsQuery.new(start_date: Date.new(2026, 9, 1), end_date: Date.current, basis: basis) }
-  let(:basis) { ReportsQuery::ACTIVITY }
+  let(:query) { ReportsQuery.new(start_date: Date.new(2026, 9, 1), end_date: Date.current) }
   let(:csv) do
     described_class.new(query, audience: "dacsports.net",
                                summary: query.summary_stats, event_stats: query.per_event_stats)
@@ -15,7 +14,7 @@ RSpec.describe ReportsCsv do
   it 'says what was counted before any numbers' do
     expect(rows[1..3]).to eq([
       [ "Period", "2026-09-01 to #{Date.current}" ],
-      [ "Counting", "Viewing that happened in the period" ],
+      [ "Counting", "Viewing that happened in the period, for events of any date" ],
       [ "Audience", "dacsports.net" ]
     ])
   end
@@ -26,15 +25,7 @@ RSpec.describe ReportsCsv do
                               "Women's Soccer", "0", "0.5", "0", "0", "0", "0", "1", "1" ])
   end
 
-  context 'counting by events aired' do
-    let(:basis) { ReportsQuery::AIRED }
-
-    it 'includes the days-after-air columns' do
-      expect(rows).to include(a_collection_including("VOD - 30D viewers", "VOD - All views"))
-    end
-  end
-
-  it 'names the file after the period, basis and audience' do
-    expect(csv.filename).to eq("dsn-viewership-2026-09-01-to-#{Date.current}-activity-dacsports-net.csv")
+  it 'names the file after the period and audience' do
+    expect(csv.filename).to eq("dsn-viewership-2026-09-01-to-#{Date.current}-dacsports-net.csv")
   end
 end
