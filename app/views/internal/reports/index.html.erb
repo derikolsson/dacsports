@@ -315,10 +315,9 @@
 <% end %>
 
 <% columns = ReportsQuery::EVENT_COLUMNS.map { |key, label| [ label, key == "live" ? "table-danger" : key, "#{key}_viewers", "#{key}_views" ] } %>
-<%# Sorting reloads only this table, so the page keeps its scroll position; the URL
-    still advances so a sorted view can be shared. %>
-<%= turbo_frame_tag "event_breakdown", data: { turbo_action: "advance" } do %>
-<div class="card mb-5">
+<div class="card mb-5" data-controller="table-sort"
+     data-table-sort-column-value="<%= @sort %>" data-table-sort-direction-value="<%= @direction %>"
+     data-table-sort-ascending-first-value="<%= ReportsHelper::ASCENDING_FIRST.to_json %>">
   <div class="card-header">
     <h5 class="mb-0">Breakdown per Event</h5>
   </div>
@@ -350,9 +349,11 @@
               <% end %>
             </tr>
           </thead>
-          <tbody>
+          <tbody data-table-sort-target="body">
             <% @event_stats.each do |event| %>
-              <tr>
+              <% sort_values = event.slice("title", "live_peak", "plays", *columns.flat_map { |c| c[2..3] })
+                                    .merge("start_at" => event["start_at"]&.to_i, "player_minutes" => event["player_minutes"].to_f) %>
+              <tr data-sort-values="<%= sort_values.to_json %>">
                 <td>
                   <%= event["title"] %>
                   <br>
@@ -388,4 +389,3 @@
     <% end %>
   </div>
 </div>
-<% end %>

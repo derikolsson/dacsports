@@ -18,19 +18,25 @@ module ReportsHelper
     end
   end
 
-  # A per-event column header that sorts the table by that column. Numbers sort biggest
-  # first on the first click, since that's the question being asked.
+  # Columns that sort A-Z / oldest first on the first click; everything else is a figure
+  # and sorts biggest first, since that's the question being asked.
+  ASCENDING_FIRST = %w[title start_at].freeze
+
+  # A per-event column header that sorts the table by that column: in place via the
+  # table-sort controller, or by reloading with ?sort= without JavaScript.
   def event_sort_link(label, column)
     current = @sort == column
     direction =
       if current then @direction == "asc" ? "desc" : "asc"
-      else %w[title start_at].include?(column) ? "asc" : "desc"
+      else ASCENDING_FIRST.include?(column) ? "asc" : "desc"
       end
     arrow = (@direction == "asc" ? " ▲" : " ▼") if current
 
     link_to "#{label}#{arrow}",
             internal_reports_path(start_date: @start_date.to_date, end_date: @end_date.to_date,
                                   **@filters, sort: column, direction: direction),
-            class: "link-body-emphasis text-decoration-none"
+            class: "link-body-emphasis text-decoration-none",
+            data: { table_sort_target: "link", action: "table-sort#sort",
+                    table_sort_column_param: column, table_sort_label_param: label }
   end
 end
