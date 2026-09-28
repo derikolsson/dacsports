@@ -167,6 +167,33 @@ class ReportsQuery
     rows.each { |row| row["live_peak"] = peaks.fetch(row["id"], 0) }
   end
 
+  # One row per partner property, biggest first, with its share of all partner views.
+  # Only meaningful for the "all partners" audience; each property is its own row
+  # because a viewer can't be recognised from one property to the next.
+  def per_partner_stats
+    rows = scoped_visits
+      .group("event_visits.source")
+      .order(Arel.sql("COUNT(DISTINCT event_visits.session_id) DESC"))
+      .pluck(
+        "event_visits.source",
+        Arel.sql("MAX(event_visits.referrer_origin)"),
+        Arel.sql("COUNT(DISTINCT CASE WHEN event_visits.event_status = 'live' THEN sessions.visitor_id END)"),
+        Arel.sql("COUNT(DISTINCT CASE WHEN event_visits.event_status = 'live' THEN event_visits.session_id END)"),
+        Arel.sql("COUNT(DISTINCT CASE WHEN event_visits.event_status = 'vod' THEN sessions.visitor_id END)"),
+        Arel.sql("COUNT(DISTINCT CASE WHEN event_visits.event_status = 'vod' THEN event_visits.session_id END)"),
+        Arel.sql("COUNT(DISTINCT event_visits.session_id)")
+      )
+
+    total_views = rows.sum(&:last)
+    rows.map do |src, origin, live_users, live_views, vod_users, vod_views, views|
+      {
+        source: src, label: origin.presence || "Unattributed",
+        live_users: live_users, live_views: live_views, vod_users: vod_users, vod_views: vod_views,
+        share: total_views.positive? ? (views * 100.0 / total_views).round(1) : 0
+      }
+    end
+  end
+
   # The most live viewers watching an event at the same moment, keyed by event id.
   #
   # Each visit is open from its start to the last poll that saw it, so walking those

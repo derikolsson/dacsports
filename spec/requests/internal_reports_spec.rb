@@ -98,4 +98,13 @@ RSpec.describe "Internal::Reports", type: :request do
     get internal_reports_path(sort: "DROP TABLE")
     expect(response.body.index("Quiet Game")).to be < response.body.index("Busy Game")
   end
+
+  it "compares partner sites when showing all partners" do
+    event = create(:event, :replay_available, start_at: 3.days.ago)
+    create(:event_visit, :vod, :embedded, event: event, started_at: 1.day.ago)
+
+    get internal_reports_path(source: "partners")
+
+    expect(response.body).to include("By Partner Site", "https://northlake.example.edu", "100.0%")
+  end
 end

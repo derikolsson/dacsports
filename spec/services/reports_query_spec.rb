@@ -59,6 +59,15 @@ RSpec.describe ReportsQuery do
       expect(report.device_breakdown.keys).to match_array([ "Phone", "Tablet" ])
     end
 
+    it 'compares partner sites, biggest first' do
+      create(:event_visit, :live, event: event, source: "embed:https://eastfield.example.edu",
+                                  referrer_origin: "https://eastfield.example.edu", started_at: 1.day.ago)
+
+      rows = report.per_partner_stats
+      expect(rows.map { |r| r[:label] }).to eq([ "https://eastfield.example.edu", "https://northlake.example.edu" ])
+      expect(rows.first).to include(live_views: 1, vod_views: 1, share: 66.7)
+    end
+
     it 'combines partners in the per-event breakdown' do
       row = report.per_event_stats.find { |r| r["id"] == event.id }
       expect(row["vod_30d_viewers"]).to eq(2)

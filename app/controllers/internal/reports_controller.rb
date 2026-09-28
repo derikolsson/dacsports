@@ -37,6 +37,12 @@ class Internal::ReportsController < Internal::ApplicationController
       @query.per_event_stats
     end
 
+    if @query.all_partners?
+      @partner_stats = Rails.cache.fetch("#{cache_key}/partners", expires_in: 10.minutes) do
+        @query.per_partner_stats
+      end
+    end
+
     sort_event_stats
 
     respond_to do |format|

@@ -190,6 +190,46 @@
   </div>
 </div>
 
+<% if @partner_stats %>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">By Partner Site</h5>
+    </div>
+    <div class="card-body">
+      <% if @partner_stats.empty? %>
+        <p class="text-muted mb-0">No partner viewing in the selected period.</p>
+      <% else %>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Partner site</th>
+                <th class="text-end">Live users</th>
+                <th class="text-end">Live views</th>
+                <th class="text-end">VOD users</th>
+                <th class="text-end">VOD views</th>
+                <th class="text-end">Share of views</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @partner_stats.each do |partner| %>
+                <tr>
+                  <td><%= link_to partner[:label], internal_reports_path(start_date: @start_date.to_date, end_date: @end_date.to_date, **@filters, source: partner[:source]) %></td>
+                  <td class="text-end"><%= number_with_delimiter(partner[:live_users]) %></td>
+                  <td class="text-end"><%= number_with_delimiter(partner[:live_views]) %></td>
+                  <td class="text-end"><%= number_with_delimiter(partner[:vod_users]) %></td>
+                  <td class="text-end"><%= number_with_delimiter(partner[:vod_views]) %></td>
+                  <td class="text-end"><%= number_to_percentage(partner[:share], precision: 1) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <% columns = @query.event_columns.map { |key, label| [ label, key == "live" ? "table-danger" : key.tr("_", "-"), "#{key}_viewers", "#{key}_views" ] } %>
 <div class="card mb-5">
   <div class="card-header">
