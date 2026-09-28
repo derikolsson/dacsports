@@ -13,6 +13,10 @@ class Internal::ReportsController < Internal::ApplicationController
       query.summary_stats
     end
 
+    @previous_summary = Rails.cache.fetch("#{cache_key}/previous_summary", expires_in: 10.minutes) do
+      query.previous_period&.summary_stats
+    end
+
     @device_breakdown = Rails.cache.fetch("#{cache_key}/devices", expires_in: 10.minutes) do
       query.device_breakdown
     end

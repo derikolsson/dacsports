@@ -50,7 +50,7 @@
         <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
         <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
         <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "All Time", internal_reports_path(start_date: "2020-01-01", end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "All Time", internal_reports_path(start_date: ReportsQuery::ALL_TIME_START, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
       </div>
     <% end %>
     <p class="form-text mb-0 mt-3">
@@ -76,7 +76,8 @@
       <div class="card-body">
         <h5 class="card-title mb-0">Live Users</h5>
         <small class="text-muted d-block mb-2">Unique browsers that watched live.</small>
-        <p class="display-6"><%= number_with_delimiter(@summary[:live][:users]) %></p>
+        <p class="display-6 mb-1"><%= number_with_delimiter(@summary[:live][:users]) %></p>
+        <%= period_change(@summary[:live][:users], @previous_summary&.dig(:live, :users)) %>
       </div>
     </div>
   </div>
@@ -85,7 +86,8 @@
       <div class="card-body">
         <h5 class="card-title mb-0">Live Views</h5>
         <small class="text-muted d-block mb-2">Viewing sessions of live events.</small>
-        <p class="display-6"><%= number_with_delimiter(@summary[:live][:views]) %></p>
+        <p class="display-6 mb-1"><%= number_with_delimiter(@summary[:live][:views]) %></p>
+        <%= period_change(@summary[:live][:views], @previous_summary&.dig(:live, :views)) %>
       </div>
     </div>
   </div>
@@ -94,7 +96,8 @@
       <div class="card-body">
         <h5 class="card-title mb-0">VOD Users</h5>
         <small class="text-muted d-block mb-2">Unique browsers that watched a replay.</small>
-        <p class="display-6"><%= number_with_delimiter(@summary[:vod][:users]) %></p>
+        <p class="display-6 mb-1"><%= number_with_delimiter(@summary[:vod][:users]) %></p>
+        <%= period_change(@summary[:vod][:users], @previous_summary&.dig(:vod, :users)) %>
         <small class="text-muted"><%= number_with_delimiter(@summary[:vod_30d][:users]) %> within 30 days of the event</small>
       </div>
     </div>
@@ -104,7 +107,8 @@
       <div class="card-body">
         <h5 class="card-title mb-0">VOD Views</h5>
         <small class="text-muted d-block mb-2">Viewing sessions of replays.</small>
-        <p class="display-6"><%= number_with_delimiter(@summary[:vod][:views]) %></p>
+        <p class="display-6 mb-1"><%= number_with_delimiter(@summary[:vod][:views]) %></p>
+        <%= period_change(@summary[:vod][:views], @previous_summary&.dig(:vod, :views)) %>
         <small class="text-muted"><%= number_with_delimiter(@summary[:vod_30d][:views]) %> within 30 days of the event</small>
       </div>
     </div>

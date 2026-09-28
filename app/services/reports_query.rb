@@ -35,6 +35,19 @@ class ReportsQuery
     @basis = BASES.include?(basis) ? basis : ACTIVITY
   end
 
+  # The "All Time" preset starts here; nothing before it can be compared against.
+  ALL_TIME_START = Date.new(2020, 1, 1)
+
+  # The same-length period immediately before this one, with the same audience and basis.
+  # nil when this period already reaches back to the start of time.
+  def previous_period
+    return if start_date.to_date <= ALL_TIME_START
+
+    days = (end_date.to_date - start_date.to_date).to_i + 1
+    self.class.new(start_date: start_date.to_date - days, end_date: start_date.to_date - 1,
+                   source: source, basis: basis)
+  end
+
   def all_partners?
     source == ALL_PARTNERS
   end

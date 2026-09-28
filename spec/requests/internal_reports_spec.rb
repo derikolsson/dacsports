@@ -48,4 +48,14 @@ RSpec.describe "Internal::Reports", type: :request do
     expect(response.body).to include("Total of 2 events")
     expect(response.body).to match(%r{<td class="text-end vod-all">2</td>})
   end
+
+  it "compares the summary with the previous period" do
+    event = create(:event, :replay_available, start_at: 60.days.ago)
+    create(:event_visit, :vod, event: event, started_at: 40.days.ago)
+    2.times { create(:event_visit, :vod, event: event, started_at: 1.day.ago) }
+
+    get internal_reports_path
+
+    expect(response.body).to include("▲ 100%")
+  end
 end

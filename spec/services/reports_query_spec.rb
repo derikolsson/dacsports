@@ -184,4 +184,22 @@ RSpec.describe ReportsQuery do
       expect(described_class.new(**range, basis: "bogus")).to be_activity
     end
   end
+
+  describe '#previous_period' do
+    subject(:previous) { described_class.new(**range, source: described_class::ALL_PARTNERS, basis: described_class::AIRED).previous_period }
+
+    it 'covers the same number of days immediately before' do
+      expect(previous.start_date.to_date).to eq(21.days.ago.to_date)
+      expect(previous.end_date.to_date).to eq(11.days.ago.to_date)
+    end
+
+    it 'keeps the audience and basis' do
+      expect([ previous.source, previous.basis ]).to eq([ described_class::ALL_PARTNERS, described_class::AIRED ])
+    end
+
+    it 'is nil for an all-time report' do
+      report = described_class.new(start_date: described_class::ALL_TIME_START, end_date: Date.current)
+      expect(report.previous_period).to be_nil
+    end
+  end
 end
