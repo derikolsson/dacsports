@@ -69,4 +69,19 @@ RSpec.describe "Internal::Reports", type: :request do
     expect(response.headers["Content-Disposition"]).to include("dsn-viewership-")
     expect(response.body).to include("Spring Final")
   end
+
+  it "narrows to a team and keeps that on the preset links" do
+    team = create(:team, name: "Brookhaven")
+    ours = create(:event, :replay_available, title: "Bears Home Game", start_at: 3.days.ago)
+    ours.event_teams.create!(team: team)
+    create(:event_visit, :vod, event: ours, started_at: 1.day.ago)
+    theirs = create(:event, :replay_available, title: "Someone Else", start_at: 3.days.ago)
+    create(:event_visit, :vod, event: theirs, started_at: 1.day.ago)
+
+    get internal_reports_path(team_id: team.id)
+
+    expect(response.body).to include("Bears Home Game", "Only Brookhaven events.")
+    expect(response.body).not_to include("Someone Else")
+    expect(response.body).to include("team_id=#{team.id}")
+  end
 end

@@ -1,5 +1,5 @@
 class ReportsQuery
-  attr_reader :start_date, :end_date, :source, :basis
+  attr_reader :start_date, :end_date, :source, :basis, :sport, :team_id
 
   # Audience the figures cover:
   #
@@ -28,11 +28,14 @@ class ReportsQuery
   # server's first sighting.
   VISIT_START = "COALESCE(%{table}.started_at, %{table}.created_at)".freeze
 
-  def initialize(start_date:, end_date:, source: ON_SITE, basis: ACTIVITY)
+  # sport and team_id optionally narrow every figure to that sport's or team's events.
+  def initialize(start_date:, end_date:, source: ON_SITE, basis: ACTIVITY, sport: nil, team_id: nil)
     @start_date = start_date.beginning_of_day
     @end_date = end_date.end_of_day
     @source = source.presence || ON_SITE
     @basis = BASES.include?(basis) ? basis : ACTIVITY
+    @sport = sport.presence
+    @team_id = team_id.presence&.to_i
   end
 
   # Per-event column groups: each key has "<key>_viewers" and "<key>_views" in
@@ -61,7 +64,7 @@ class ReportsQuery
 
     days = (end_date.to_date - start_date.to_date).to_i + 1
     self.class.new(start_date: start_date.to_date - days, end_date: start_date.to_date - 1,
-                   source: source, basis: basis)
+                   source: source, basis: basis, sport: sport, team_id: team_id)
   end
 
   def all_partners?
@@ -157,7 +160,7 @@ class ReportsQuery
     SQL
 
     rows = ActiveRecord::Base.connection.exec_query(
-      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source, on_site: ON_SITE } ])
+      ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source, on_site: ON_SITE, sport: sport, team_id: team_id } ])
     ).to_a
 
     peaks = peak_live_concurrency
@@ -209,7 +212,11 @@ class ReportsQuery
   end
 
   def event_range_predicate
-    activity? ? "TRUE" : "e.start_at BETWEEN :start_date AND :end_date"
+    predicates = []
+    predicates << "e.start_at BETWEEN :start_date AND :end_date" unless activity?
+    predicates << "e.sport = :sport" if sport
+    predicates << "e.id IN (SELECT event_id FROM event_teams WHERE team_id = :team_id)" if team_id
+    predicates.any? ? predicates.join(" AND ") : "TRUE"
   end
 
   def scoped_visits
@@ -220,6 +227,9 @@ class ReportsQuery
       else
         base.where(events: { start_at: start_date..end_date })
       end
+
+    base = base.where(events: { sport: sport }) if sport
+    base = base.where(event_id: EventTeam.where(team_id: team_id).select(:event_id)) if team_id
 
     all_partners? ? base.embedded : base.where(source: source)
   end

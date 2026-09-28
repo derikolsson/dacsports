@@ -236,4 +236,35 @@ RSpec.describe ReportsQuery do
       expect(row["live_peak"]).to eq(0)
     end
   end
+
+  describe 'narrowed to a sport or team' do
+    let(:team) { create(:team) }
+    let(:soccer) { create(:event, :replay_available, sport: "Women's Soccer", start_at: 3.days.ago) }
+
+    before do
+      soccer.event_teams.create!(team: team)
+      create(:event_visit, :vod, event: soccer, started_at: 1.day.ago)
+    end
+
+    it 'counts only that sport' do
+      report = described_class.new(**range, sport: "Women's Soccer")
+
+      expect(report.summary_stats[:vod][:views]).to eq(1)
+      expect(report.per_event_stats.map { |r| r["id"] }).to eq([ soccer.id ])
+    end
+
+    it 'counts only that team, under either basis' do
+      [ described_class::ACTIVITY, described_class::AIRED ].each do |basis|
+        report = described_class.new(**range, team_id: team.id, basis: basis)
+
+        expect(report.summary_stats[:vod][:views]).to eq(1)
+        expect(report.per_event_stats.map { |r| r["id"] }).to eq([ soccer.id ])
+      end
+    end
+
+    it 'carries the narrowing into the previous period' do
+      previous = described_class.new(**range, sport: "Women's Soccer", team_id: team.id).previous_period
+      expect([ previous.sport, previous.team_id ]).to eq([ "Women's Soccer", team.id ])
+    end
+  end
 end

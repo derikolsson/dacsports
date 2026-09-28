@@ -3,9 +3,10 @@ require "csv"
 # The viewership report as a spreadsheet: a header block saying exactly what was
 # counted, the summary, then one row per event.
 class ReportsCsv
-  def initialize(query, audience:, summary:, event_stats:)
+  def initialize(query, audience:, summary:, event_stats:, team: nil)
     @query = query
     @audience = audience
+    @team = team
     @summary = summary
     @event_stats = event_stats
   end
@@ -21,6 +22,8 @@ class ReportsCsv
       csv << [ "Period", "#{@query.start_date.to_date} to #{@query.end_date.to_date}" ]
       csv << [ "Counting", @query.activity? ? "Viewing that happened in the period" : "All viewing of events that aired in the period" ]
       csv << [ "Audience", @audience ]
+      csv << [ "Sport", @query.sport ] if @query.sport
+      csv << [ "Team", @team ] if @team
       csv << []
       csv << [ "", "Users", "Views" ]
       csv << [ "Live", @summary[:live][:users], @summary[:live][:views] ]

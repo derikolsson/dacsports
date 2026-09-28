@@ -1,7 +1,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
   <h1 class="mb-0">Reports</h1>
   <div>
-    <%= link_to "Export CSV", internal_reports_path(format: :csv, start_date: @start_date.to_date, end_date: @end_date.to_date, source: @source, basis: @basis), class: "btn btn-outline-primary me-2" %>
+    <%= link_to "Export CSV", internal_reports_path(format: :csv, start_date: @start_date.to_date, end_date: @end_date.to_date, **@filters), class: "btn btn-outline-primary me-2" %>
     <%= link_to "https://app.usefathom.com/share/bpvxynyg/dac+sports+network", class: "btn btn-outline-secondary", target: "_blank", rel: "noopener noreferrer" do %>
       Web Analytics <i class="bi bi-box-arrow-up-right ms-1"></i>
     <% end %>
@@ -10,7 +10,7 @@
 <% activity = @basis == ReportsQuery::ACTIVITY %>
 <% range_label = "#{@start_date.strftime("%b %-d, %Y")} – #{@end_date.strftime("%b %-d, %Y")}" %>
 <h1 class="mb-4 d-none d-print-block">
-  DAC Sports Network – Viewership: <%= range_label %>
+  DAC Sports Network – Viewership: <%= range_label %><%= " · #{[ @sport, @team&.name ].compact.join(" · ")}" if @sport || @team %>
   <small class="d-block fs-6 text-muted"><%= activity ? "Viewing that happened in this period" : "All viewing of events that aired in this period" %></small>
 </h1>
 
@@ -38,6 +38,14 @@
               class: "form-select" %>
       </div>
       <div class="col-auto">
+        <%= label_tag :sport, "Sport", class: "form-label" %>
+        <%= select_tag :sport, options_for_select(Event::SPORTS, @sport), include_blank: "All sports", class: "form-select" %>
+      </div>
+      <div class="col-auto">
+        <%= label_tag :team_id, "Team", class: "form-label" %>
+        <%= select_tag :team_id, options_from_collection_for_select(@teams, :id, :name, @team&.id), include_blank: "All teams", class: "form-select" %>
+      </div>
+      <div class="col-auto">
         <span class="form-label d-block">Count by</span>
         <div class="btn-group" role="group" aria-label="Count by">
           <%= radio_button_tag :basis, ReportsQuery::ACTIVITY, activity, class: "btn-check", autocomplete: "off" %>
@@ -50,10 +58,10 @@
         <%= submit_tag "Apply", class: "btn btn-primary" %>
       </div>
       <div class="col-auto">
-        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "All Time", internal_reports_path(start_date: ReportsQuery::ALL_TIME_START, end_date: Date.current, source: @source, basis: @basis), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
+        <%= link_to "All Time", internal_reports_path(start_date: ReportsQuery::ALL_TIME_START, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
       </div>
     <% end %>
     <p class="form-text mb-0 mt-3">
@@ -61,6 +69,9 @@
         Counting viewing that happened <%= range_label %>, including replays of events that aired earlier.
       <% else %>
         Counting all viewing, whenever it happened, of events that aired <%= range_label %>.
+      <% end %>
+      <% if @sport || @team %>
+        Only <%= [ @sport, @team&.name ].compact.join(" · ") %> events.
       <% end %>
     </p>
   </div>

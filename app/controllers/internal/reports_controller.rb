@@ -4,11 +4,18 @@ class Internal::ReportsController < Internal::ApplicationController
     @partner_options = ReportsQuery.partner_sources
     parse_source
     @basis = ReportsQuery::BASES.include?(params[:basis]) ? params[:basis] : ReportsQuery::ACTIVITY
-    @query = ReportsQuery.new(start_date: @start_date, end_date: @end_date, source: @source, basis: @basis)
+    @teams = Team.order(:name)
+    @sport = params[:sport] if Event::SPORTS.include?(params[:sport])
+    @team = @teams.find_by(id: params[:team_id]) if params[:team_id].present?
 
-    # Source and basis are part of the cache key, or switching either would serve the
-    # previous selection's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v6/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}/#{@basis}"
+    # Everything but the dates, for links that change only the period.
+    @filters = { source: @source, basis: @basis, sport: @sport, team_id: @team&.id }.compact
+
+    @query = ReportsQuery.new(start_date: @start_date, end_date: @end_date, **@filters)
+
+    # Every filter is part of the cache key, or changing one would serve the previous
+    # selection's numbers. Versioned because the cached hashes changed shape.
+    cache_key = "reports/v6/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       @query.summary_stats
@@ -33,7 +40,8 @@ class Internal::ReportsController < Internal::ApplicationController
     respond_to do |format|
       format.html
       format.csv do
-        csv = ReportsCsv.new(@query, audience: audience_label, summary: @summary, event_stats: @event_stats)
+        csv = ReportsCsv.new(@query, audience: audience_label, team: @team&.name,
+                                     summary: @summary, event_stats: @event_stats)
         send_data csv.to_csv, filename: csv.filename, type: "text/csv"
       end
     end
