@@ -141,8 +141,9 @@
       <div class="card-body">
         <h5 class="card-title mb-0">Time with the Player Open <span class="badge text-bg-light fw-normal">Estimate</span></h5>
         <small class="text-muted d-block mb-2">How long pages with the player stayed open. It can't tell playing from paused.</small>
-        <p class="display-6 mb-1"><%= number_with_delimiter((@summary[:player][:minutes] / 60.0).round) %> hours</p>
-        <%= period_change(@summary[:player][:minutes], @previous_summary&.dig(:player, :minutes)) %>
+        <% hours = ->(summary) { (summary[:player][:minutes] / 60.0).round if summary } %>
+        <p class="display-6 mb-1"><%= number_with_delimiter(hours.(@summary)) %> hours</p>
+        <%= period_change(hours.(@summary), hours.(@previous_summary)) %>
         <small class="text-muted d-block"><%= @summary[:player][:per_visit] %> minutes per view on average</small>
       </div>
     </div>

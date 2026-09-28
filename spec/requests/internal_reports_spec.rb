@@ -107,4 +107,14 @@ RSpec.describe "Internal::Reports", type: :request do
 
     expect(response.body).to include("By Partner Site", "https://northlake.example.edu", "100.0%")
   end
+
+  it "compares player time in hours with the previous period's hours" do
+    event = create(:event, :replay_available, start_at: 60.days.ago)
+    create(:event_visit, :vod, event: event, started_at: 40.days.ago, last_seen_at: 40.days.ago + 2.hours)
+    create(:event_visit, :vod, event: event, started_at: 2.days.ago, last_seen_at: 2.days.ago + 3.hours)
+
+    get internal_reports_path
+
+    expect(response.body).to include("3 hours", "vs 2 previous period")
+  end
 end
