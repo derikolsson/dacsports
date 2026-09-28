@@ -18,7 +18,12 @@
         <thead><tr><th><%= series[:interval].capitalize %></th><th class="text-end">Live</th><th class="text-end">VOD</th></tr></thead>
         <tbody>
           <% labels.each_with_index do |label, i| %>
-            <tr><td><%= label %></td><td class="text-end"><%= series[:live][i] %></td><td class="text-end"><%= series[:vod][i] %></td></tr>
+            <tr>
+              <td><%= label %></td>
+              <% [ series[:live][i], series[:vod][i] ].each do |count| %>
+                <td class="text-end"><%= count.zero? ? tag.span("—", class: "text-muted") : number_with_delimiter(count) %></td>
+              <% end %>
+            </tr>
           <% end %>
         </tbody>
       </table>

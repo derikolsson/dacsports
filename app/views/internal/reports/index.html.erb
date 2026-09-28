@@ -15,43 +15,52 @@
 
 <div class="card mb-4 d-print-none">
   <div class="card-body">
-    <%= form_with url: internal_reports_path, method: :get, local: true, class: "row g-3 align-items-end" do %>
-      <div class="col-auto">
-        <%= label_tag :start_date, "Start Date", class: "form-label" %>
-        <%= date_field_tag :start_date, @start_date, class: "form-control" %>
+    <%= form_with url: internal_reports_path, method: :get, local: true do %>
+      <%# When: the period, with shortcuts that keep every other filter. %>
+      <div class="row g-3 align-items-end mb-3">
+        <div class="col-auto">
+          <%= label_tag :start_date, "Start Date", class: "form-label" %>
+          <%= date_field_tag :start_date, @start_date, class: "form-control" %>
+        </div>
+        <div class="col-auto">
+          <%= label_tag :end_date, "End Date", class: "form-label" %>
+          <%= date_field_tag :end_date, @end_date, class: "form-control" %>
+        </div>
+        <div class="col-auto">
+          <div class="btn-group" role="group" aria-label="Date shortcuts">
+            <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary" %>
+            <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary" %>
+            <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary" %>
+            <%= link_to "All Time", internal_reports_path(start_date: ReportsQuery::ALL_TIME_START, end_date: Date.current, **@filters), class: "btn btn-outline-secondary" %>
+          </div>
+        </div>
       </div>
-      <div class="col-auto">
-        <%= label_tag :end_date, "End Date", class: "form-label" %>
-        <%= date_field_tag :end_date, @end_date, class: "form-control" %>
-      </div>
-      <div class="col-auto">
-        <%= label_tag :source, "Audience", class: "form-label" %>
-        <%= select_tag :source,
-              grouped_options_for_select(
-                [
-                  [ "DAC Sports Network", [ [ "DAC Sports Network site", ReportsQuery::ON_SITE ] ] ],
-                  [ "Partners", [ [ "All partner sites", ReportsQuery::ALL_PARTNERS ] ] + @partner_options ]
-                ],
-                @source
-              ),
-              class: "form-select" %>
-      </div>
-      <div class="col-auto">
-        <%= label_tag :sport, "Sport", class: "form-label" %>
-        <%= select_tag :sport, options_for_select(Event::SPORTS, @sport), include_blank: "All sports", class: "form-select" %>
-      </div>
-      <div class="col-auto">
-        <%= label_tag :team_id, "Team", class: "form-label" %>
-        <%= select_tag :team_id, options_from_collection_for_select(@teams, :id, :name, @team&.id), include_blank: "All teams", class: "form-select" %>
-      </div>
-      <div class="col-auto">
-        <%= submit_tag "Apply", class: "btn btn-primary" %>
-      </div>
-      <div class="col-auto">
-        <%= link_to "Last 7 Days", internal_reports_path(start_date: 7.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 30 Days", internal_reports_path(start_date: 30.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "Last 90 Days", internal_reports_path(start_date: 90.days.ago.to_date, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
-        <%= link_to "All Time", internal_reports_path(start_date: ReportsQuery::ALL_TIME_START, end_date: Date.current, **@filters), class: "btn btn-outline-secondary btn-sm" %>
+
+      <%# What: whose viewing, of which events. %>
+      <div class="row g-3 align-items-end">
+        <div class="col-auto">
+          <%= label_tag :source, "Audience", class: "form-label" %>
+          <%= select_tag :source,
+                grouped_options_for_select(
+                  [
+                    [ "DAC Sports Network", [ [ "DAC Sports Network site", ReportsQuery::ON_SITE ] ] ],
+                    [ "Partners", [ [ "All partner sites", ReportsQuery::ALL_PARTNERS ] ] + @partner_options ]
+                  ],
+                  @source
+                ),
+                class: "form-select" %>
+        </div>
+        <div class="col-auto">
+          <%= label_tag :sport, "Sport", class: "form-label" %>
+          <%= select_tag :sport, options_for_select(Event::SPORTS, @sport), include_blank: "All sports", class: "form-select" %>
+        </div>
+        <div class="col-auto">
+          <%= label_tag :team_id, "Team", class: "form-label" %>
+          <%= select_tag :team_id, options_from_collection_for_select(@teams, :id, :name, @team&.id), include_blank: "All teams", class: "form-select" %>
+        </div>
+        <div class="col-auto">
+          <%= submit_tag "Apply", class: "btn btn-primary" %>
+        </div>
       </div>
     <% end %>
     <p class="form-text mb-0 mt-3">
