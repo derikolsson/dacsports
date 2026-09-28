@@ -47,17 +47,15 @@
           </tr>
         </thead>
         <tbody>
-          <% @active_viewers_by_event.each do |(event_id, status), count| %>
-            <% event = Event.find_by(id: event_id) %>
-            <% next unless event %>
+          <% @active_viewers_by_event.each do |row| %>
             <tr>
-              <td><%= event.title %> (<code><%= event.slug %></code>)</td>
+              <td><%= row[:event].title %> (<code><%= row[:event].slug %></code>)</td>
               <td>
-                <span class="badge bg-<%= status == 'live' ? 'success' : 'primary' %>">
-                  <%= status.titleize %>
+                <span class="badge bg-<%= row[:status] == 'live' ? 'success' : 'primary' %>">
+                  <%= row[:status].titleize %>
                 </span>
               </td>
-              <td><%= count %></td>
+              <td><%= row[:viewers] %></td>
             </tr>
           <% end %>
         </tbody>
