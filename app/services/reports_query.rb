@@ -180,7 +180,9 @@ class ReportsQuery
     grouped.each do |key, counts|
       result[key] = {
         live: totals["live"].positive? ? (counts["live"].to_f / totals["live"] * 100).round(1) : 0,
-        vod: totals["vod"].positive? ? (counts["vod"].to_f / totals["vod"] * 100).round(1) : 0
+        vod: totals["vod"].positive? ? (counts["vod"].to_f / totals["vod"] * 100).round(1) : 0,
+        live_count: counts["live"],
+        vod_count: counts["vod"]
       }
     end
 

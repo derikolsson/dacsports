@@ -30,6 +30,10 @@ RSpec.describe ReportsQuery do
       expect(report.device_breakdown.keys).to eq([ "Desktop" ])
     end
 
+    it 'reports counts alongside percentages' do
+      expect(report.device_breakdown["Desktop"]).to eq(live: 0, vod: 100.0, live_count: 0, vod_count: 1)
+    end
+
     it 'excludes partner visits from the per-event breakdown' do
       row = report.per_event_stats.find { |r| r["id"] == event.id }
       expect(row["vod_30d_viewers"]).to eq(1)

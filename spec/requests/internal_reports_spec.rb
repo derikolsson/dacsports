@@ -36,4 +36,16 @@ RSpec.describe "Internal::Reports", type: :request do
     expect(response.body).not_to include("Spring Final")
     expect(response.body).to include("No events aired in the selected period.")
   end
+
+  it "totals the per-event table" do
+    2.times do |i|
+      event = create(:event, :replay_available, title: "Game #{i}", start_at: 3.days.ago)
+      create(:event_visit, :vod, event: event, started_at: 1.day.ago)
+    end
+
+    get internal_reports_path
+
+    expect(response.body).to include("Total of 2 events")
+    expect(response.body).to match(%r{<td class="text-end vod-all">2</td>})
+  end
 end
