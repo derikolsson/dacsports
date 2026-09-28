@@ -81,6 +81,8 @@ RSpec.describe "Internal::Reports", type: :request do
     2.times { create(:event_visit, :vod, event: busy, started_at: 1.day.ago) }
 
     get internal_reports_path(sort: "vod_views", direction: "desc")
+    frame = response.body[/<turbo-frame[^>]*id="event_breakdown"[^>]*>/]
+    expect(frame).to include('data-turbo-action="advance"')
     expect(response.body.index("Busy Game")).to be < response.body.index("Quiet Game")
 
     # An unknown column falls back to air date, oldest first.

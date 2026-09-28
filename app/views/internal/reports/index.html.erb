@@ -315,6 +315,9 @@
 <% end %>
 
 <% columns = ReportsQuery::EVENT_COLUMNS.map { |key, label| [ label, key == "live" ? "table-danger" : key, "#{key}_viewers", "#{key}_views" ] } %>
+<%# Sorting reloads only this table, so the page keeps its scroll position; the URL
+    still advances so a sorted view can be shared. %>
+<%= turbo_frame_tag "event_breakdown", data: { turbo_action: "advance" } do %>
 <div class="card mb-5">
   <div class="card-header">
     <h5 class="mb-0">Breakdown per Event</h5>
@@ -385,3 +388,4 @@
     <% end %>
   </div>
 </div>
+<% end %>
