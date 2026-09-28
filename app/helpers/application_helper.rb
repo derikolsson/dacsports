@@ -15,20 +15,21 @@ module ApplicationHelper
     end
   end
 
-  def mux_player(playback_id:, title:, video_id:, live: false, start_time: nil, end_time: nil)
+  # Pinned for the same reason as the embed player below.
+  def mux_player(playback_id:, title:, video_id:, live: false, start_time: nil, end_time: nil, analytics: {})
     attrs = {
       "playback-id" => playback_id,
       "metadata-video-title" => title,
       "metadata-video-id" => video_id,
       "accent-color" => "#dc0028"
-    }
+    }.merge(mux_data_metadata(player: "dsn-site", **analytics))
     attrs["redundant-streams"] = "" if live
     attrs["asset-start-time"] = start_time.to_s if start_time.present?
     attrs["asset-end-time"] = end_time.to_s if end_time.present?
 
     attr_string = attrs.map { |k, v| v.empty? ? k : "#{k}=\"#{ERB::Util.html_escape(v)}\"" }.join("\n  ")
 
-    %(<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player"></script>
+    %(<script src="https://cdn.jsdelivr.net/npm/@mux/mux-player@3"></script>
 <mux-player
   #{attr_string}
 ></mux-player>).html_safe
@@ -40,9 +41,8 @@ module ApplicationHelper
   #
   # Pinned to the current major. Chromecast needs >= 2.3.0, but @2 resolves to 2.9.1,
   # which fires a stray relative fetch against our own origin on every load; @3 does not.
-  # Pinned rather than bare so a future major cannot land here without us choosing it —
-  # the on-site helper's unpinned URL is a live dependency on whatever Mux ships next.
-  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil)
+  # Pinned rather than bare so a future major cannot land here without us choosing it.
+  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil, analytics: {})
     attrs = {
       "playback-id" => playback_id,
       "stream-type" => stream_type,
@@ -51,7 +51,7 @@ module ApplicationHelper
       "metadata-video-title" => title,
       "metadata-video-id" => video_id,
       "accent-color" => "#dc0028"
-    }
+    }.merge(mux_data_metadata(player: "dsn-embed", **analytics))
     # Explicit poster. Left to compute its own, mux-player emits a relative "undefined"
     # URL and the browser fetches it against our origin on every load.
     if tokens[:thumbnail].present?
@@ -69,5 +69,30 @@ module ApplicationHelper
 <mux-player
   #{attr_string}
 ></mux-player>).html_safe
+  end
+
+  # Tags each Mux Data view so its dashboard can split viewing the way our reports do:
+  # by audience (dacsports.net or a partner property), live vs VOD and sport, and tie
+  # views to our own anonymous visitor id. Custom dimensions 1-3 are named to match in
+  # the Mux Data environment settings.
+  def mux_analytics(event, status, source: EventVisit::DEFAULT_SOURCE)
+    { viewer_id: mux_viewer_id(Current.session&.visitor_id), source: source, status: status, sport: event.sport }
+  end
+
+  # A stable stand-in for our visitor id: unique per visitor like the id itself, but the
+  # page never carries the cookie value. Computable server-side to join Mux views back
+  # to ours.
+  def mux_viewer_id(visitor_id)
+    Digest::SHA256.hexdigest("mux-viewer:#{visitor_id}").first(32) if visitor_id.present?
+  end
+
+  def mux_data_metadata(player:, viewer_id: nil, source: nil, status: nil, sport: nil)
+    {
+      "metadata-player-name" => player,
+      "metadata-viewer-user-id" => viewer_id,
+      "metadata-custom-1" => source,
+      "metadata-custom-2" => status,
+      "metadata-custom-3" => sport
+    }.compact_blank
   end
 end
