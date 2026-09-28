@@ -84,4 +84,18 @@ RSpec.describe "Internal::Reports", type: :request do
     expect(response.body).not_to include("Someone Else")
     expect(response.body).to include("team_id=#{team.id}")
   end
+
+  it "sorts the per-event table by a column" do
+    quiet = create(:event, :replay_available, title: "Quiet Game", start_at: 5.days.ago)
+    busy = create(:event, :replay_available, title: "Busy Game", start_at: 4.days.ago)
+    create(:event_visit, :vod, event: quiet, started_at: 1.day.ago)
+    2.times { create(:event_visit, :vod, event: busy, started_at: 1.day.ago) }
+
+    get internal_reports_path(sort: "vod_all_views", direction: "desc")
+    expect(response.body.index("Busy Game")).to be < response.body.index("Quiet Game")
+
+    # An unknown column falls back to air date, oldest first.
+    get internal_reports_path(sort: "DROP TABLE")
+    expect(response.body.index("Quiet Game")).to be < response.body.index("Busy Game")
+  end
 end

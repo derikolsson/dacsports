@@ -37,6 +37,8 @@ class Internal::ReportsController < Internal::ApplicationController
       @query.per_event_stats
     end
 
+    sort_event_stats
+
     respond_to do |format|
       format.html
       format.csv do
@@ -67,6 +69,21 @@ class Internal::ReportsController < Internal::ApplicationController
     when ReportsQuery::ALL_PARTNERS then "All partner sites"
     else @partner_options.to_a.find { |(_, v)| v == @source }&.first || @source
     end
+  end
+
+  # Sorted in Ruby: the rows are cached, one per event, and few enough that re-querying
+  # per column would only cost cache hits. Only columns the table shows are allowed.
+  def sort_event_stats
+    sortable = [ "start_at", "title", "live_peak" ] +
+      @query.event_columns.keys.flat_map { |key| [ "#{key}_viewers", "#{key}_views" ] }
+    @sort = sortable.include?(params[:sort]) ? params[:sort] : "start_at"
+    @direction = params[:direction] == "desc" ? "desc" : "asc"
+
+    @event_stats = @event_stats.sort_by do |row|
+      value = row[@sort]
+      @sort == "title" ? value.to_s.downcase : (value || 0)
+    end
+    @event_stats.reverse! if @direction == "desc"
   end
 
   def parse_date_range

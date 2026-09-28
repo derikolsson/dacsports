@@ -208,16 +208,16 @@
           </colgroup>
           <thead>
             <tr>
-              <th rowspan="2" class="align-bottom">Event</th>
-              <th rowspan="2" class="align-bottom text-end" title="Most people watching live at the same moment">Peak live</th>
+              <th rowspan="2" class="align-bottom"><%= event_sort_link "Event", "title" %> <small class="fw-normal">· <%= event_sort_link "Aired", "start_at" %></small></th>
+              <th rowspan="2" class="align-bottom text-end" title="Most people watching live at the same moment"><%= event_sort_link "Peak live", "live_peak" %></th>
               <% columns.each do |label, css, _, _| %>
                 <th colspan="2" class="text-center <%= css %> group-start"><%= label %></th>
               <% end %>
             </tr>
             <tr>
-              <% columns.each do |_, css, _, _| %>
-                <th class="text-end <%= css %> group-start">Viewers</th>
-                <th class="text-end <%= css %>">Views</th>
+              <% columns.each do |_, css, viewers, views| %>
+                <th class="text-end <%= css %> group-start"><%= event_sort_link "Viewers", viewers %></th>
+                <th class="text-end <%= css %>"><%= event_sort_link "Views", views %></th>
               <% end %>
             </tr>
           </thead>
