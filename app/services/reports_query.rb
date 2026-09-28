@@ -156,9 +156,39 @@ class ReportsQuery
       ORDER BY e.start_at ASC
     SQL
 
-    ActiveRecord::Base.connection.exec_query(
+    rows = ActiveRecord::Base.connection.exec_query(
       ActiveRecord::Base.sanitize_sql([ sql, { start_date: start_date, end_date: end_date, source: source, on_site: ON_SITE } ])
     ).to_a
+
+    peaks = peak_live_concurrency
+    rows.each { |row| row["live_peak"] = peaks.fetch(row["id"], 0) }
+  end
+
+  # The most live viewers watching an event at the same moment, keyed by event id.
+  #
+  # Each visit is open from its start to the last poll that saw it, so walking those
+  # edges in time order and keeping a running total gives the peak. Precision is the
+  # poll interval. At equal timestamps arrivals count first; otherwise a viewer seen by
+  # only one poll (start == last seen) would never count as watching at all.
+  def peak_live_concurrency
+    visits = scoped_visits.where(event_status: "live")
+    start = format(VISIT_START, table: "event_visits")
+
+    sql = <<~SQL
+      WITH edges AS (
+        #{visits.select("event_visits.event_id, #{start} AS at, 1 AS delta").to_sql}
+        UNION ALL
+        #{visits.select("event_visits.event_id, COALESCE(event_visits.last_seen_at, #{start}) AS at, -1 AS delta").to_sql}
+      ),
+      running AS (
+        SELECT event_id,
+               SUM(delta) OVER (PARTITION BY event_id ORDER BY at, delta DESC ROWS UNBOUNDED PRECEDING) AS watching
+        FROM edges
+      )
+      SELECT event_id, MAX(watching) AS peak FROM running GROUP BY event_id
+    SQL
+
+    ActiveRecord::Base.connection.select_rows(sql).to_h { |id, peak| [ id, peak.to_i ] }
   end
 
   private

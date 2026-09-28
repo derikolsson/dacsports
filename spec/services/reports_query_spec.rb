@@ -202,4 +202,38 @@ RSpec.describe ReportsQuery do
       expect(report.previous_period).to be_nil
     end
   end
+
+  describe 'peak live viewers' do
+    subject(:report) { described_class.new(**range) }
+
+    let(:live_event) { create(:event, start_at: 2.days.ago) }
+
+    def watch(from, to)
+      create(:event_visit, :live, event: live_event, started_at: from, last_seen_at: to)
+    end
+
+    it 'counts the most viewers watching at the same moment' do
+      base = 2.days.ago
+      watch(base, base + 60.minutes)
+      watch(base + 10.minutes, base + 30.minutes)
+      watch(base + 20.minutes, base + 40.minutes)
+      watch(base + 50.minutes, base + 70.minutes)
+
+      row = report.per_event_stats.find { |r| r["id"] == live_event.id }
+      expect(row["live_peak"]).to eq(3)
+    end
+
+    it 'counts a viewer seen by a single poll' do
+      at = 2.days.ago
+      watch(at, at)
+
+      row = report.per_event_stats.find { |r| r["id"] == live_event.id }
+      expect(row["live_peak"]).to eq(1)
+    end
+
+    it 'is zero for events watched only as replays' do
+      row = report.per_event_stats.find { |r| r["id"] == event.id }
+      expect(row["live_peak"]).to eq(0)
+    end
+  end
 end

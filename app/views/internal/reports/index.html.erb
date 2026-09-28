@@ -91,6 +91,10 @@
         <small class="text-muted d-block mb-2">Viewing sessions of live events.</small>
         <p class="display-6 mb-1"><%= number_with_delimiter(@summary[:live][:views]) %></p>
         <%= period_change(@summary[:live][:views], @previous_summary&.dig(:live, :views)) %>
+        <% peak = @event_stats.max_by { |e| e["live_peak"] } %>
+        <% if peak && peak["live_peak"].positive? %>
+          <small class="text-muted d-block">Peak <%= number_with_delimiter(peak["live_peak"]) %> watching at once, <%= peak["title"] %></small>
+        <% end %>
       </div>
     </div>
   </div>
@@ -188,11 +192,13 @@
         <table class="table table-bordered table-hover mb-0 event-breakdown-table" style="--bs-border-color: #adb5bd;">
           <colgroup>
             <col class="event-col">
+            <col class="data-col">
             <% columns.each do %><col class="data-col"><col class="data-col"><% end %>
           </colgroup>
           <thead>
             <tr>
               <th rowspan="2" class="align-bottom">Event</th>
+              <th rowspan="2" class="align-bottom text-end" title="Most people watching live at the same moment">Peak live</th>
               <% columns.each do |label, css, _, _| %>
                 <th colspan="2" class="text-center <%= css %> group-start"><%= label %></th>
               <% end %>
@@ -212,6 +218,7 @@
                   <br>
                   <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %><%= " · #{event["sport"]}" if event["sport"].present? %></small>
                 </td>
+                <td class="text-end"><%= number_with_delimiter(event["live_peak"]) %></td>
                 <% columns.each do |_, css, viewers, views| %>
                   <td class="text-end <%= css %> group-start"><%= event[viewers] || 0 %></td>
                   <td class="text-end <%= css %>"><%= event[views] || 0 %></td>
@@ -222,6 +229,7 @@
           <tfoot>
             <tr class="fw-semibold">
               <td>Total of <%= pluralize(@event_stats.size, "event") %></td>
+              <td></td>
               <% columns.each do |_, css, viewers, views| %>
                 <td class="text-end <%= css %> group-start"><%= number_with_delimiter(@event_stats.sum { |e| e[viewers].to_i }) %></td>
                 <td class="text-end <%= css %>"><%= number_with_delimiter(@event_stats.sum { |e| e[views].to_i }) %></td>

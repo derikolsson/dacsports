@@ -8,7 +8,7 @@ class Internal::ReportsController < Internal::ApplicationController
 
     # Source and basis are part of the cache key, or switching either would serve the
     # previous selection's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v5/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}/#{@basis}"
+    cache_key = "reports/v6/#{@start_date.to_date}/#{@end_date.to_date}/#{@source}/#{@basis}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       @query.summary_stats
