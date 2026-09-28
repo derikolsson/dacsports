@@ -100,6 +100,7 @@ class ReportsQuery
       .where("event_visits.started_at <= events.start_at + INTERVAL '30 days'")
 
     {
+      player: player_time,
       live: {
         users: live_stats.distinct.count("sessions.visitor_id"),
         views: live_stats.distinct.count("event_visits.session_id")
@@ -149,7 +150,8 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN s.visitor_id END) AS vod_30d_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' AND ev.started_at <= e.start_at + INTERVAL '30 days' THEN ev.session_id END) AS vod_30d_views,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN s.visitor_id END) AS vod_all_viewers,
-        COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN ev.session_id END) AS vod_all_views
+        COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN ev.session_id END) AS vod_all_views,
+        COALESCE(SUM(#{player_seconds('ev')}), 0) / 60.0 AS player_minutes
       FROM events e
       LEFT JOIN event_visits ev ON ev.event_id = e.id AND #{source_predicate} AND #{visit_range_predicate}
       LEFT JOIN sessions s ON s.id = ev.session_id
@@ -225,6 +227,21 @@ class ReportsQuery
 
   # Filters the LEFT JOIN rather than the WHERE clause, so events with no visits from
   # this audience still appear in the report instead of dropping out of it.
+  # An estimate of attention: how long pages with the player stayed open, from first to
+  # last poll. It can't tell playing from paused, and misses the final poll interval.
+  def player_time
+    seconds, visits = scoped_visits.pick(
+      Arel.sql("COALESCE(SUM(#{player_seconds('event_visits')}), 0)"), Arel.sql("COUNT(*)")
+    )
+    minutes = seconds.to_f / 60
+
+    { minutes: minutes.round, per_visit: visits.positive? ? (minutes / visits).round(1) : 0 }
+  end
+
+  def player_seconds(table)
+    "GREATEST(EXTRACT(EPOCH FROM (#{table}.last_seen_at - #{format(VISIT_START, table: table)})), 0)"
+  end
+
   def source_predicate
     all_partners? ? "ev.source <> :on_site" : "ev.source = :source"
   end

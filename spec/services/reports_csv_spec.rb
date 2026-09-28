@@ -10,7 +10,7 @@ RSpec.describe ReportsCsv do
   end
   let(:rows) { CSV.parse(csv.to_csv) }
 
-  before { create(:event_visit, :vod, event: event, started_at: 1.day.ago) }
+  before { create(:event_visit, :vod, event: event, started_at: 1.day.ago, last_seen_at: 1.day.ago + 30.minutes) }
 
   it 'says what was counted before any numbers' do
     expect(rows[1..3]).to eq([
@@ -23,7 +23,7 @@ RSpec.describe ReportsCsv do
   it 'includes the summary and one row per event' do
     expect(rows).to include([ "VOD", "1", "1" ])
     expect(rows.last).to eq([ "Spring Final", event.start_at.in_time_zone("America/Chicago").strftime("%Y-%m-%d %H:%M"),
-                              "Women's Soccer", "0", "0", "0", "1", "1" ])
+                              "Women's Soccer", "0", "0.5", "0", "0", "1", "1" ])
   end
 
   context 'counting by events aired' do

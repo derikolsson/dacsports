@@ -276,4 +276,24 @@ RSpec.describe ReportsQuery do
       expect([ previous.sport, previous.team_id ]).to eq([ "Women's Soccer", team.id ])
     end
   end
+
+  describe 'time with the player open' do
+    subject(:report) { described_class.new(**range) }
+
+    before do
+      on_site_visit.update_columns(started_at: 2.days.ago, last_seen_at: 2.days.ago + 30.minutes)
+      create(:event_visit, :vod, event: event, started_at: 1.day.ago, last_seen_at: 1.day.ago + 10.minutes)
+      # A skewed clock can put the start after the last poll; that counts as nothing.
+      create(:event_visit, :vod, event: event, started_at: 1.day.ago, last_seen_at: 1.day.ago - 5.minutes)
+    end
+
+    it 'totals and averages it in the summary' do
+      expect(report.summary_stats[:player]).to eq(minutes: 40, per_visit: 13.3)
+    end
+
+    it 'totals it per event' do
+      row = report.per_event_stats.find { |r| r["id"] == event.id }
+      expect(row["player_minutes"].to_f).to be_within(0.01).of(40)
+    end
+  end
 end
