@@ -19,8 +19,15 @@ RSpec.describe DashboardQuery do
     expect(rows.map { |r| [ r[:partner], r[:viewers] ] }).to eq([ [ false, 2 ], [ true, 1 ] ])
   end
 
-  it 'counts viewers as unique browsers and views as sessions, like the report' do
-    expect(described_class.new.audience_counts).to eq(viewers_24h: 1, views_24h: 2, views_all_time: 2)
+  it 'counts the week as the report does: viewers are browsers, views are sessions' do
+    week = described_class.new.week
+
+    expect(week[:current][:total]).to eq(users: 1, views: 2)
+    expect(week[:previous][:total]).to eq(users: 0, views: 0)
+  end
+
+  it 'gives partner sites a share of all views' do
+    expect(described_class.new.partner_share).to eq(current: 33, previous: 0)
   end
 
   it 'scopes the device breakdown to the audience' do

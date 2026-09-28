@@ -100,6 +100,10 @@ class ReportsQuery
       .where("event_visits.started_at <= events.start_at + INTERVAL '30 days'")
 
     {
+      total: {
+        users: scoped_visits.distinct.count("sessions.visitor_id"),
+        views: scoped_visits.distinct.count("event_visits.session_id")
+      },
       player: player_time,
       live: {
         users: live_stats.distinct.count("sessions.visitor_id"),

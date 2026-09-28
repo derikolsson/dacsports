@@ -43,14 +43,27 @@ class DashboardQuery
     end.sort_by { |row| -row[:viewers] }
   end
 
-  def audience_counts
-    last_24h = audience_visits.joins(:session).where("event_visits.started_at > ?", 24.hours.ago)
+  # The last 7 days (today included) for this audience, as the viewership report
+  # counts them, with the 7 days before for comparison.
+  def week
+    report = week_report(source)
+    { current: report.summary_stats, previous: report.previous_period.summary_stats }
+  end
+
+  # Partner sites' share of all viewing sessions over the last 7 days, and the week
+  # before. Sessions can be added across audiences; unique viewers can't.
+  def partner_share
+    on_site = week_report(ReportsQuery::ON_SITE)
+    partners = week_report(ReportsQuery::ALL_PARTNERS)
 
     {
-      viewers_24h: last_24h.distinct.count("sessions.visitor_id"),
-      views_24h: last_24h.distinct.count("event_visits.session_id"),
-      views_all_time: audience_visits.distinct.count(:session_id)
+      current: share(partners, on_site),
+      previous: share(partners.previous_period, on_site.previous_period)
     }
+  end
+
+  def week_range
+    { start_date: 6.days.ago.to_date, end_date: Date.current }
   end
 
   # Viewing sessions in this audience, by each session attribute.
@@ -59,6 +72,16 @@ class DashboardQuery
   def device_breakdown = session_breakdown(:device_type)
 
   private
+
+  def week_report(audience)
+    ReportsQuery.new(**week_range, source: audience)
+  end
+
+  def share(partners_report, on_site_report)
+    partners = partners_report.summary_stats[:total][:views]
+    total = partners + on_site_report.summary_stats[:total][:views]
+    total.positive? ? (partners * 100.0 / total).round : 0
+  end
 
   def active_visits
     EventVisit.where("last_seen_at > ?", ACTIVE_WINDOW.ago)

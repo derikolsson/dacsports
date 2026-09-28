@@ -30,4 +30,10 @@ RSpec.describe "Internal::Home", type: :request do
 
     expect(response.body).to include("Partner Game", "1 on partner sites")
   end
+
+  it "links the week's figures to the matching report" do
+    get internal_root_path(source: "partners")
+
+    expect(response.body).to include("start_date=#{6.days.ago.to_date}", "source=partners", "basis=activity")
+  end
 end

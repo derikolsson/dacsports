@@ -15,7 +15,7 @@ class Internal::ReportsController < Internal::ApplicationController
 
     # Every filter is part of the cache key, or changing one would serve the previous
     # selection's numbers. Versioned because the cached hashes changed shape.
-    cache_key = "reports/v7/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
+    cache_key = "reports/v8/#{@start_date.to_date}/#{@end_date.to_date}/#{@filters.to_query}"
 
     @summary = Rails.cache.fetch("#{cache_key}/summary", expires_in: 10.minutes) do
       @query.summary_stats

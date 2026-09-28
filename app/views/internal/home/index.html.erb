@@ -6,8 +6,8 @@
   </div>
 </div>
 
-<div class="row mb-4">
-  <div class="col-md-3">
+<div class="row row-cols-1 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+  <div class="col">
     <div class="card h-100">
       <div class="card-body">
         <h5 class="card-title mb-0">Watching Now</h5>
@@ -17,32 +17,31 @@
       </div>
     </div>
   </div>
-  <div class="col-md-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title mb-0">Viewers (24h)</h5>
-        <small class="text-muted d-block mb-2">Unique browsers</small>
-        <p class="display-6 mb-0"><%= number_with_delimiter(@counts[:viewers_24h]) %></p>
-      </div>
+  <% [
+       [ "Viewers", "Unique browsers, last 7 days", :total, :users ],
+       [ "Views", "Viewing sessions, last 7 days", :total, :views ],
+       [ "Live Views", "Sessions watching live, last 7 days", :live, :views ]
+     ].each do |title, help, status, metric| %>
+    <div class="col">
+      <%= link_to @week_link, class: "card h-100 text-reset text-decoration-none" do %>
+        <div class="card-body">
+          <h5 class="card-title mb-0"><%= title %></h5>
+          <small class="text-muted d-block mb-2"><%= help %></small>
+          <p class="display-6 mb-1"><%= number_with_delimiter(@week[:current][status][metric]) %></p>
+          <%= period_change(@week[:current][status][metric], @week[:previous][status][metric]) %>
+        </div>
+      <% end %>
     </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card h-100">
+  <% end %>
+  <div class="col">
+    <%= link_to internal_reports_path(start_date: 6.days.ago.to_date, end_date: Date.current, source: ReportsQuery::ALL_PARTNERS), class: "card h-100 text-reset text-decoration-none" do %>
       <div class="card-body">
-        <h5 class="card-title mb-0">Views (24h)</h5>
-        <small class="text-muted d-block mb-2">Viewing sessions</small>
-        <p class="display-6 mb-0"><%= number_with_delimiter(@counts[:views_24h]) %></p>
+        <h5 class="card-title mb-0">Partner Share</h5>
+        <small class="text-muted d-block mb-2">Of all views, last 7 days</small>
+        <p class="display-6 mb-1"><%= @partner_share[:current] %>%</p>
+        <small class="text-muted d-block"><%= @partner_share[:previous] %>% the week before</small>
       </div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card h-100">
-      <div class="card-body">
-        <h5 class="card-title mb-0">Views (All Time)</h5>
-        <small class="text-muted d-block mb-2">Viewing sessions since launch</small>
-        <p class="display-6 mb-0"><%= number_with_delimiter(@counts[:views_all_time]) %></p>
-      </div>
-    </div>
+    <% end %>
   </div>
 </div>
 
