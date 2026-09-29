@@ -2,8 +2,7 @@
   // Set the colour theme before the page paints, so dark mode doesn't flash white.
   // The theme controller keeps it up to date after that.
   (() => {
-    let choice = "auto"
-    try { choice = localStorage.getItem("theme") || "auto" } catch {}
+    const choice = "<%= j theme %>"
     const dark = choice === "dark" || (choice === "auto" && matchMedia("(prefers-color-scheme: dark)").matches)
     document.documentElement.dataset.bsTheme = dark ? "dark" : "light"
   })()

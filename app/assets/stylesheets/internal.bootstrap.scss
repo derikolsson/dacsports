@@ -98,8 +98,8 @@ header {
   }
 }
 
-// The account link, Theme and Sign out are a link, a dropdown toggle and a form
-// button; render them alike, in the bar's own colour, so they read as one row.
+// The account link and Sign out are a link and a form button; render them
+// alike, in the bar's own colour, so they read as one row.
 .account-bar-link {
   padding: 0;
   border: 0;
@@ -109,7 +109,7 @@ header {
   text-decoration: underline;
   cursor: pointer;
 
-  &:hover, &:focus-visible, &[aria-expanded="true"] {
+  &:hover, &:focus-visible {
     color: var(--bs-body-color);
   }
 }

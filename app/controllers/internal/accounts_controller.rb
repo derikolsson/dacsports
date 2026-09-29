@@ -6,7 +6,7 @@ class Internal::AccountsController < Internal::ApplicationController
   def update
     if params[:password_change]
       change_password
-    elsif current_user.update(params.require(:user).permit(:name))
+    elsif current_user.update(params.require(:user).permit(:name, :theme))
       redirect_to edit_internal_account_path, notice: "Saved."
     else
       render_edit

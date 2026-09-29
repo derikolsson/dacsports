@@ -10,6 +10,17 @@ RSpec.describe "Internal::Accounts", type: :request do
     expect(user.reload.name).to eq("New Name")
   end
 
+  it "saves the theme and renders pages in it" do
+    get edit_internal_account_path
+    expect(response.body).to include('name="user[theme]"')
+
+    patch internal_account_path, params: { user: { theme: "dark" } }
+    expect(user.reload.theme).to eq("dark")
+
+    get internal_root_path
+    expect(response.body).to include('data-theme-preference="dark"')
+  end
+
   it "changes the password with the current one and signs out other browsers" do
     other_browser = user.user_sessions.create!
 

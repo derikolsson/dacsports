@@ -1,13 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
 const SYSTEM_DARK = matchMedia("(prefers-color-scheme: dark)")
-const ICONS = { light: "bi-sun-fill", dark: "bi-moon-stars-fill", auto: "bi-circle-half" }
+const CHOICES = ["light", "dark", "auto"]
 
-// Light, dark, or follow the system, remembered per browser. Lives on <html> so it
-// outlasts Turbo page changes; the picker's options may come and go with the body.
+// Light, dark, or follow the system, as chosen on the account page. Lives on <html> so it
+// outlasts Turbo page changes; each new <body> carries the signed-in user's choice.
 // Dispatches "theme:change" on document when the page switches between light and dark.
 export default class extends Controller {
-  static targets = ["option", "icon"]
+  static targets = ["preference"]
 
   connect() {
     this.apply = this.apply.bind(this)
@@ -24,18 +24,11 @@ export default class extends Controller {
     window.removeEventListener("afterprint", this.apply)
   }
 
-  choose({ params: { choice } }) {
-    try { localStorage.setItem("theme", choice) } catch {}
-    this.apply()
-  }
-
-  optionTargetConnected() { this.markChoice() }
-  iconTargetConnected() { this.markChoice() }
+  preferenceTargetConnected() { this.apply() }
 
   apply() {
     const choice = this.choice
     this.render(choice === "auto" ? (SYSTEM_DARK.matches ? "dark" : "light") : choice)
-    this.markChoice()
   }
 
   render(theme) {
@@ -44,25 +37,8 @@ export default class extends Controller {
     document.dispatchEvent(new CustomEvent("theme:change", { detail: { theme } }))
   }
 
-  markChoice() {
-    const choice = this.choice
-    this.optionTargets.forEach(option => {
-      const chosen = option.dataset.themeChoiceParam === choice
-      option.classList.toggle("active", chosen)
-      option.setAttribute("aria-pressed", chosen)
-    })
-    this.iconTargets.forEach(icon => {
-      icon.classList.remove(...Object.values(ICONS))
-      icon.classList.add(ICONS[choice])
-    })
-  }
-
   get choice() {
-    try {
-      const stored = localStorage.getItem("theme")
-      return stored in ICONS ? stored : "auto"
-    } catch {
-      return "auto"
-    }
+    const preference = this.hasPreferenceTarget ? this.preferenceTarget.dataset.themePreference : "auto"
+    return CHOICES.includes(preference) ? preference : "auto"
   }
 }

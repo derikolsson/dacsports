@@ -9,6 +9,11 @@ RSpec.describe User, type: :model do
     expect(create(:user).webauthn_id).to be_present
   end
 
+  it 'follows the system theme unless told otherwise, and only knows light and dark' do
+    expect(create(:user).theme).to eq("auto")
+    expect(build(:user, theme: "sepia")).not_to be_valid
+  end
+
   describe 'passwords' do
     it 'lets an invitee exist without one' do
       expect(build(:user, :pending)).to be_valid

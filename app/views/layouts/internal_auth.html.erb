@@ -4,7 +4,7 @@
     <title><%= content_for(:title) || "Sign in" %> | DAC Sports Network</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="robots" content="noindex">
-    <%= render "internal/shared/theme_script" %>
+    <%= render "internal/shared/theme_script", theme: "auto" %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "internal", "data-turbo-track": "reload" %>

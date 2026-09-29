@@ -22,6 +22,20 @@
       </div>
     </div>
 
+    <div class="card mb-4">
+      <div class="card-body">
+        <h2 class="h5 card-title mb-3">Display</h2>
+        <%= form_with model: current_user, url: internal_account_path, method: :patch do |f| %>
+          <div class="mb-3">
+            <%= f.label :theme, class: "form-label" %>
+            <%= f.select :theme, User::THEMES.invert, {}, class: "form-select" %>
+            <small class="form-text text-muted">System follows your computer's light or dark setting.</small>
+          </div>
+          <%= f.submit "Save", class: "btn btn-primary" %>
+        <% end %>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-body">
         <h2 class="h5 card-title mb-3">Change password</h2>

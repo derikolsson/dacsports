@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   MINIMUM_PASSWORD_LENGTH = 12
+  THEMES = { "auto" => "System", "light" => "Light", "dark" => "Dark" }.freeze
 
   # Invitees have no password until they accept, so we supply our own validations.
   has_secure_password validations: false
@@ -13,6 +14,7 @@ class User < ApplicationRecord
   validates :email_address, presence: true, uniqueness: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :password, length: { minimum: MINIMUM_PASSWORD_LENGTH, maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_nil: true
   validates :password, confirmation: true, allow_nil: true
+  validates :theme, inclusion: { in: THEMES.keys }
   validates :password_digest, presence: { message: "can't be blank" }, if: :invitation_accepted?
 
   before_validation(on: :create) { self.webauthn_id ||= WebAuthn.generate_user_id }
