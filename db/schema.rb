@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_28_170000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_29_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -96,6 +96,32 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_28_170000) do
     t.bigint "channel_id"
     t.index ["channel_id"], name: "index_events_on_channel_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
+  end
+
+  create_table "mux_daily_countries", force: :cascade do |t|
+    t.date "day", null: false
+    t.string "audience", null: false
+    t.string "country_code", null: false
+    t.integer "views", default: 0, null: false
+    t.bigint "watch_time_ms", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["day", "audience", "country_code"], name: "index_mux_daily_countries_unique", unique: true
+  end
+
+  create_table "mux_daily_stats", force: :cascade do |t|
+    t.date "day", null: false
+    t.string "video_id", null: false
+    t.bigint "event_id"
+    t.string "audience", null: false
+    t.string "stream_type", null: false
+    t.integer "views", default: 0, null: false
+    t.integer "unique_viewers", default: 0, null: false
+    t.bigint "watch_time_ms", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["day", "video_id", "audience", "stream_type"], name: "index_mux_daily_stats_unique", unique: true
+    t.index ["event_id", "day"], name: "index_mux_daily_stats_on_event_id_and_day"
   end
 
   create_table "passkeys", force: :cascade do |t|
