@@ -163,6 +163,15 @@ RSpec.describe "Internal::Events", type: :request do
       expect(response.body).to include("Ready")
     end
 
+    it "marks only the events hidden from the public" do
+      create(:event, :hidden, title: "Hidden Game")
+      create(:event, title: "Public Game")
+
+      get internal_events_path
+
+      expect(response.body.scan("bi-eye-slash").size).to eq(1)
+    end
+
     it "flags an upcoming event whose channel has no signed live ID" do
       create(:event, :upcoming, channel: create(:channel, mux_live_signed_playback_id: nil))
 

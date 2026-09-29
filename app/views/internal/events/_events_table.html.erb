@@ -5,7 +5,6 @@
       <th>Event</th>
       <th>Teams</th>
       <th>Status</th>
-      <th>Visibility</th>
       <th>Embed</th>
       <th>Actions</th>
     </tr>
@@ -26,7 +25,12 @@
           <% end %>
         </td>
         <td>
-          <div><strong><%= event.title %></strong></div>
+          <div>
+            <strong><%= event.title %></strong>
+            <% unless event.visible? %>
+              <i class="bi bi-eye-slash text-muted ms-1" title="Hidden from public" aria-label="Hidden from public"></i>
+            <% end %>
+          </div>
           <small class="text-muted d-block">
             <code><%= event.slug %></code>
           </small>
@@ -58,13 +62,6 @@
           end %>">
             <%= event.status.titleize %>
           </span>
-        </td>
-        <td class="text-center">
-          <% if event.visible %>
-            <span class="text-success" title="Visible to public">✓</span>
-          <% else %>
-            <span class="text-danger" title="Hidden from public">✗</span>
-          <% end %>
         </td>
         <td>
           <%= render "internal/events/embed_status", event: event %>
