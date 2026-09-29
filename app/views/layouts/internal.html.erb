@@ -19,10 +19,9 @@
   <body>
     <div class="container-fluid px-3 px-lg-4">
       <div class="d-flex justify-content-end align-items-center gap-3 pt-2 small text-body-secondary d-print-none">
-        <span>Signed in as <%= current_user.display_name %></span>
-        <%= link_to "Account", edit_internal_account_path, class: "account-bar-link" %>
+        <span>Signed in as <%= link_to current_user.display_name, edit_internal_account_path, class: "account-bar-link" %></span>
         <div class="dropdown">
-          <button type="button" class="account-bar-link dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+          <button type="button" class="account-bar-link text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-circle-half" data-theme-target="icon"></i> Theme
           </button>
           <ul class="dropdown-menu dropdown-menu-end">
