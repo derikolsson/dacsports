@@ -18,8 +18,9 @@
 
   <body data-theme-target="preference" data-theme-preference="<%= current_user.theme %>">
     <div class="container-fluid px-3 px-lg-4">
-      <div class="d-flex justify-content-end align-items-center gap-3 pt-2 small text-body-secondary d-print-none">
+      <div class="d-flex justify-content-end align-items-center gap-2 pt-2 small text-body-secondary d-print-none">
         <span>Signed in as <%= link_to current_user.display_name, edit_internal_account_path, class: "account-bar-link" %></span>
+        <span aria-hidden="true">·</span>
         <%= button_to "Sign out", internal_logout_path, method: :delete, class: "account-bar-link" %>
       </div>
       <header class="d-flex flex-wrap justify-content-center align-items-center py-3 mb-4 border-bottom d-print-none">
