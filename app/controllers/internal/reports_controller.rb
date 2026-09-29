@@ -93,8 +93,9 @@ class Internal::ReportsController < Internal::ApplicationController
   def sort_event_stats
     sortable = [ "start_at", "title", "live_peak", "watch_minutes", "plays" ] +
       ReportsQuery::EVENT_COLUMNS.keys.flat_map { |key| [ "#{key}_viewers", "#{key}_views" ] }
+    # Most recent events first unless a column was chosen.
     @sort = sortable.include?(params[:sort]) ? params[:sort] : "start_at"
-    @direction = params[:direction] == "desc" ? "desc" : "asc"
+    @direction = %w[asc desc].include?(params[:direction]) ? params[:direction] : helpers.default_sort_direction(@sort)
 
     @event_stats = @event_stats.sort_by do |row|
       value = row[@sort]

@@ -25,9 +25,13 @@ module ReportsHelper
     "#{code.chars.map { |char| (char.ord + 0x1F1A5).chr(Encoding::UTF_8) }.join} #{code}"
   end
 
-  # Columns that sort A-Z / oldest first on the first click; everything else is a figure
-  # and sorts biggest first, since that's the question being asked.
-  ASCENDING_FIRST = %w[title start_at].freeze
+  # Columns that sort A-Z on the first click. Everything else sorts biggest or newest
+  # first, since that's the question being asked.
+  ASCENDING_FIRST = %w[title].freeze
+
+  def default_sort_direction(column)
+    ASCENDING_FIRST.include?(column) ? "asc" : "desc"
+  end
 
   # A per-event column header that sorts the table by that column: in place via the
   # table-sort controller, or by reloading with ?sort= without JavaScript.
@@ -35,7 +39,7 @@ module ReportsHelper
     current = @sort == column
     direction =
       if current then @direction == "asc" ? "desc" : "asc"
-      else ASCENDING_FIRST.include?(column) ? "asc" : "desc"
+      else default_sort_direction(column)
       end
     arrow = (@direction == "asc" ? " ▲" : " ▼") if current
 

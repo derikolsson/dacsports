@@ -84,8 +84,15 @@ RSpec.describe "Internal::Reports", type: :request do
     expect(response.body).to include('data-controller="table-sort"', "data-sort-values=")
     expect(response.body.index("Busy Game")).to be < response.body.index("Quiet Game")
 
-    # An unknown column falls back to air date, oldest first.
+    # By default, and for an unknown column, the most recently aired come first.
+    get internal_reports_path
+    expect(response.body.index("Busy Game")).to be < response.body.index("Quiet Game")
     get internal_reports_path(sort: "DROP TABLE")
+    expect(response.body.index("Busy Game")).to be < response.body.index("Quiet Game")
+
+    get internal_reports_path(sort: "title")
+    expect(response.body.index("Busy Game")).to be < response.body.index("Quiet Game")
+    get internal_reports_path(sort: "start_at", direction: "asc")
     expect(response.body.index("Quiet Game")).to be < response.body.index("Busy Game")
   end
 
