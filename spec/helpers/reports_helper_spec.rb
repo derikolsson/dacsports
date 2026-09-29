@@ -18,4 +18,19 @@ RSpec.describe ReportsHelper do
       expect(helper.period_change(5, nil)).to be_nil
     end
   end
+
+  describe '#country_label' do
+    it 'shows the flag and everyday name' do
+      expect(helper.country_label("US")).to eq("🇺🇸 United States")
+      expect(helper.country_label("KR")).to eq("🇰🇷 South Korea")
+    end
+
+    it 'keeps the code for a country without a name' do
+      expect(helper.country_label("XK")).to eq("🇽🇰 XK")
+    end
+
+    it 'passes through anything that is not a country code' do
+      expect(helper.country_label("Unknown")).to eq("Unknown")
+    end
+  end
 end

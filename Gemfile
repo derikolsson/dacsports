@@ -30,6 +30,9 @@ gem "device_detector"
 # Report exports (no longer a default gem as of Ruby 3.4)
 gem "csv"
 
+# Country names for reports
+gem "countries", "~> 8.1"
+
 # Video streaming
 gem "mux_ruby"
 

@@ -18,11 +18,13 @@ module ReportsHelper
     end
   end
 
-  # "🇺🇸 US" for an ISO country code: its flag from regional indicator letters.
+  # "🇺🇸 United States" for an ISO country code: its flag from regional indicator letters,
+  # then its everyday name, or the code itself for one the countries gem doesn't know.
   def country_label(code)
     return code unless code.to_s.match?(/\A[A-Z]{2}\z/)
 
-    "#{code.chars.map { |char| (char.ord + 0x1F1A5).chr(Encoding::UTF_8) }.join} #{code}"
+    flag = code.chars.map { |char| (char.ord + 0x1F1A5).chr(Encoding::UTF_8) }.join
+    "#{flag} #{ISO3166::Country[code]&.common_name || code}"
   end
 
   # Columns that sort A-Z on the first click. Everything else sorts biggest or newest

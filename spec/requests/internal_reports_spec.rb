@@ -140,7 +140,7 @@ RSpec.describe "Internal::Reports", type: :request do
 
     get internal_reports_path
 
-    expect(response.body).to include("Top Countries", "🇺🇸 US")
+    expect(response.body).to include("Top Countries", "🇺🇸 United States")
   end
 
   it "lists partner pages, escaping what the partner page supplied" do
