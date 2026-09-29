@@ -152,6 +152,26 @@ RSpec.describe "Internal::Events", type: :request do
     end
   end
 
+  describe "GET /internal/events" do
+    # A snippet pasted ahead of the game follows the event through to its replay.
+    it "offers the partner snippet for an upcoming event" do
+      event = create(:event, :upcoming, channel: create(:channel))
+
+      get internal_events_path
+
+      expect(CGI.unescapeHTML(response.body)).to include(%(data-stream="#{event.slug}"))
+      expect(response.body).to include("Ready")
+    end
+
+    it "flags an upcoming event whose channel has no signed live ID" do
+      create(:event, :upcoming, channel: create(:channel, mux_live_signed_playback_id: nil))
+
+      get internal_events_path
+
+      expect(response.body).to include("No signed ID")
+    end
+  end
+
   describe "channel selection" do
     let(:channel) { create(:channel, name: "Main Court") }
     let(:event) { create(:event) }

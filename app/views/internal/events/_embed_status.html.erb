@@ -1,14 +1,13 @@
-<%# Whether this event can actually be embedded, answerable without opening Mux. %>
-<% signed = event.live? ? event.mux_live_signed_playback_id : event.mux_replay_signed_playback_id %>
-<% relevant = event.live? || event.replay_available? %>
+<%# Whether this event can actually be embedded, answerable without opening Mux. Until the
+    stream ends that's the channel's signed live ID; after, the replay's own. %>
+<% replay_side = Event::ENDED_STATUSES.include?(event.status) %>
+<% signed = replay_side ? event.mux_replay_signed_playback_id : event.mux_live_signed_playback_id %>
 
 <div class="embed-status">
-  <% if !relevant %>
-    <span class="text-muted small">—</span>
-  <% elsif signed.present? %>
+  <% if signed.present? %>
     <span class="badge bg-success-subtle text-success-emphasis" title="Signed playback ID present">Ready</span>
   <% else %>
-    <span class="badge bg-warning-subtle text-warning-emphasis" title="No signed playback ID — /embed/<%= event.slug %> will show a slate">No signed ID</span>
+    <span class="badge bg-warning-subtle text-warning-emphasis" title="No signed <%= replay_side ? "replay" : "live" %> playback ID — /embed/<%= event.slug %> will show a slate">No signed ID</span>
   <% end %>
 
   <% if signed.present? %>
@@ -16,15 +15,18 @@
       <code class="mux-id" title="<%= signed %>"><%= truncate(signed, length: 12) %></code>
       <button type="button" class="btn btn-link btn-sm p-0 copy-btn" data-copy="<%= signed %>" title="Copy signed playback ID">copy id</button>
     </div>
-    <%# Built through tag helpers rather than a hand-written attribute: the comment
-        carries the event title, and a title like "Men's Soccer" would otherwise break
-        out of the attribute's quoting. %>
-    <%= tag.button "copy snippet",
-          type: "button",
-          class: "btn btn-link btn-sm p-0 copy-btn",
-          title: "Copy the snippet to hand to a partner",
-          data: {
-            copy: embed_snippet_for(event, embed_script_url(host: request.host_with_port, protocol: request.protocol))
-          } %>
   <% end %>
+  <%# Offered in every state: the snippet is just the slug, and one pasted ahead of the
+      game follows the event through to its replay on its own.
+
+      Built through tag helpers rather than a hand-written attribute: the comment
+      carries the event title, and a title like "Men's Soccer" would otherwise break
+      out of the attribute's quoting. %>
+  <%= tag.button "copy snippet",
+        type: "button",
+        class: "btn btn-link btn-sm p-0 copy-btn",
+        title: "Copy the snippet to hand to a partner",
+        data: {
+          copy: embed_snippet_for(event, embed_script_url(host: request.host_with_port, protocol: request.protocol))
+        } %>
 </div>
