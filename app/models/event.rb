@@ -116,6 +116,17 @@ class Event < ApplicationRecord
     LIVE_PREVIEWABLE_STATUSES.include?(status) && mux_live_signed_playback_id.present?
   end
 
+  # Recordings arrive public-only (see MuxSignedPlaybackId#recordings_signed?), so each
+  # replay's signed ID has to be minted from its asset before the embed can play it. A new
+  # asset needs its own, even when an old one is still on file.
+  def needs_signed_replay?
+    mux_asset_id.present? && (mux_replay_signed_playback_id.blank? || saved_change_to_mux_asset_id?)
+  end
+
+  def resolve_signed_replay!
+    update!(mux_replay_signed_playback_id: MuxSignedPlaybackId.for_asset(mux_asset_id))
+  end
+
   def can_go_live?
     upcoming? && has_live_video_source?
   end

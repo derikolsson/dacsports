@@ -26,7 +26,7 @@ class Internal::EventsController < Internal::ApplicationController
   def create
     @event = Event.new(event_params)
     if @event.save
-      redirect_to internal_events_path, notice: "Event created successfully"
+      redirect_to internal_events_path, notice: "Event created successfully", alert: sign_replay
     else
       render :new, status: :unprocessable_entity
     end
@@ -37,7 +37,7 @@ class Internal::EventsController < Internal::ApplicationController
 
   def update
     if @event.update(event_params)
-      redirect_to internal_events_path, notice: "Event updated successfully"
+      redirect_to internal_events_path, notice: "Event updated successfully", alert: sign_replay
     else
       render :edit, status: :unprocessable_entity
     end
@@ -82,8 +82,10 @@ class Internal::EventsController < Internal::ApplicationController
   end
 
   def publish_replay
+    alert = sign_replay
     if @event.publish_replay!
-      redirect_to internal_events_path, notice: "Replay is now available!"
+      alert ||= "Partner embeds will say the replay is coming until it has a Mux Asset ID." unless @event.embeddable?
+      redirect_to internal_events_path, notice: "Replay is now available!", alert: alert
     else
       redirect_to internal_events_path, alert: "Could not publish replay. Check that replay embed code is present."
     end
@@ -99,14 +101,25 @@ class Internal::EventsController < Internal::ApplicationController
       return
     end
 
-    signed_id = MuxSignedPlaybackId.for_asset(@event.mux_asset_id)
-    @event.update!(mux_replay_signed_playback_id: signed_id)
-    redirect_to edit_internal_event_path(@event), notice: "Signed playback ID resolved: #{signed_id}"
+    @event.resolve_signed_replay!
+    redirect_to edit_internal_event_path(@event), notice: "Signed playback ID resolved: #{@event.mux_replay_signed_playback_id}"
   rescue MuxSignedPlaybackId::Error, ActiveRecord::RecordInvalid => e
     redirect_to edit_internal_event_path(@event), alert: "Could not resolve signed playback ID: #{e.message}"
   end
 
   private
+
+  # Mints the replay's signed ID as soon as there's an asset to mint it from, so partner
+  # embeds are ready the moment the replay is published. A Mux failure doesn't undo the
+  # save — the site plays off the public ID either way. Returns the alert to show, if any.
+  def sign_replay
+    return unless @event.needs_signed_replay?
+
+    @event.resolve_signed_replay!
+    nil
+  rescue MuxSignedPlaybackId::Error, ActiveRecord::RecordInvalid => e
+    "Could not resolve signed playback ID: #{e.message}"
+  end
 
   def set_event
     @event = Event.find(params[:id])

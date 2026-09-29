@@ -37,6 +37,64 @@ RSpec.describe "Internal::Events", type: :request do
     end
   end
 
+  describe "minting the signed replay ID automatically" do
+    let(:event) { create(:event, :replay_pending) }
+
+    it "mints it when an asset ID is saved" do
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return("SIGNED1")
+
+      patch internal_event_path(event), params: { event: { mux_asset_id: "ASSET1" } }
+
+      expect(event.reload.mux_replay_signed_playback_id).to eq("SIGNED1")
+    end
+
+    it "mints a new one when the asset changes" do
+      event.update!(mux_asset_id: "OLD", mux_replay_signed_playback_id: "OLDSIGNED")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("NEW").and_return("NEWSIGNED")
+
+      patch internal_event_path(event), params: { event: { mux_asset_id: "NEW" } }
+
+      expect(event.reload.mux_replay_signed_playback_id).to eq("NEWSIGNED")
+    end
+
+    it "leaves an existing one alone when the asset is unchanged" do
+      event.update!(mux_asset_id: "ASSET1", mux_replay_signed_playback_id: "SIGNED1")
+      expect(MuxSignedPlaybackId).not_to receive(:for_asset)
+
+      patch internal_event_path(event), params: { event: { title: "Renamed" } }
+    end
+
+    it "keeps the save and warns when Mux refuses" do
+      allow(MuxSignedPlaybackId).to receive(:for_asset)
+        .and_raise(MuxSignedPlaybackId::Error, "Mux asset NOPE: not found")
+
+      patch internal_event_path(event), params: { event: { mux_asset_id: "NOPE", title: "Renamed" } }
+
+      expect(event.reload).to have_attributes(title: "Renamed", mux_replay_signed_playback_id: nil)
+      expect(flash[:alert]).to match(/Could not resolve/)
+    end
+
+    it "mints it on publish, which is enough of a replay source to publish from" do
+      event.update_columns(mux_asset_id: "ASSET1")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return("SIGNED1")
+
+      post publish_replay_internal_event_path(event)
+
+      expect(event.reload).to be_replay_available
+      expect(event.mux_replay_signed_playback_id).to eq("SIGNED1")
+      expect(flash[:alert]).to be_nil
+    end
+
+    it "warns on publish when the embed will have nothing to play" do
+      event.update_columns(replay_embed_code: "<iframe></iframe>")
+
+      post publish_replay_internal_event_path(event)
+
+      expect(event.reload).to be_replay_available
+      expect(flash[:alert]).to match(/Partner embeds/)
+    end
+  end
+
   describe "GET /internal/events/new" do
     # The form's "Resolve signed ID" button targets a member route, which an
     # unsaved event has no id for. Rendering must not try to build that path.

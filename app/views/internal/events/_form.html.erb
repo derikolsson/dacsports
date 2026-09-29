@@ -110,14 +110,14 @@
         <% end %>
       </div>
       <small class="form-text text-muted">
-        Save the asset ID first, then resolve. Mux does not let us change a live stream's
-        recording playback policy after creation, so recordings arrive public-only and
-        each one needs its signed ID minted here.
+        Saving the asset ID mints its signed ID. Mux does not let us change a live
+        stream's recording playback policy after creation, so recordings arrive
+        public-only and each one needs its own. Resolve retries if Mux refused.
       </small>
     </div>
     <div class="mb-3">
       <%= f.label :mux_replay_signed_playback_id, "Signed Playback ID", class: 'form-label' %>
-      <%= f.text_field :mux_replay_signed_playback_id, class: 'form-control', placeholder: 'Filled in by Resolve, or paste manually' %>
+      <%= f.text_field :mux_replay_signed_playback_id, class: 'form-control', placeholder: 'Filled in from the asset ID, or paste manually' %>
       <small class="form-text text-muted">Required for <code>/embed/&lt;slug&gt;</code> once the replay is published.</small>
     </div>
     <div class="row mb-3">
