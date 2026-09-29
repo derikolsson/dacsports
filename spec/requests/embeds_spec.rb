@@ -102,6 +102,8 @@ RSpec.describe "Embeds", type: :request do
       get embed_path(event.slug)
 
       expect(response.body).not_to include("playback-token=")
+      # The site has the replay; the partner viewer is still waiting on it.
+      expect(response.body).to include("A replay of this broadcast will be available shortly.")
     end
 
     describe "framing headers" do

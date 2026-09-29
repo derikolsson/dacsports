@@ -28,7 +28,9 @@ module EmbedsHelper
       starts.present? ? "This stream begins #{starts}." : "This stream hasn't started yet."
     when "ended"
       "This broadcast has concluded."
-    when "replay_pending"
+    # A published replay reaches here only when the embed has nothing signed to play yet,
+    # which from a partner viewer's side is the same wait.
+    when "replay_pending", "replay_available"
       "A replay of this broadcast will be available shortly."
     when "technical_difficulties"
       "We're experiencing technical difficulties — stand by. The full replay will be posted later."
