@@ -80,6 +80,13 @@ RSpec.describe MuxDataImport do
       expect(MuxDailyStat.find_by(video_id: "PLAYBACKID").event_id).to eq(replay.id)
     end
 
+    it "matches playback IDs inside an older replay's embed code" do
+      replay = create(:event, :replay_available, replay_embed_code: "<iframe src='https://player.mux.com/PLAYBACKID'></iframe>")
+      import
+
+      expect(MuxDailyStat.find_by(video_id: "PLAYBACKID").event_id).to eq(replay.id)
+    end
+
     it 'matches a live playback ID only when one event on its channel aired that day' do
       channel = create(:channel, mux_live_playback_id: "PLAYBACKID")
       event.update!(channel: channel)

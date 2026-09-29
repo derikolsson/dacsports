@@ -107,8 +107,9 @@ class MuxDataImport
   end
 
   # Which event a Mux video_id is. Tagged players send the event slug (possibly one
-  # since renamed); older views carry a playback ID instead. A channel's live playback
-  # ID only identifies an event when one event on that channel aired that day.
+  # since renamed); older views carry a playback ID instead, found in the event's Mux
+  # columns or, for older replays, inside its pasted embed code. A channel's live
+  # playback ID only identifies an event when one event on that channel aired that day.
   class EventLookup
     def initialize(video_ids, day)
       @video_ids = video_ids
@@ -118,7 +119,7 @@ class MuxDataImport
     def event_ids
       return {} if @video_ids.empty?
 
-      live_playback_ids.merge(replay_playback_ids).merge(old_slugs).merge(slugs)
+      live_playback_ids.merge(embedded_playback_ids).merge(replay_playback_ids).merge(old_slugs).merge(slugs)
     end
 
     private
@@ -134,6 +135,16 @@ class MuxDataImport
     def replay_playback_ids
       %i[mux_replay_playback_id mux_replay_signed_playback_id].each_with_object({}) do |column, ids|
         ids.merge!(Event.where(column => @video_ids).pluck(column, :id).to_h)
+      end
+    end
+
+    def embedded_playback_ids
+      patterns = @video_ids.map { |id| "%#{Event.sanitize_sql_like(id)}%" }
+      codes = Event.where("replay_embed_code LIKE ANY (ARRAY[?])", patterns).pluck(:replay_embed_code, :id)
+
+      @video_ids.each_with_object({}) do |video_id, ids|
+        match = codes.find { |code, _| code.include?(video_id) }
+        ids[video_id] = match.last if match
       end
     end
 
