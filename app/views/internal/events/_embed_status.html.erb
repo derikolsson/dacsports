@@ -10,12 +10,6 @@
     <span class="badge bg-warning-subtle text-warning-emphasis" title="No signed <%= replay_side ? "replay" : "live" %> playback ID — /embed/<%= event.slug %> will show a slate">No signed ID</span>
   <% end %>
 
-  <% if signed.present? %>
-    <div class="mux-id-row">
-      <code class="mux-id" title="<%= signed %>"><%= truncate(signed, length: 12) %></code>
-      <button type="button" class="btn btn-link btn-sm p-0 copy-btn" data-copy="<%= signed %>" title="Copy signed playback ID">copy id</button>
-    </div>
-  <% end %>
   <%# Offered in every state: the snippet is just the slug, and one pasted ahead of the
       game follows the event through to its replay on its own.
 
@@ -24,7 +18,7 @@
       out of the attribute's quoting. %>
   <%= tag.button "copy snippet",
         type: "button",
-        class: "btn btn-link btn-sm p-0 copy-btn",
+        class: "btn btn-link btn-sm p-0 copy-btn d-block",
         title: "Copy the snippet to hand to a partner",
         data: {
           copy: embed_snippet_for(event, embed_script_url(host: request.host_with_port, protocol: request.protocol))
