@@ -116,14 +116,14 @@ RSpec.describe "Internal::Reports", type: :request do
       expect(response.body).to include("3.0 hours", "vs 2.0 previous period")
     end
 
-    # Before players reported their audience there's nothing to compare against, and
-    # the jump would read as growth.
-    it "doesn't compare against a period from before audience tagging" do
+    # Before Mux Data starts there's nothing to compare against, and the jump would
+    # read as growth.
+    it "doesn't compare against a period from before Mux Data starts" do
       watched(2, 3)
 
       get internal_reports_path
 
-      expect(response.body).to include("3.0 hours")
+      expect(response.body).to include("3.0 hours", "Counted from #{2.days.ago.to_date.strftime("%b %-d, %Y")}, the earliest Mux Data we have.")
       expect(response.body).not_to include("vs 0.0 previous period")
     end
   end

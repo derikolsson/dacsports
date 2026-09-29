@@ -270,7 +270,7 @@ RSpec.describe ReportsQuery do
       expect(report.summary_stats[:watch]).to include(hours: 3.0, live_hours: 1.0, vod_hours: 2.0, per_view_minutes: 45.0)
     end
 
-    it 'says when audience tagging began' do
+    it 'says when Mux Data starts' do
       expect(report.summary_stats[:watch][:since]).to eq(20.days.ago.to_date)
     end
 

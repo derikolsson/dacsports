@@ -158,9 +158,9 @@ class ReportsQuery
     end
   end
 
-  # The first day Mux views carry an audience. Nothing before it can be split by
-  # audience, so watch time and countries start here.
-  def self.mux_tagged_since
+  # The first day of Mux Data with an audience: the start of Mux's retention when the
+  # import first ran. Watch time and countries can't reach further back.
+  def self.mux_data_since
     MuxDailyStat.where.not(audience: MuxDailyStat::UNKNOWN).minimum(:day)
   end
 
@@ -314,7 +314,7 @@ class ReportsQuery
       live_hours: ms.fetch("live", 0) / 3_600_000.0,
       vod_hours: ms.fetch("vod", 0) / 3_600_000.0,
       per_view_minutes: views.positive? ? (total / 60_000.0 / views).round(1) : 0,
-      since: self.class.mux_tagged_since
+      since: self.class.mux_data_since
     }
   end
 

@@ -141,11 +141,11 @@
           <% hours = ->(summary) { summary[:watch][:hours].round(1) if summary } %>
           <% previous = @query.previous_period %>
           <p class="display-6 mb-1"><%= number_with_delimiter(hours.(@summary)) %> hours</p>
-          <%# A previous period from before players reported their audience would read as growth. %>
+          <%# A previous period from before Mux Data starts would read as growth. %>
           <%= period_change(hours.(@summary), hours.(@previous_summary)) if previous && watch[:since] <= previous.start_date.to_date %>
           <small class="text-muted d-block"><%= number_with_delimiter(watch[:live_hours].round(1)) %> live · <%= number_with_delimiter(watch[:vod_hours].round(1)) %> VOD · <%= watch[:per_view_minutes] %> minutes per view</small>
           <% if watch[:since] > @start_date.to_date %>
-            <small class="text-muted d-block">Counted from <%= watch[:since].strftime("%b %-d, %Y") %>, when players began reporting their audience.</small>
+            <small class="text-muted d-block">Counted from <%= watch[:since].strftime("%b %-d, %Y") %>, the earliest Mux Data we have.</small>
           <% end %>
         <% else %>
           <p class="display-6 mb-1 text-muted">—</p>
