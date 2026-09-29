@@ -36,4 +36,14 @@ RSpec.describe "Internal::Home", type: :request do
 
     expect(response.body).to include("start_date=#{6.days.ago.to_date}", "source=partners")
   end
+
+  it "shows the week's watch time from Mux Data" do
+    event = create(:event, :replay_available, start_at: 3.days.ago)
+    MuxDailyStat.create!(day: 1.day.ago.to_date, video_id: event.slug, event_id: event.id, audience: "dsn",
+                         stream_type: "vod", views: 1, unique_viewers: 1, watch_time_ms: 5_400_000)
+
+    get internal_root_path
+
+    expect(response.body).to include("Watch Time", "1.5", "Today fills in after each show")
+  end
 end

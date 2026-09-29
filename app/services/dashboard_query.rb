@@ -44,10 +44,16 @@ class DashboardQuery
   end
 
   # The last 7 days (today included) for this audience, as the viewership report
-  # counts them, with the 7 days before for comparison.
+  # counts them, with the 7 days before for comparison. Watch time is only compared
+  # when Mux Data covers the whole previous week; otherwise the jump reads as growth.
   def week
     report = week_report(source)
-    { current: report.summary_stats, previous: report.previous_period.summary_stats }
+    previous = report.previous_period
+    current = report.summary_stats
+    since = current[:watch][:since]
+
+    { current: current, previous: previous.summary_stats,
+      compare_watch: since.present? && since <= previous.start_date.to_date }
   end
 
   # Partner sites' share of all viewing sessions over the last 7 days, and the week

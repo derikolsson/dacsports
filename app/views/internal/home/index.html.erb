@@ -6,7 +6,7 @@
   </div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-3 row-cols-xl-5 g-3 mb-4">
+<div class="row row-cols-1 row-cols-md-3 row-cols-xl-6 g-3 mb-4">
   <div class="col">
     <div class="card h-100">
       <div class="card-body">
@@ -36,6 +36,24 @@
       <% end %>
     </div>
   <% end %>
+  <div class="col">
+    <%= link_to @week_link, class: "card h-100 text-reset text-decoration-none" do %>
+      <div class="card-body">
+        <h5 class="card-title mb-0">Watch Time</h5>
+        <small class="text-muted d-block mb-2">Hours played, last 7 days, from Mux Data</small>
+        <% watch = @week[:current][:watch] %>
+        <% if watch[:since] %>
+          <p class="display-6 mb-1"><%= number_with_delimiter(watch[:hours].round(1)) %></p>
+          <%= period_change(watch[:hours].round(1), @week[:previous][:watch][:hours].round(1)) if @week[:compare_watch] %>
+          <%# Mux counts a view once it ends; today fills in an hour after each show and overnight. %>
+          <small class="text-muted d-block">Today fills in after each show</small>
+        <% else %>
+          <p class="display-6 mb-1 text-muted">—</p>
+          <small class="text-muted d-block">No Mux Data imported yet</small>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
   <div class="col">
     <%= link_to internal_reports_path(start_date: 6.days.ago.to_date, end_date: Date.current, source: ReportsQuery::ALL_PARTNERS), class: "card h-100 text-reset text-decoration-none" do %>
       <div class="card-body">
@@ -96,13 +114,14 @@
           <p class="text-muted mb-0">No viewing in the last 7 days.</p>
         <% else %>
           <table class="table table-sm mb-0">
-            <thead><tr><th>Event</th><th class="text-end">Views</th><th class="text-end">Viewers</th></tr></thead>
+            <thead><tr><th>Event</th><th class="text-end">Views</th><th class="text-end">Viewers</th><th class="text-end" title="Hours played, from Mux Data">Watch hours</th></tr></thead>
             <tbody>
               <% @top_events.each do |event| %>
                 <tr>
                   <td><%= event["title"] %><br><small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %-d") %><%= " · #{event["sport"]}" if event["sport"].present? %></small></td>
                   <td class="text-end"><%= number_with_delimiter(event["views"]) %></td>
                   <td class="text-end"><%= number_with_delimiter(event["live_viewers"] + event["vod_viewers"]) %></td>
+                  <td class="text-end"><%= number_with_delimiter((event["watch_minutes"].to_f / 60).round(1)) %></td>
                 </tr>
               <% end %>
             </tbody>

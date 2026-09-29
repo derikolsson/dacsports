@@ -26,6 +26,34 @@ RSpec.describe DashboardQuery do
     expect(week[:previous][:total]).to eq(users: 0, views: 0)
   end
 
+  describe 'watch time' do
+    def watched(days_ago, hours)
+      MuxDailyStat.create!(day: days_ago.days.ago.to_date, video_id: event.slug, event_id: event.id, audience: "dsn",
+                           stream_type: "live", views: 1, unique_viewers: 1, watch_time_ms: hours * 3_600_000)
+    end
+
+    it 'compares the week with the one before when Mux Data covers both' do
+      watched(20, 1)
+      watched(10, 2)
+      watched(1, 3)
+      week = described_class.new.week
+
+      expect([ week[:current][:watch][:hours], week[:previous][:watch][:hours], week[:compare_watch] ]).to eq([ 3.0, 2.0, true ])
+    end
+
+    it 'does not compare when Mux Data starts inside the previous week' do
+      watched(10, 2)
+
+      expect(described_class.new.week[:compare_watch]).to be(false)
+    end
+
+    it 'adds watch time to the top events' do
+      watched(1, 3)
+
+      expect(described_class.new.top_events.first["watch_minutes"]).to eq(180.0)
+    end
+  end
+
   it 'gives partner sites a share of all views' do
     expect(described_class.new.partner_share).to eq(current: 33, previous: 0)
   end
