@@ -43,11 +43,11 @@ RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz
     rm -rf /tmp/node-build-master
 
 # Install application gems.
-# bootsnap -j 1 turns off parallel precompile, which hangs under amd64 emulation: https://github.com/rails/bootsnap/issues/495
+# bootsnap -j 0 compiles inline without forking workers (-j 1 still forks one), which hangs under amd64 emulation: https://github.com/rails/bootsnap/issues/495
 COPY Gemfile Gemfile.lock ./
 RUN bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile -j 1 --gemfile
+    bundle exec bootsnap precompile -j 0 --gemfile
 
 # Install node modules
 COPY package.json yarn.lock ./
@@ -57,7 +57,7 @@ RUN yarn install --immutable
 COPY . .
 
 # Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile -j 1 app/ lib/
+RUN bundle exec bootsnap precompile -j 0 app/ lib/
 
 # Precompiling assets for production without requiring secret RAILS_MASTER_KEY
 RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
