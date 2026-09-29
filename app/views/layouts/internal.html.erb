@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html data-controller="theme">
   <head>
     <title>INTERNAL | DAC Sports Network</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= render "internal/shared/theme_script" %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
     <%= stylesheet_link_tag "internal", "data-turbo-track": "reload" %>
@@ -16,10 +17,20 @@
   </head>
 
   <body>
-    <div class="container">
+    <div class="container-fluid px-3 px-lg-4">
       <div class="d-flex justify-content-end align-items-center gap-3 pt-2 small text-body-secondary d-print-none">
         <span>Signed in as <%= current_user.display_name %></span>
         <%= link_to "Account", edit_internal_account_path, class: "link-secondary" %>
+        <div class="dropdown">
+          <button type="button" class="btn btn-link btn-sm p-0 text-body-secondary text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-circle-half" data-theme-target="icon"></i> Theme
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><button type="button" class="dropdown-item" data-action="theme#choose" data-theme-choice-param="light" data-theme-target="option"><i class="bi bi-sun-fill me-2"></i>Light</button></li>
+            <li><button type="button" class="dropdown-item" data-action="theme#choose" data-theme-choice-param="dark" data-theme-target="option"><i class="bi bi-moon-stars-fill me-2"></i>Dark</button></li>
+            <li><button type="button" class="dropdown-item" data-action="theme#choose" data-theme-choice-param="auto" data-theme-target="option"><i class="bi bi-circle-half me-2"></i>System</button></li>
+          </ul>
+        </div>
         <%= button_to "Sign out", internal_logout_path, method: :delete, class: "btn btn-link btn-sm p-0 text-body-secondary" %>
       </div>
       <header class="d-flex flex-wrap justify-content-center align-items-center py-3 mb-4 border-bottom d-print-none">

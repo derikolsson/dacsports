@@ -352,7 +352,7 @@
   </div>
 <% end %>
 
-<% columns = ReportsQuery::EVENT_COLUMNS.map { |key, label| [ label, key == "live" ? "table-danger" : key, "#{key}_viewers", "#{key}_views" ] } %>
+<% columns = ReportsQuery::EVENT_COLUMNS.map { |key, label| [ label, key, "#{key}_viewers", "#{key}_views" ] } %>
 <div class="card mb-5" data-controller="table-sort"
      data-table-sort-column-value="<%= @sort %>" data-table-sort-direction-value="<%= @direction %>"
      data-table-sort-ascending-first-value="<%= ReportsHelper::ASCENDING_FIRST.to_json %>">
@@ -364,7 +364,7 @@
       <p class="text-muted mb-0">No viewing in the selected period.</p>
     <% else %>
       <div class="table-responsive">
-        <table class="table table-bordered table-hover mb-0 event-breakdown-table" style="--bs-border-color: #adb5bd;">
+        <table class="table table-bordered table-hover mb-0 event-breakdown-table">
           <colgroup>
             <col class="event-col">
             <col class="data-col"><col class="data-col"><col class="data-col">

@@ -17,7 +17,7 @@ html, body {
 }
 
 @media print {
-  .container {
+  .container-fluid {
     padding: 0;
     max-width: 100%;
   }
@@ -26,6 +26,8 @@ html, body {
 .event-breakdown-table {
   table-layout: fixed;
   width: 100%;
+  --bs-border-color: #{$gray-500};
+  --group-divider-color: #{$gray-600};
 
   col.event-col { width: 20%; }
   col.data-col  { width: 8%; }
@@ -33,11 +35,21 @@ html, body {
   // Stronger dividers between the Live and VOD groups
   th.group-start,
   td.group-start {
-    border-left: 2px solid #6c757d;
+    border-left: 2px solid var(--group-divider-color);
   }
 
+  th.live,
+  td.live { --bs-table-bg: var(--bs-danger-bg-subtle); }
+
   th.vod,
-  td.vod { background-color: #cfe2ff; }
+  td.vod { --bs-table-bg: var(--bs-primary-bg-subtle); }
+}
+
+@include color-mode(dark) {
+  .event-breakdown-table {
+    --bs-border-color: #{$gray-600};
+    --group-divider-color: #{$gray-500};
+  }
 }
 
 @media print {
@@ -61,7 +73,7 @@ header {
   }
 
   a.title-link, a.title-link:hover {
-    color: black;
+    color: var(--bs-emphasis-color);
     font-weight: 900;
     text-decoration: none;
   }
@@ -70,11 +82,11 @@ header {
 // Embed provisioning status on the events index
 .embed-status {
   .mux-id-row { display: flex; align-items: center; gap: .35rem; margin-top: .2rem; }
-  .mux-id { font-size: .7rem; color: #6c757d; }
+  .mux-id { font-size: .7rem; color: var(--bs-secondary-color); }
   .copy-btn {
     font-size: .7rem;
     text-decoration: none;
-    &.copied { color: #198754; }
+    &.copied { color: var(--bs-success-text-emphasis); }
   }
 }
 

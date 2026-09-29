@@ -77,7 +77,7 @@
       <div class="card mb-4">
         <div class="card-body">
           <h2 class="h6 text-uppercase text-muted mb-3">Snippet for this event</h2>
-          <pre class="bg-light p-3 rounded small mb-2"><code><%= embed_snippet_for(@event, embed_script_url(host: request.host_with_port, protocol: request.protocol)) %></code></pre>
+          <pre class="bg-body-tertiary p-3 rounded small mb-2"><code><%= embed_snippet_for(@event, embed_script_url(host: request.host_with_port, protocol: request.protocol)) %></code></pre>
           <%= tag.button "Copy snippet",
                 type: "button",
                 class: "btn btn-sm btn-primary copy-btn",
