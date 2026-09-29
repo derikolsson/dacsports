@@ -9,7 +9,11 @@ RSpec.describe ReportsCsv do
   end
   let(:rows) { CSV.parse(csv.to_csv) }
 
-  before { create(:event_visit, :vod, event: event, started_at: 1.day.ago, last_seen_at: 1.day.ago + 30.minutes) }
+  before do
+    create(:event_visit, :vod, event: event, started_at: 1.day.ago)
+    MuxDailyStat.create!(day: 1.day.ago.to_date, video_id: event.slug, event_id: event.id, audience: "dsn",
+                         stream_type: "vod", views: 1, unique_viewers: 1, watch_time_ms: 30 * 60_000)
+  end
 
   it 'says what was counted before any numbers' do
     expect(rows[1..3]).to eq([

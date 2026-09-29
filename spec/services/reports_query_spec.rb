@@ -250,23 +250,54 @@ RSpec.describe ReportsQuery do
     end
   end
 
-  describe 'time with the player open' do
+  describe 'Mux Data watch time and countries' do
     subject(:report) { described_class.new(**range) }
 
-    before do
-      on_site_visit.update_columns(started_at: 2.days.ago, last_seen_at: 2.days.ago + 30.minutes)
-      create(:event_visit, :vod, event: event, started_at: 1.day.ago, last_seen_at: 1.day.ago + 10.minutes)
-      # A skewed clock can put the start after the last poll; that counts as nothing.
-      create(:event_visit, :vod, event: event, started_at: 1.day.ago, last_seen_at: 1.day.ago - 5.minutes)
+    def stat(**attrs)
+      MuxDailyStat.create!(day: 1.day.ago.to_date, video_id: event.slug, event_id: event.id, audience: "dsn",
+                           stream_type: "vod", views: 1, unique_viewers: 1, watch_time_ms: 0, **attrs)
     end
 
-    it 'totals and averages it in the summary' do
-      expect(report.summary_stats[:player]).to eq(minutes: 40, per_visit: 13.3)
+    before do
+      stat(views: 3, watch_time_ms: 2 * 3_600_000)
+      stat(stream_type: "live", views: 1, watch_time_ms: 3_600_000)
+      stat(audience: "embed:https://northlake.example.edu", watch_time_ms: 5 * 3_600_000)
+      stat(audience: "unknown", video_id: "PLAYBACKID", event_id: nil, watch_time_ms: 7 * 3_600_000)
+      stat(day: 20.days.ago.to_date, video_id: "old", watch_time_ms: 11 * 3_600_000)
+    end
+
+    it "totals the audience's watch time in the period, split live and VOD" do
+      expect(report.summary_stats[:watch]).to include(hours: 3.0, live_hours: 1.0, vod_hours: 2.0, per_view_minutes: 45.0)
+    end
+
+    it 'says when audience tagging began' do
+      expect(report.summary_stats[:watch][:since]).to eq(20.days.ago.to_date)
     end
 
     it 'totals it per event' do
       row = report.per_event_stats.find { |r| r["id"] == event.id }
-      expect(row["player_minutes"].to_f).to be_within(0.01).of(40)
+      expect(row["watch_minutes"]).to eq(180.0)
+    end
+
+    it 'combines partner audiences for all partners' do
+      expect(described_class.new(**range, source: "partners").summary_stats[:watch][:hours]).to eq(5.0)
+    end
+
+    it 'narrows to the selected sport' do
+      expect(described_class.new(**range, sport: "Baseball").summary_stats[:watch][:hours]).to eq(0)
+    end
+
+    it 'ranks countries by views for the audience' do
+      [ [ "US", 5 ], [ "MX", 2 ] ].each do |code, views|
+        MuxDailyCountry.create!(day: 1.day.ago.to_date, audience: "dsn", country_code: code, views: views, watch_time_ms: 60_000)
+      end
+      MuxDailyCountry.create!(day: 1.day.ago.to_date, audience: "embed:https://northlake.example.edu", country_code: "CA", views: 9, watch_time_ms: 0)
+
+      expect(report.top_countries.map { |row| row.values_at(:country, :views) }).to eq([ [ "US", 5 ], [ "MX", 2 ] ])
+    end
+
+    it 'has no countries when narrowed to a sport, since they are not kept per event' do
+      expect(described_class.new(**range, sport: "Baseball").top_countries).to be_nil
     end
   end
 

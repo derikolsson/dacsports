@@ -98,14 +98,42 @@ RSpec.describe "Internal::Reports", type: :request do
     expect(response.body).to include("By Partner Site", "https://northlake.example.edu", "100.0%")
   end
 
-  it "compares player time in hours with the previous period's hours" do
-    event = create(:event, :replay_available, start_at: 60.days.ago)
-    create(:event_visit, :vod, event: event, started_at: 40.days.ago, last_seen_at: 40.days.ago + 2.hours)
-    create(:event_visit, :vod, event: event, started_at: 2.days.ago, last_seen_at: 2.days.ago + 3.hours)
+  describe "watch time" do
+    let(:event) { create(:event, :replay_available, start_at: 90.days.ago) }
+
+    def watched(days_ago, hours)
+      MuxDailyStat.create!(day: days_ago.days.ago.to_date, video_id: event.slug, event_id: event.id, audience: "dsn",
+                           stream_type: "vod", views: 1, unique_viewers: 1, watch_time_ms: hours * 3_600_000)
+    end
+
+    it "compares hours with the previous period's hours" do
+      watched(80, 0)
+      watched(40, 2)
+      watched(2, 3)
+
+      get internal_reports_path
+
+      expect(response.body).to include("3.0 hours", "vs 2.0 previous period")
+    end
+
+    # Before players reported their audience there's nothing to compare against, and
+    # the jump would read as growth.
+    it "doesn't compare against a period from before audience tagging" do
+      watched(2, 3)
+
+      get internal_reports_path
+
+      expect(response.body).to include("3.0 hours")
+      expect(response.body).not_to include("vs 0.0 previous period")
+    end
+  end
+
+  it "ranks countries" do
+    MuxDailyCountry.create!(day: 1.day.ago.to_date, audience: "dsn", country_code: "US", views: 4, watch_time_ms: 0)
 
     get internal_reports_path
 
-    expect(response.body).to include("3 hours", "vs 2 previous period")
+    expect(response.body).to include("Top Countries", "🇺🇸 US")
   end
 
   it "lists partner pages, escaping what the partner page supplied" do

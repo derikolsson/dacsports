@@ -28,7 +28,8 @@ class ReportsCsv
       csv << [ "", "Users", "Views" ]
       csv << [ "Live", @summary[:live][:users], @summary[:live][:views] ]
       csv << [ "VOD", @summary[:vod][:users], @summary[:vod][:views] ]
-      csv << [ "Est. hours with player open", (@summary[:player][:minutes] / 60.0).round ]
+      csv << [ "Watch hours (Mux Data)", @summary[:watch][:hours].round(1) ]
+      csv << [ "Watch time counted from", @summary[:watch][:since] ] if @summary[:watch][:since]&.after?(@query.start_date.to_date)
       csv << []
       csv << event_header
       @event_stats.each { |row| csv << event_row(row) }
@@ -38,12 +39,12 @@ class ReportsCsv
   private
 
   def event_header
-    [ "Event", "Aired (Central)", "Sport", "Peak live (at once)", "Est. hours with player open", "Plays", "Views with play tracking" ] +
+    [ "Event", "Aired (Central)", "Sport", "Peak live (at once)", "Watch hours", "Plays", "Views with play tracking" ] +
       ReportsQuery::EVENT_COLUMNS.values.flat_map { |label| [ "#{label} viewers", "#{label} views" ] }
   end
 
   def event_row(row)
-    [ row["title"], row["start_at"]&.in_time_zone("America/Chicago")&.strftime("%Y-%m-%d %H:%M"), row["sport"], row["live_peak"].to_i, (row["player_minutes"].to_f / 60).round(1), row["plays"].to_i, row["play_tracked_views"].to_i ] +
+    [ row["title"], row["start_at"]&.in_time_zone("America/Chicago")&.strftime("%Y-%m-%d %H:%M"), row["sport"], row["live_peak"].to_i, (row["watch_minutes"].to_f / 60).round(1), row["plays"].to_i, row["play_tracked_views"].to_i ] +
       ReportsQuery::EVENT_COLUMNS.keys.flat_map { |key| [ row["#{key}_viewers"].to_i, row["#{key}_views"].to_i ] }
   end
 end

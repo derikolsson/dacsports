@@ -134,12 +134,23 @@
   <div class="col-md-6">
     <div class="card">
       <div class="card-body">
-        <h5 class="card-title mb-0">Time with the Player Open <span class="badge text-bg-light fw-normal">Estimate</span></h5>
-        <small class="text-muted d-block mb-2">How long pages with the player stayed open. It can't tell playing from paused.</small>
-        <% hours = ->(summary) { (summary[:player][:minutes] / 60.0).round if summary } %>
-        <p class="display-6 mb-1"><%= number_with_delimiter(hours.(@summary)) %> hours</p>
-        <%= period_change(hours.(@summary), hours.(@previous_summary)) %>
-        <small class="text-muted d-block"><%= @summary[:player][:per_visit] %> minutes per view on average</small>
+        <h5 class="card-title mb-0">Watch Time</h5>
+        <small class="text-muted d-block mb-2">How long the video actually played, from Mux Data.</small>
+        <% watch = @summary[:watch] %>
+        <% if watch[:since] %>
+          <% hours = ->(summary) { summary[:watch][:hours].round(1) if summary } %>
+          <% previous = @query.previous_period %>
+          <p class="display-6 mb-1"><%= number_with_delimiter(hours.(@summary)) %> hours</p>
+          <%# A previous period from before players reported their audience would read as growth. %>
+          <%= period_change(hours.(@summary), hours.(@previous_summary)) if previous && watch[:since] <= previous.start_date.to_date %>
+          <small class="text-muted d-block"><%= number_with_delimiter(watch[:live_hours].round(1)) %> live · <%= number_with_delimiter(watch[:vod_hours].round(1)) %> VOD · <%= watch[:per_view_minutes] %> minutes per view</small>
+          <% if watch[:since] > @start_date.to_date %>
+            <small class="text-muted d-block">Counted from <%= watch[:since].strftime("%b %-d, %Y") %>, when players began reporting their audience.</small>
+          <% end %>
+        <% else %>
+          <p class="display-6 mb-1 text-muted">—</p>
+          <small class="text-muted d-block">No Mux Data has been imported yet.</small>
+        <% end %>
       </div>
     </div>
   </div>
@@ -286,6 +297,33 @@
   </div>
 </div>
 
+<% if @top_countries %>
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Top Countries</h5>
+    </div>
+    <div class="card-body">
+      <p class="text-muted small">Where viewers watched from, by Mux Data views.</p>
+      <% if @top_countries.empty? %>
+        <p class="text-muted mb-0">No Mux Data views in the selected period.</p>
+      <% else %>
+        <table class="table table-sm table-hover mb-0">
+          <thead><tr><th>Country</th><th class="text-end">Views</th><th class="text-end">Watch hours</th></tr></thead>
+          <tbody>
+            <% @top_countries.each do |row| %>
+              <tr>
+                <td><%= country_label(row[:country]) %></td>
+                <td class="text-end"><%= number_with_delimiter(row[:views]) %></td>
+                <td class="text-end"><%= number_with_delimiter((row[:watch_minutes] / 60).round(1)) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <% if @top_pages %>
   <div class="card mb-4">
     <div class="card-header">
@@ -336,7 +374,7 @@
             <tr>
               <th rowspan="2" class="align-bottom"><%= event_sort_link "Event", "title" %> <small class="fw-normal">· <%= event_sort_link "Aired", "start_at" %></small></th>
               <th rowspan="2" class="align-bottom text-end" title="Most people watching live at the same moment"><%= event_sort_link "Peak live", "live_peak" %></th>
-              <th rowspan="2" class="align-bottom text-end" title="Estimated from how long pages with the player stayed open"><%= event_sort_link "Est. hours", "player_minutes" %></th>
+              <th rowspan="2" class="align-bottom text-end" title="How long the video played, from Mux Data"><%= event_sort_link "Watch hours", "watch_minutes" %></th>
               <th rowspan="2" class="align-bottom text-end" title="Views where the video actually played, since play tracking began"><%= event_sort_link "Play rate", "plays" %></th>
               <% columns.each do |label, css, _, _| %>
                 <th colspan="2" class="text-center <%= css %> group-start"><%= label %></th>
@@ -352,7 +390,7 @@
           <tbody data-table-sort-target="body">
             <% @event_stats.each do |event| %>
               <% sort_values = event.slice("title", "live_peak", "plays", *columns.flat_map { |c| c[2..3] })
-                                    .merge("start_at" => event["start_at"]&.to_i, "player_minutes" => event["player_minutes"].to_f) %>
+                                    .merge("start_at" => event["start_at"]&.to_i, "watch_minutes" => event["watch_minutes"].to_f) %>
               <tr data-sort-values="<%= sort_values.to_json %>">
                 <td>
                   <%= event["title"] %>
@@ -360,7 +398,7 @@
                   <small class="text-muted"><%= event["start_at"]&.in_time_zone("America/Chicago")&.strftime("%b %d %l:%M%P") %><%= " · #{event["sport"]}" if event["sport"].present? %></small>
                 </td>
                 <td class="text-end"><%= number_with_delimiter(event["live_peak"]) %></td>
-                <td class="text-end"><%= number_with_delimiter((event["player_minutes"].to_f / 60).round(1)) %></td>
+                <td class="text-end"><%= number_with_delimiter((event["watch_minutes"].to_f / 60).round(1)) %></td>
                 <td class="text-end"><%= event["play_tracked_views"].positive? ? number_to_percentage(event["plays"] * 100.0 / event["play_tracked_views"], precision: 0) : "—" %></td>
                 <% columns.each do |_, css, viewers, views| %>
                   <td class="text-end <%= css %> group-start"><%= event[viewers] || 0 %></td>
@@ -373,7 +411,7 @@
             <tr class="fw-semibold">
               <td>Total of <%= pluralize(@event_stats.size, "event") %></td>
               <td></td>
-              <td class="text-end"><%= number_with_delimiter((@event_stats.sum { |e| e["player_minutes"].to_f } / 60).round(1)) %></td>
+              <td class="text-end"><%= number_with_delimiter((@event_stats.sum { |e| e["watch_minutes"].to_f } / 60).round(1)) %></td>
               <td></td>
               <% columns.each do |_, css, viewers, views| %>
                 <td class="text-end <%= css %> group-start"><%= number_with_delimiter(@event_stats.sum { |e| e[viewers].to_i }) %></td>

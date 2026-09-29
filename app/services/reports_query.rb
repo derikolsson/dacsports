@@ -85,7 +85,7 @@ class ReportsQuery
         users: scoped_visits.distinct.count("sessions.visitor_id"),
         views: scoped_visits.distinct.count("event_visits.session_id")
       },
-      player: player_time,
+      watch: watch_time,
       plays: play_rate,
       live: {
         users: live_stats.distinct.count("sessions.visitor_id"),
@@ -132,7 +132,6 @@ class ReportsQuery
         COUNT(DISTINCT CASE WHEN ev.event_status = 'live' THEN ev.session_id END) AS live_views,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN s.visitor_id END) AS vod_viewers,
         COUNT(DISTINCT CASE WHEN ev.event_status = 'vod' THEN ev.session_id END) AS vod_views,
-        COALESCE(SUM(#{player_seconds('ev')}), 0) / 60.0 AS player_minutes,
         COUNT(ev.first_played_at) AS plays,
         COUNT(ev.id) FILTER (WHERE ev.created_at >= :play_since) AS play_tracked_views
       FROM event_visits ev
@@ -152,7 +151,30 @@ class ReportsQuery
     ).to_a
 
     peaks = peak_live_concurrency
-    rows.each { |row| row["live_peak"] = peaks.fetch(row["id"], 0) }
+    watched = mux_stats.where.not(event_id: nil).group(:event_id).sum(:watch_time_ms)
+    rows.each do |row|
+      row["live_peak"] = peaks.fetch(row["id"], 0)
+      row["watch_minutes"] = watched.fetch(row["id"], 0) / 60_000.0
+    end
+  end
+
+  # The first day Mux views carry an audience. Nothing before it can be split by
+  # audience, so watch time and countries start here.
+  def self.mux_tagged_since
+    MuxDailyStat.where.not(audience: MuxDailyStat::UNKNOWN).minimum(:day)
+  end
+
+  # Countries by Mux views, most first: [{ country:, views:, watch_minutes: }]. nil when
+  # a sport or team is selected: Mux's country figures aren't kept per event.
+  def top_countries(limit: 10)
+    return if sport || team_id
+
+    MuxDailyCountry.where(day: mux_days).where(mux_audience(MuxDailyCountry))
+      .group(:country_code)
+      .order(Arel.sql("SUM(views) DESC"))
+      .limit(limit)
+      .pluck(:country_code, Arel.sql("SUM(views)"), Arel.sql("SUM(watch_time_ms)"))
+      .map { |code, views, ms| { country: code, views: views, watch_minutes: ms / 60_000.0 } }
   end
 
   # Unique viewers per day (per week for long periods), split live and VOD, bucketed by
@@ -281,17 +303,19 @@ class ReportsQuery
 
   private
 
-  # Filters the LEFT JOIN rather than the WHERE clause, so events with no visits from
-  # this audience still appear in the report instead of dropping out of it.
-  # An estimate of attention: how long pages with the player stayed open, from first to
-  # last poll. It can't tell playing from paused, and misses the final poll interval.
-  def player_time
-    seconds, visits = scoped_visits.pick(
-      Arel.sql("COALESCE(SUM(#{player_seconds('event_visits')}), 0)"), Arel.sql("COUNT(*)")
-    )
-    minutes = seconds.to_f / 60
+  # How long the video actually played, from Mux Data, in hours: total, live and VOD.
+  def watch_time
+    ms = mux_stats.group(:stream_type).sum(:watch_time_ms)
+    views = mux_stats.sum(:views)
+    total = ms.values.sum
 
-    { minutes: minutes.round, per_visit: visits.positive? ? (minutes / visits).round(1) : 0 }
+    {
+      hours: total / 3_600_000.0,
+      live_hours: ms.fetch("live", 0) / 3_600_000.0,
+      vod_hours: ms.fetch("vod", 0) / 3_600_000.0,
+      per_view_minutes: views.positive? ? (total / 60_000.0 / views).round(1) : 0,
+      since: self.class.mux_tagged_since
+    }
   end
 
   def connection = ActiveRecord::Base.connection
@@ -308,8 +332,17 @@ class ReportsQuery
     { since: since.to_date, plays: plays, views: views, pct: views.positive? ? (plays * 100.0 / views).round : nil }
   end
 
-  def player_seconds(table)
-    "GREATEST(EXTRACT(EPOCH FROM (#{table}.last_seen_at - #{format(VISIT_START, table: table)})), 0)"
+  def mux_days = start_date.to_date..end_date.to_date
+
+  def mux_audience(model)
+    all_partners? ? model.arel_table[:audience].matches("embed:%") : { audience: source }
+  end
+
+  def mux_stats
+    stats = MuxDailyStat.where(day: mux_days).where(mux_audience(MuxDailyStat))
+    stats = stats.where(event_id: Event.where(sport: sport).select(:id)) if sport
+    stats = stats.where(event_id: EventTeam.where(team_id: team_id).select(:event_id)) if team_id
+    stats
   end
 
   def source_predicate

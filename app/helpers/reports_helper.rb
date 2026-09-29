@@ -18,6 +18,13 @@ module ReportsHelper
     end
   end
 
+  # "🇺🇸 US" for an ISO country code: its flag from regional indicator letters.
+  def country_label(code)
+    return code unless code.to_s.match?(/\A[A-Z]{2}\z/)
+
+    "#{code.chars.map { |char| (char.ord + 0x1F1A5).chr(Encoding::UTF_8) }.join} #{code}"
+  end
+
   # Columns that sort A-Z / oldest first on the first click; everything else is a figure
   # and sorts biggest first, since that's the question being asked.
   ASCENDING_FIRST = %w[title start_at].freeze
