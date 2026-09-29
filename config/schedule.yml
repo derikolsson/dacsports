@@ -1,3 +1,7 @@
 start_events_job:
   cron: "* * * * *"  # Every minute
   class: "StartEventsJob"
+
+mux_data_import_job:
+  cron: "0 4 * * * America/Chicago"  # Nightly, after the evening's views have closed
+  class: "MuxDataImportJob"

@@ -40,10 +40,14 @@ class Event < ApplicationRecord
   validates :sport, inclusion: { in: SPORTS, allow_blank: true }
   validates :slug, presence: true, uniqueness: true
 
+  # A stream may still be up in technical difficulties; after these it's over.
+  STREAMING_STATUSES = %w[live technical_difficulties].freeze
+  ENDED_STATUSES = %w[ended replay_pending replay_available].freeze
+
   # Scopes
   scope :visible, -> { where(visible: true) }
   scope :upcoming_events, -> { upcoming.where("start_at >= ?", Time.current.beginning_of_day) }
-  scope :past, -> { where(status: [ "ended", "replay_pending", "replay_available" ]) }
+  scope :past, -> { where(status: ENDED_STATUSES) }
   scope :by_date, -> { order(start_at: :desc) }
 
   # Events that would actually render a player at /embed/:slug right now — the state has
@@ -177,7 +181,19 @@ class Event < ApplicationRecord
   # Slug history tracking
   before_update :archive_slug_if_changed
 
+  # Pull Mux Data an hour after a show ends, once most of its views have closed.
+  after_commit :import_mux_data_later, if: :just_ended?
+
   private
+
+  def just_ended?
+    was, now = saved_change_to_status
+    STREAMING_STATUSES.include?(was) && ENDED_STATUSES.include?(now)
+  end
+
+  def import_mux_data_later
+    MuxDataImportJob.perform_in(1.hour)
+  end
 
   def bump_force_reload_count
     if title_changed? || replay_embed_code_changed? ||

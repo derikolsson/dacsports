@@ -357,4 +357,28 @@ RSpec.describe Event, type: :model do
       end
     end
   end
+
+  describe 'Mux Data import after a show' do
+    def queued = MuxDataImportJob.jobs.size
+
+    it 'queues an import an hour after the show ends' do
+      event = create(:event, :live)
+
+      expect { event.end_event! }.to change { queued }.by(1)
+      expect(MuxDataImportJob.jobs.last["at"]).to be_within(5).of(1.hour.from_now.to_f)
+    end
+
+    it 'queues when a show ends from technical difficulties, not when it goes into them' do
+      event = create(:event, :live)
+
+      expect { event.mark_technical_difficulties! }.not_to(change { queued })
+      expect { event.update!(status: :replay_pending) }.to change { queued }.by(1)
+    end
+
+    it 'does not queue for changes that are not a show ending' do
+      event = create(:event, :ended)
+
+      expect { event.update!(title: "Renamed") }.not_to(change { queued })
+    end
+  end
 end
