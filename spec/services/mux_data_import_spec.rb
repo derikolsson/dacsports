@@ -92,14 +92,17 @@ RSpec.describe MuxDataImport do
     end
   end
 
-  it 'retries when rate limited' do
+  it 'waits as long as Mux asks when rate limited, then retries' do
     empty = MuxRuby::ListBreakdownValuesResponse.new(data: [], total_row_count: 0)
+    limited = MuxRuby::TooManyRequestsError.new(code: 429, response_headers: { "retry-after" => "14" })
     calls = 0
-    allow(api).to receive(:list_breakdown_values) { (calls += 1) == 1 ? raise(MuxRuby::ApiError.new(code: 429)) : empty }
+    allow(api).to receive(:list_breakdown_values) { (calls += 1) == 1 ? raise(limited) : empty }
     importer = described_class.new(api: api)
     allow(importer).to receive(:sleep)
 
-    expect { importer.import(day) }.not_to raise_error
+    importer.import(day)
+
+    expect(importer).to have_received(:sleep).with(15)
     expect(calls).to be > 1
   end
 end

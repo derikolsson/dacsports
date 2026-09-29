@@ -12,7 +12,9 @@ class MuxDataImport
   # Every breakdown row carries views, total watch time and, as its value, unique viewers.
   METRIC = "unique_viewers".freeze
   PAGE_SIZE = 250
-  RATE_LIMIT_RETRIES = 3
+  # Mux allows a burst of 50 requests, then says how long to wait in Retry-After.
+  # A 100-day backfill needs over a thousand, so it waits many times.
+  RATE_LIMIT_RETRIES = 10
 
   def initialize(api: MuxRuby::MetricsApi.new)
     @api = api
@@ -96,10 +98,10 @@ class MuxDataImport
     attempts = 0
     begin
       yield
-    rescue MuxRuby::ApiError => e
-      raise unless e.code == 429 && (attempts += 1) <= RATE_LIMIT_RETRIES
+    rescue MuxRuby::TooManyRequestsError => e
+      raise if (attempts += 1) > RATE_LIMIT_RETRIES
 
-      sleep(attempts)
+      sleep(e.response_headers.to_h["retry-after"].to_i.clamp(1, 60) + 1)
       retry
     end
   end
