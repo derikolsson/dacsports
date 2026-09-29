@@ -5,9 +5,10 @@
 # here too. Mux counts a view once it ends, so a day keeps changing until its last
 # views close; the nightly job re-imports the last few days for that reason.
 #
-# Filters only ever name video IDs, stream types and countries. custom_1 values
+# Filters name video IDs, stream types and countries. custom_1 values
 # ("embed:https://…") contain colons, which Mux's "dimension:value" filter syntax
-# can't be trusted with, so audiences are always a group_by.
+# can't be trusted with, so audiences are a group_by; the one exception excludes
+# colon-free values only (see #audience_rows).
 class MuxDataImport
   # Every breakdown row carries views, total watch time and, as its value, unique viewers.
   METRIC = "unique_viewers".freeze
@@ -16,8 +17,16 @@ class MuxDataImport
   # A 100-day backfill needs over a thousand, so it waits many times.
   RATE_LIMIT_RETRIES = 10
 
-  def initialize(api: MuxRuby::MetricsApi.new)
+  def initialize(api: self.class.metrics_api)
     @api = api
+  end
+
+  # mux_ruby 5.1 checks group_by against a list that predates page_url, which Mux's
+  # API accepts. This client skips that check; the shared configuration keeps it.
+  def self.metrics_api
+    config = MuxRuby::Configuration.default.dup
+    config.client_side_validation = false
+    MuxRuby::MetricsApi.new(MuxRuby::ApiClient.new(config))
   end
 
   # days: a Date or a range of Dates (Chicago).
@@ -48,29 +57,51 @@ class MuxDataImport
     event_ids = EventLookup.new(video_ids, day).event_ids
 
     rows = video_ids.product(stream_types).flat_map do |video_id, (mux_type, type)|
-      breakdown("custom_1", timeframe, filters: [ "video_id:#{video_id}", "stream_type:#{mux_type}" ]).map do |row|
-        { day: day, video_id: video_id, event_id: event_ids[video_id], audience: row.field.presence || MuxDailyStat::UNKNOWN,
+      audience_rows(timeframe, [ "video_id:#{video_id}", "stream_type:#{mux_type}" ]).map do |audience, row|
+        { day: day, video_id: video_id, event_id: event_ids[video_id], audience: audience,
           stream_type: type, views: row.views.to_i, unique_viewers: row.value.to_i, watch_time_ms: row.total_watch_time.to_i }
       end
     end
 
     # Several Mux live types (standard, low latency…) fold into one "live" row.
-    rows.group_by { |row| row.values_at(:video_id, :audience, :stream_type) }.map do |_key, group|
-      group.first.merge(%i[views unique_viewers watch_time_ms].to_h { |key| [ key, group.sum { |row| row[key] } ] })
-    end
+    fold(rows, %i[video_id audience stream_type], %i[views unique_viewers watch_time_ms])
   end
 
-  # Countries per audience. Views with no audience tag are left out: they can't be
+  # Countries per audience. Views with no known audience are left out: they can't be
   # shown under any audience in the report.
   def day_countries(day, timeframe)
     countries = breakdown("country", timeframe).filter_map(&:field)
 
-    countries.flat_map do |country|
-      breakdown("custom_1", timeframe, filters: [ "country:#{country}" ]).filter_map do |row|
-        next if row.field.blank?
+    rows = countries.flat_map do |country|
+      audience_rows(timeframe, [ "country:#{country}" ]).filter_map do |audience, row|
+        next if audience == MuxDailyStat::UNKNOWN
 
-        { day: day, audience: row.field, country_code: country, views: row.views.to_i, watch_time_ms: row.total_watch_time.to_i }
+        { day: day, audience: audience, country_code: country, views: row.views.to_i, watch_time_ms: row.total_watch_time.to_i }
       end
+    end
+
+    fold(rows, %i[audience country_code], %i[views watch_time_ms])
+  end
+
+  # [[audience, breakdown row], ...] for the views matching filters. Views from before
+  # players sent custom_1 are placed by the page they played on instead, excluding the
+  # tagged values by filter. That's only safe for colon-free values, which is all
+  # there were while untagged views were still arriving; otherwise they stay unknown.
+  # Unique viewers are summed across pages, so they can run slightly high there.
+  def audience_rows(timeframe, filters)
+    tagged, untagged = breakdown("custom_1", timeframe, filters: filters).partition { |row| row.field.present? }
+    rows = tagged.map { |row| [ row.field, row ] }
+    return rows if untagged.empty?
+    return rows + untagged.map { |row| [ MuxDailyStat::UNKNOWN, row ] } if tagged.any? { |row| row.field.include?(":") }
+
+    excluded = tagged.map { |row| "!custom_1:#{row.field}" }
+    rows + breakdown("page_url", timeframe, filters: filters + excluded).map { |row| [ UntaggedAudience.for(row.field), row ] }
+  end
+
+  # Sums rows that share the same key fields.
+  def fold(rows, keys, sums)
+    rows.group_by { |row| row.values_at(*keys) }.map do |_key, group|
+      group.first.merge(sums.to_h { |key| [ key, group.sum { |row| row[key] } ] })
     end
   end
 
@@ -103,6 +134,37 @@ class MuxDataImport
 
       sleep(e.response_headers.to_h["retry-after"].to_i.clamp(1, 60) + 1)
       retry
+    end
+  end
+
+  # Before players sent custom_1 (Sep 28, 2026), the page a view played on is the only
+  # clue to its audience. Remove once that date leaves Mux's 100-day retention, early
+  # January 2027; the rows already imported keep their audience.
+  module UntaggedAudience
+    # First path segments of our public pages that play video. We serve several
+    # domains, so the path decides, not the host.
+    SITE_PAGES = [ "", "schedule", "archive", "events", "teams" ].freeze
+
+    # page_url → "dsn", "embed:<partner origin>", "embed" (partner unknown) or "unknown".
+    def self.for(page_url)
+      page = URI.parse(page_url.to_s)
+      # Older replays' pasted embed code, which played on our own event pages.
+      return EventVisit::DEFAULT_SOURCE if page.host == "player.mux.com"
+      return MuxDailyStat::UNKNOWN if page.host.blank?
+
+      section = page.path.to_s.split("/")[1].to_s
+      return EventVisit::DEFAULT_SOURCE if SITE_PAGES.include?(section)
+      return MuxDailyStat::UNKNOWN unless section == "embed"
+
+      # The embed URL carries the partner page as src, whose origin is what
+      # EmbedsController records. localhost and our internal preview are our own testing.
+      partner = URI.parse(Rack::Utils.parse_query(page.query)["src"].to_s)
+      return "embed" if partner.host.blank?
+      return MuxDailyStat::UNKNOWN if partner.host == "localhost" || partner.path.to_s.start_with?("/internal")
+
+      "embed:#{partner.scheme}://#{partner.host}#{":#{partner.port}" if partner.port != partner.default_port}"
+    rescue URI::InvalidURIError
+      MuxDailyStat::UNKNOWN
     end
   end
 
