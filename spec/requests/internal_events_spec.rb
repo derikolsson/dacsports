@@ -3,11 +3,15 @@ require 'rails_helper'
 RSpec.describe "Internal::Events", type: :request do
   before { sign_in_as create(:user) }
 
+  def ids(signed_id, public_id: "PUBLIC#{signed_id}")
+    MuxSignedPlaybackId::AssetPlaybackIds.new(public_id:, signed_id:)
+  end
+
   describe "POST /internal/events/:id/resolve_signed_playback" do
     let(:event) { create(:event, :signed_replay, mux_asset_id: "SOMEASSETID") }
 
     it "stores the signed playback ID resolved from the asset" do
-      allow(MuxSignedPlaybackId).to receive(:for_asset).with("SOMEASSETID").and_return("NEWSIGNEDID")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("SOMEASSETID").and_return(ids("NEWSIGNEDID"))
 
       post resolve_signed_playback_internal_event_path(event)
 
@@ -41,7 +45,7 @@ RSpec.describe "Internal::Events", type: :request do
     let(:event) { create(:event, :replay_pending) }
 
     it "mints it when an asset ID is saved" do
-      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return("SIGNED1")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return(ids("SIGNED1"))
 
       patch internal_event_path(event), params: { event: { mux_asset_id: "ASSET1" } }
 
@@ -50,15 +54,32 @@ RSpec.describe "Internal::Events", type: :request do
 
     it "mints a new one when the asset changes" do
       event.update!(mux_asset_id: "OLD", mux_replay_signed_playback_id: "OLDSIGNED")
-      allow(MuxSignedPlaybackId).to receive(:for_asset).with("NEW").and_return("NEWSIGNED")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("NEW").and_return(ids("NEWSIGNED"))
 
       patch internal_event_path(event), params: { event: { mux_asset_id: "NEW" } }
 
       expect(event.reload.mux_replay_signed_playback_id).to eq("NEWSIGNED")
     end
 
-    it "leaves an existing one alone when the asset is unchanged" do
-      event.update!(mux_asset_id: "ASSET1", mux_replay_signed_playback_id: "SIGNED1")
+    it "fills in the public playback ID the site plays" do
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return(ids("SIGNED1", public_id: "PUBLIC1"))
+
+      patch internal_event_path(event), params: { event: { mux_asset_id: "ASSET1" } }
+
+      expect(event.reload.mux_replay_playback_id).to eq("PUBLIC1")
+    end
+
+    it "keeps a public playback ID already on file when the asset has none" do
+      event.update!(mux_replay_playback_id: "TYPEDIN")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return(ids("SIGNED1", public_id: nil))
+
+      patch internal_event_path(event), params: { event: { mux_asset_id: "ASSET1" } }
+
+      expect(event.reload.mux_replay_playback_id).to eq("TYPEDIN")
+    end
+
+    it "leaves existing ones alone when the asset is unchanged" do
+      event.update!(mux_asset_id: "ASSET1", mux_replay_signed_playback_id: "SIGNED1", mux_replay_playback_id: "PUBLIC1")
       expect(MuxSignedPlaybackId).not_to receive(:for_asset)
 
       patch internal_event_path(event), params: { event: { title: "Renamed" } }
@@ -76,13 +97,24 @@ RSpec.describe "Internal::Events", type: :request do
 
     it "mints it on publish, which is enough of a replay source to publish from" do
       event.update_columns(mux_asset_id: "ASSET1")
-      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return("SIGNED1")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return(ids("SIGNED1"))
 
       post publish_replay_internal_event_path(event)
 
       expect(event.reload).to be_replay_available
-      expect(event.mux_replay_signed_playback_id).to eq("SIGNED1")
+      expect(event).to have_attributes(mux_replay_signed_playback_id: "SIGNED1", mux_replay_playback_id: "PUBLICSIGNED1")
       expect(flash[:alert]).to be_nil
+    end
+
+    # A signed ID alone plays in partner embeds but leaves the site's player empty.
+    it "refuses to publish when the site would have nothing to play" do
+      event.update_columns(mux_asset_id: "ASSET1")
+      allow(MuxSignedPlaybackId).to receive(:for_asset).with("ASSET1").and_return(ids("SIGNED1", public_id: nil))
+
+      post publish_replay_internal_event_path(event)
+
+      expect(event.reload).to be_replay_pending
+      expect(flash[:alert]).to match(/Could not publish replay/)
     end
 
     it "warns on publish when the embed will have nothing to play" do

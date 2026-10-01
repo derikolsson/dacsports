@@ -87,7 +87,7 @@ class Internal::EventsController < Internal::ApplicationController
       alert ||= "Partner embeds will say the replay is coming until it has a Mux Asset ID." unless @event.embeddable?
       redirect_to internal_events_path, notice: "Replay is now available!", alert: alert
     else
-      redirect_to internal_events_path, alert: "Could not publish replay. Check that replay embed code is present."
+      redirect_to internal_events_path, alert: "Could not publish replay. It needs replay embed code, a Mux Playback ID, or a Mux Asset ID."
     end
   end
 

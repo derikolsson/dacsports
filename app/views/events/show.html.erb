@@ -46,13 +46,20 @@
         </div>
 
       <% when 'replay_available' %>
-        <div class="watch-video-player">
-          <% if @event.replay_embed_code.present? %>
+        <% if @event.replay_embed_code.present? %>
+          <div class="watch-video-player">
             <%= @event.replay_embed_code.html_safe %>
-          <% elsif @event.mux_replay_playback_id.present? %>
+          </div>
+        <% elsif @event.mux_replay_playback_id.present? %>
+          <div class="watch-video-player">
             <%= mux_player(playback_id: @event.mux_replay_playback_id, title: @event.title, video_id: @event.slug, start_time: @event.replay_start_time, end_time: @event.replay_end_time, analytics: mux_analytics(@event, "vod")) %>
-          <% end %>
-        </div>
+          </div>
+        <% else %>
+          <div class="watch-video-placeholder">
+            <i class="bi bi-clock-history"></i>
+            <p>A replay of this broadcast will be available shortly</p>
+          </div>
+        <% end %>
       <% end %>
     </div>
 

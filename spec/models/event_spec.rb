@@ -188,6 +188,11 @@ RSpec.describe Event, type: :model do
         expect(event.reload.status).to eq('replay_pending')
       end
 
+      it 'returns false when only a signed playback ID is present' do
+        event.update_columns(replay_embed_code: nil, mux_replay_signed_playback_id: 'SIGNED')
+        expect(event.publish_replay!).to be false
+      end
+
       it 'transitions from technical_difficulties to replay_available' do
         td_event = create(:event, :technical_difficulties, replay_embed_code: '<iframe>replay</iframe>')
         expect(td_event.publish_replay!).to be true

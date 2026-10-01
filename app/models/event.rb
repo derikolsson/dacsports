@@ -118,13 +118,17 @@ class Event < ApplicationRecord
 
   # Recordings arrive public-only (see MuxSignedPlaybackId#recordings_signed?), so each
   # replay's signed ID has to be minted from its asset before the embed can play it. A new
-  # asset needs its own, even when an old one is still on file.
+  # asset needs its own, even when an old one is still on file. The site plays the public
+  # ID, which comes from the same asset, so a missing one is filled in the same pass.
   def needs_signed_replay?
-    mux_asset_id.present? && (mux_replay_signed_playback_id.blank? || saved_change_to_mux_asset_id?)
+    mux_asset_id.present? &&
+      (mux_replay_signed_playback_id.blank? || mux_replay_playback_id.blank? || saved_change_to_mux_asset_id?)
   end
 
   def resolve_signed_replay!
-    update!(mux_replay_signed_playback_id: MuxSignedPlaybackId.for_asset(mux_asset_id))
+    ids = MuxSignedPlaybackId.for_asset(mux_asset_id)
+    update!(mux_replay_signed_playback_id: ids.signed_id,
+            mux_replay_playback_id: ids.public_id || mux_replay_playback_id)
   end
 
   def can_go_live?
@@ -143,8 +147,9 @@ class Event < ApplicationRecord
     live?
   end
 
+  # The site can't play a signed ID, so publishing waits for something it can.
   def can_publish_replay?
-    (replay_pending? || technical_difficulties?) && has_replay_video_source?
+    (replay_pending? || technical_difficulties?) && has_site_replay_source?
   end
 
   # State transitions
@@ -217,6 +222,10 @@ class Event < ApplicationRecord
 
   def has_live_video_source?
     mux_live_playback_id.present? || mux_live_signed_playback_id.present?
+  end
+
+  def has_site_replay_source?
+    replay_embed_code.present? || mux_replay_playback_id.present?
   end
 
   def has_replay_video_source?

@@ -1,4 +1,5 @@
-# Resolves (or creates) the signed playback ID for a Mux live stream or asset.
+# Resolves (or creates) the signed playback ID for a Mux live stream or asset. For an
+# asset it also reports the public ID, since a replay needs both.
 #
 # Idempotent: if a signed playback ID already exists on the resource it is returned
 # as-is rather than minting a second one. Safe to re-run.
@@ -8,8 +9,13 @@
 # the on-site player still plays off the public IDs.
 class MuxSignedPlaybackId
   SIGNED = MuxRuby::PlaybackPolicy::SIGNED
+  PUBLIC = MuxRuby::PlaybackPolicy::PUBLIC
 
   class Error < StandardError; end
+
+  # An asset's IDs as they stand once it's signed: the public one the site plays (nil if
+  # the asset has none) and the signed one partner embeds play.
+  AssetPlaybackIds = Data.define(:public_id, :signed_id)
 
   def self.for_live_stream(live_stream_id)
     new.for_live_stream(live_stream_id)
@@ -37,10 +43,10 @@ class MuxSignedPlaybackId
 
     api = MuxRuby::AssetsApi.new
     asset = api.get_asset(asset_id).data
-    existing = signed_id_from(asset.playback_ids)
-    return existing if existing
+    signed_id = signed_id_from(asset.playback_ids) ||
+                api.create_asset_playback_id(asset_id, signed_request).data.id
 
-    api.create_asset_playback_id(asset_id, signed_request).data.id
+    AssetPlaybackIds.new(public_id: public_id_from(asset.playback_ids), signed_id: signed_id)
   rescue MuxRuby::ApiError => e
     raise Error, "Mux asset #{asset_id}: #{e.message}"
   end
@@ -73,5 +79,9 @@ class MuxSignedPlaybackId
 
   def signed_id_from(playback_ids)
     Array(playback_ids).find { |p| p.policy.to_s == SIGNED }&.id
+  end
+
+  def public_id_from(playback_ids)
+    Array(playback_ids).find { |p| p.policy.to_s == PUBLIC }&.id
   end
 end
