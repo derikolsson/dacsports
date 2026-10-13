@@ -20,4 +20,24 @@ RSpec.describe "Events", type: :request do
       expect(response.body).to include("A replay of this broadcast will be available shortly")
     end
   end
+
+  describe "link previews" do
+    it "shows the logo by default" do
+      event = create(:event)
+
+      get event_path(event.slug)
+
+      expect(response.body).to match(%r{<meta property="og:image" content="http://www\.example\.com/assets/logo-\h+\.png">})
+      expect(response.body).to include(%(<meta name="twitter:card" content="summary">))
+    end
+
+    it "shows the event's poster when it has one" do
+      event = create(:event, poster_key: "posters/events/abc.png")
+
+      get event_path(event.slug)
+
+      expect(response.body).to include(%(<meta property="og:image" content="#{EventPoster.url("posters/events/abc.png")}">))
+      expect(response.body).to include(%(<meta name="twitter:card" content="summary_large_image">))
+    end
+  end
 end

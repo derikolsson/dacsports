@@ -11,6 +11,10 @@
     <meta property="og:title" content="<%= @title || 'DAC Sports Network' %>">
     <meta property="og:description" content="Watch live games and replays from the Dallas Athletic Conference">
     <meta property="og:type" content="website">
+    <%# Pages with their own image (an event's poster) set :og_image; the rest share the logo. %>
+    <% og_image = content_for(:og_image) %>
+    <meta property="og:image" content="<%= og_image.presence || image_url("logo.png") %>">
+    <meta name="twitter:card" content="<%= og_image.present? ? "summary_large_image" : "summary" %>">
 
     <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
