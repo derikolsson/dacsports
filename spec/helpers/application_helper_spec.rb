@@ -39,4 +39,27 @@ RSpec.describe ApplicationHelper do
       expect(html).not_to include("metadata-viewer-user-id", "metadata-custom-3")
     end
   end
+
+  describe 'posters' do
+    it 'shows the event poster on the site player' do
+      html = helper.mux_player(playback_id: "abc", title: "Final", video_id: "final", poster: "https://cdn.example.com/p.png")
+
+      expect(html).to include('poster="https://cdn.example.com/p.png"')
+    end
+
+    it 'shows the event poster on the embed instead of the signed thumbnail' do
+      html = helper.signed_mux_player(playback_id: "abc", tokens: { thumbnail: "THUMB" }, title: "Final", video_id: "final",
+                                      stream_type: "on-demand", poster: "https://cdn.example.com/p.png")
+
+      expect(html).to include('poster="https://cdn.example.com/p.png"')
+      expect(html).not_to include("thumbnail.webp")
+    end
+
+    it 'falls back to the signed thumbnail without one' do
+      html = helper.signed_mux_player(playback_id: "abc", tokens: { thumbnail: "THUMB" }, title: "Final", video_id: "final",
+                                      stream_type: "on-demand")
+
+      expect(html).to include("thumbnail.webp?token=THUMB")
+    end
+  end
 end

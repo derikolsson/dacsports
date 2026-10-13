@@ -228,4 +228,40 @@ RSpec.describe "Internal::Events", type: :request do
       expect(event.reload.mux_live_signed_playback_id).to eq(channel.mux_live_signed_playback_id)
     end
   end
+
+  describe "posters" do
+    let(:event) { create(:event) }
+
+    before { allow(EventPoster).to receive(:delete) }
+
+    it "uploads one from the edit form" do
+      allow(EventPoster).to receive(:upload).and_return("events/new.png")
+
+      patch internal_event_path(event), params: {
+        event: { poster: Rack::Test::UploadedFile.new(file_fixture("poster.png"), "image/png") }
+      }
+
+      expect(response).to redirect_to(internal_events_path)
+      expect(event.reload.poster_key).to eq("events/new.png")
+    end
+
+    it "shows the current poster with a way to remove it" do
+      event.update_columns(poster_key: "events/old.png")
+
+      get edit_internal_event_path(event)
+
+      expect(response.body).to include(EventPoster.url("events/old.png"), "Remove poster")
+    end
+
+    it "sends the operator back to the form when S3 refuses" do
+      allow(EventPoster).to receive(:upload).and_raise(EventPoster::Error, "Access Denied")
+
+      patch internal_event_path(event), params: {
+        event: { poster: Rack::Test::UploadedFile.new(file_fixture("poster.png"), "image/png") }
+      }
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(response.body).to include("Access Denied")
+    end
+  end
 end

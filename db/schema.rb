@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_29_180000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -94,6 +94,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_29_180000) do
     t.string "mux_replay_signed_playback_id"
     t.string "mux_asset_id"
     t.bigint "channel_id"
+    t.string "poster_key"
     t.index ["channel_id"], name: "index_events_on_channel_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
   end

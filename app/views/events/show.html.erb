@@ -12,7 +12,7 @@
       <% when 'upcoming' %>
         <% if @preview_mode && @event.mux_live_playback_id.present? %>
           <div class="watch-video-player">
-            <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true, analytics: mux_analytics(@event, "live")) %>
+            <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true, poster: @event.poster_url, analytics: mux_analytics(@event, "live")) %>
           </div>
         <% else %>
           <div class="watch-video-placeholder">
@@ -23,7 +23,7 @@
       <% when 'live' %>
         <div class="watch-video-player">
           <% if @event.mux_live_playback_id.present? %>
-            <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true, analytics: mux_analytics(@event, "live")) %>
+            <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true, poster: @event.poster_url, analytics: mux_analytics(@event, "live")) %>
           <% end %>
         </div>
 
@@ -52,7 +52,7 @@
           </div>
         <% elsif @event.mux_replay_playback_id.present? %>
           <div class="watch-video-player">
-            <%= mux_player(playback_id: @event.mux_replay_playback_id, title: @event.title, video_id: @event.slug, start_time: @event.replay_start_time, end_time: @event.replay_end_time, analytics: mux_analytics(@event, "vod")) %>
+            <%= mux_player(playback_id: @event.mux_replay_playback_id, title: @event.title, video_id: @event.slug, start_time: @event.replay_start_time, end_time: @event.replay_end_time, poster: @event.poster_url, analytics: mux_analytics(@event, "vod")) %>
           </div>
         <% else %>
           <div class="watch-video-placeholder">

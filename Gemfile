@@ -39,6 +39,9 @@ gem "mux_ruby"
 # Signed playback tokens for Mux (mux_ruby does not sign JWTs)
 gem "jwt"
 
+# Event poster images (Active Storage is off; posters go straight to S3)
+gem "aws-sdk-s3", "~> 1.233"
+
 # Passkeys
 gem "webauthn", "~> 3.4"
 

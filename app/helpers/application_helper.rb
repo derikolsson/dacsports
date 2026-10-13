@@ -16,13 +16,15 @@ module ApplicationHelper
   end
 
   # Pinned for the same reason as the embed player below.
-  def mux_player(playback_id:, title:, video_id:, live: false, start_time: nil, end_time: nil, analytics: {})
+  # An event's own poster, when it has one, takes the place of the frame Mux would pick.
+  def mux_player(playback_id:, title:, video_id:, live: false, start_time: nil, end_time: nil, poster: nil, analytics: {})
     attrs = {
       "playback-id" => playback_id,
       "metadata-video-title" => title,
       "metadata-video-id" => video_id,
       "accent-color" => "#dc0028"
     }.merge(mux_data_metadata(player: "dsn-site", **analytics))
+    attrs["poster"] = poster if poster.present?
     attrs["redundant-streams"] = "" if live
     attrs["asset-start-time"] = start_time.to_s if start_time.present?
     attrs["asset-end-time"] = end_time.to_s if end_time.present?
@@ -42,7 +44,7 @@ module ApplicationHelper
   # Pinned to the current major. Chromecast needs >= 2.3.0, but @2 resolves to 2.9.1,
   # which fires a stray relative fetch against our own origin on every load; @3 does not.
   # Pinned rather than bare so a future major cannot land here without us choosing it.
-  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil, analytics: {})
+  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil, poster: nil, analytics: {})
     attrs = {
       "playback-id" => playback_id,
       "stream-type" => stream_type,
@@ -54,7 +56,9 @@ module ApplicationHelper
     }.merge(mux_data_metadata(player: "dsn-embed", **analytics))
     # Explicit poster. Left to compute its own, mux-player emits a relative "undefined"
     # URL and the browser fetches it against our origin on every load.
-    if tokens[:thumbnail].present?
+    if poster.present?
+      attrs["poster"] = poster
+    elsif tokens[:thumbnail].present?
       attrs["poster"] = "https://image.mux.com/#{playback_id}/thumbnail.webp?token=#{tokens[:thumbnail]}"
     end
     # Storyboards are on-demand only; Mux does not generate them for live.

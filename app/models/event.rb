@@ -10,6 +10,10 @@ class Event < ApplicationRecord
   # The live stream's playback IDs come from the channel the event airs on.
   delegate :mux_live_playback_id, :mux_live_signed_playback_id, to: :channel, allow_nil: true
 
+  # A new poster image from the internal form, and its "remove" box. The image itself
+  # lives in S3 (see EventPoster); only its key is stored here.
+  attr_accessor :poster, :remove_poster
+
   # Available sports
   SPORTS = [
     "Men's Soccer",
@@ -39,6 +43,7 @@ class Event < ApplicationRecord
   validate :replay_video_source_present, if: -> { replay_available? }
   validates :sport, inclusion: { in: SPORTS, allow_blank: true }
   validates :slug, presence: true, uniqueness: true
+  validate :poster_is_a_supported_image, if: -> { poster.present? }
 
   # A stream may still be up in technical difficulties; after these it's over.
   STREAMING_STATUSES = %w[live technical_difficulties].freeze
@@ -70,6 +75,11 @@ class Event < ApplicationRecord
       .where("channels.mux_live_signed_playback_id IS NOT NULL AND channels.mux_live_signed_playback_id <> ''")
       .order(:start_at)
   }
+
+  # Shown by the players before playback starts, in place of Mux's own thumbnail.
+  def poster_url
+    EventPoster.url(poster_key)
+  end
 
   # Helper method for date display
   def event_date
@@ -197,10 +207,47 @@ class Event < ApplicationRecord
   # Slug history tracking
   before_update :archive_slug_if_changed
 
+  # Posters go up before the row is saved, so a failed upload fails the save; the old
+  # image only comes down once the new key is committed.
+  before_save :store_poster
+  after_update_commit :delete_replaced_poster, if: :saved_change_to_poster_key?
+  after_destroy_commit -> { delete_poster(poster_key) }
+
   # Pull Mux Data an hour after a show ends, once most of its views have closed.
   after_commit :import_mux_data_later, if: :just_ended?
 
   private
+
+  def poster_is_a_supported_image
+    unless EventPoster::CONTENT_TYPES.key?(poster.content_type)
+      errors.add(:poster, "must be a JPEG, PNG or WebP image")
+    end
+    if poster.size > EventPoster::MAX_BYTES
+      errors.add(:poster, "must be smaller than #{EventPoster::MAX_BYTES / 1.megabyte} MB")
+    end
+  end
+
+  def store_poster
+    if poster.present?
+      self.poster_key = EventPoster.upload(poster.to_io, content_type: poster.content_type)
+    elsif ActiveModel::Type::Boolean.new.cast(remove_poster)
+      self.poster_key = nil
+    end
+  rescue EventPoster::Error => e
+    errors.add(:poster, "could not be uploaded: #{e.message}")
+    throw :abort
+  end
+
+  def delete_replaced_poster
+    delete_poster(poster_key_before_last_save)
+  end
+
+  # A leftover object only costs storage, so a failed delete shouldn't fail the request.
+  def delete_poster(key)
+    EventPoster.delete(key) if key.present?
+  rescue EventPoster::Error => e
+    Rails.logger.warn("Could not delete poster #{key}: #{e.message}")
+  end
 
   def just_ended?
     was, now = saved_change_to_status

@@ -133,6 +133,7 @@ class Internal::EventsController < Internal::ApplicationController
       :replay_start_time, :replay_end_time,
       :replay_embed_code, :status, :visible,
       :short_name, :description, :sport, :location, :round,
+      :poster, :remove_poster,
       event_teams_attributes: [ :id, :team_id, :_destroy ]
     )
   end

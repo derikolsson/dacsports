@@ -387,3 +387,70 @@ RSpec.describe Event, type: :model do
     end
   end
 end
+
+RSpec.describe Event, 'posters' do
+  let(:image) { Rack::Test::UploadedFile.new(file_fixture("poster.png"), "image/png") }
+
+  before { allow(EventPoster).to receive(:delete) }
+
+  it 'uploads a new poster and keeps its key' do
+    allow(EventPoster).to receive(:upload).and_return("events/new.png")
+    event = create(:event)
+
+    event.update!(poster: image)
+
+    expect(event.reload.poster_key).to eq("events/new.png")
+    expect(EventPoster).to have_received(:upload).with(anything, content_type: "image/png")
+  end
+
+  it 'deletes the poster it replaced once the new one is saved' do
+    allow(EventPoster).to receive(:upload).and_return("events/new.png")
+    event = create(:event, poster_key: "events/old.png")
+
+    event.update!(poster: image)
+
+    expect(EventPoster).to have_received(:delete).with("events/old.png")
+  end
+
+  it 'removes the poster when asked' do
+    event = create(:event, poster_key: "events/old.png")
+
+    event.update!(remove_poster: "1")
+
+    expect(event.reload.poster_key).to be_nil
+    expect(EventPoster).to have_received(:delete).with("events/old.png")
+  end
+
+  it 'leaves the poster alone on other edits' do
+    event = create(:event, poster_key: "events/old.png")
+
+    event.update!(title: "Renamed", remove_poster: "0")
+
+    expect(event.reload.poster_key).to eq("events/old.png")
+    expect(EventPoster).not_to have_received(:delete)
+  end
+
+  it 'deletes the poster with the event' do
+    event = create(:event, poster_key: "events/old.png")
+
+    event.destroy
+
+    expect(EventPoster).to have_received(:delete).with("events/old.png")
+  end
+
+  it 'only takes JPEG, PNG or WebP' do
+    event = build(:event, poster: Rack::Test::UploadedFile.new(file_fixture("poster.png"), "image/gif"))
+
+    expect(event).not_to be_valid
+    expect(event.errors[:poster]).to be_present
+  end
+
+  it 'fails the save, not the request, when S3 refuses the upload' do
+    allow(EventPoster).to receive(:upload).and_raise(EventPoster::Error, "Access Denied")
+    event = create(:event, poster_key: "events/old.png")
+
+    expect(event.update(poster: image)).to be(false)
+    expect(event.errors[:poster].first).to match(/Access Denied/)
+    expect(event.reload.poster_key).to eq("events/old.png")
+  end
+end
