@@ -2,16 +2,17 @@
 #
 # Active Storage is off in this app, so this talks to S3 directly. Each upload gets a
 # fresh random key: the URL changes whenever the image does, so the object can be
-# cached forever and a slug rename never orphans it. Objects are not ACL'd — the
-# bucket (or the CDN in front of it, via `host`) has to allow public reads.
+# cached forever and a slug rename never orphans it. Objects are not ACL'd — public
+# reads come from CloudFront (or a bucket policy, if served straight from S3).
 #
-# Credentials:
-#   posters:
-#     bucket: dacsports-posters
+# Posters share the general dacsports bucket, served through CloudFront, so they keep
+# to their own prefix. Credentials:
+#   cdn:
+#     bucket: dacsports
 #     region: us-east-1
 #     access_key_id: ...       # optional; falls back to the SDK's credential chain
 #     secret_access_key: ...
-#     host: https://posters.dacsports.net   # optional; defaults to the bucket's S3 URL
+#     host: https://cdn.dacsports.net   # optional; defaults to the bucket's S3 URL
 class EventPoster
   CONTENT_TYPES = {
     "image/jpeg" => ".jpg",
@@ -19,7 +20,7 @@ class EventPoster
     "image/webp" => ".webp"
   }.freeze
   MAX_BYTES = 5.megabytes
-  PREFIX = "events/".freeze
+  PREFIX = "posters/events/".freeze
 
   class Error < StandardError; end
 
@@ -38,7 +39,7 @@ class EventPoster
   end
 
   def self.config
-    Rails.application.credentials.posters || {}
+    Rails.application.credentials.cdn || {}
   end
 
   def self.host
@@ -67,7 +68,7 @@ class EventPoster
   private
 
   def bucket
-    self.class.config.fetch(:bucket) { raise Error, "No poster bucket configured" }
+    self.class.config.fetch(:bucket) { raise Error, "No CDN bucket configured" }
   end
 
   def client

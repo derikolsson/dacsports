@@ -12,7 +12,7 @@ RSpec.describe EventPoster do
     it 'puts the image under a fresh key with its type and a long cache life' do
       key = described_class.upload(StringIO.new("png"), content_type: "image/png")
 
-      expect(key).to match(%r{\Aevents/[0-9a-f-]{36}\.png\z})
+      expect(key).to match(%r{\Aposters/events/[0-9a-f-]{36}\.png\z})
       request = client.api_requests.last
       expect(request[:operation_name]).to eq(:put_object)
       expect(request[:params]).to include(bucket: "posters", key: key, content_type: "image/png",
