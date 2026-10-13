@@ -445,6 +445,18 @@ RSpec.describe Event, 'posters' do
     expect(event.errors[:poster]).to be_present
   end
 
+  it 'turns away files over the size limit' do
+    big = Tempfile.new([ "poster", ".jpg" ])
+    big.write("x" * (EventPoster::MAX_BYTES + 1))
+    big.rewind
+    event = build(:event, poster: Rack::Test::UploadedFile.new(big.path, "image/jpeg"))
+
+    expect(event).not_to be_valid
+    expect(event.errors[:poster]).to include("must be smaller than 1 MB")
+  ensure
+    big&.close!
+  end
+
   it 'fails the save, not the request, when S3 refuses the upload' do
     allow(EventPoster).to receive(:upload).and_raise(EventPoster::Error, "Access Denied")
     event = create(:event, poster_key: "events/old.png")

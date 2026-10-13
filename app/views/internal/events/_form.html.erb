@@ -90,8 +90,9 @@
     <% end %>
     <%= f.file_field :poster, class: 'form-control', accept: EventPoster::CONTENT_TYPES.keys.join(",") %>
     <small class="form-text text-muted">
-      Shown in the player before playback starts, on the site and partner embeds. JPEG, PNG or WebP,
-      16:9 (1920×1080 is ideal), under <%= EventPoster::MAX_BYTES / 1.megabyte %> MB. Leave blank to use Mux's thumbnail.
+      Shown in the player before playback starts, on partner embeds, and in link previews. Export a
+      16:9 JPEG (1920×1080 at about 80% quality), under <%= EventPoster::MAX_BYTES / 1.megabyte %> MB. PNG and WebP
+      also work, but some link previews skip WebP. Leave blank to use Mux's thumbnail.
     </small>
   </fieldset>
 

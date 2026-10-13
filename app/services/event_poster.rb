@@ -19,7 +19,10 @@ class EventPoster
     "image/png" => ".png",
     "image/webp" => ".webp"
   }.freeze
-  MAX_BYTES = 5.megabytes
+  # Low on purpose: posters load on every embed and in every link preview, so they
+  # should be exported small (1920×1080 JPEG at ~80% is a few hundred KB), not resized
+  # here. Anything over this is an unoptimized export.
+  MAX_BYTES = 1.megabyte
   PREFIX = "posters/events/".freeze
 
   class Error < StandardError; end
