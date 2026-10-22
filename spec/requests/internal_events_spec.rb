@@ -149,6 +149,30 @@ RSpec.describe "Internal::Events", type: :request do
     end
   end
 
+  describe "POST /internal/events/slug_preview" do
+    let(:richland) { create(:team, name: "Richland", slug: "richland") }
+    let(:form) do
+      { title: "Brookhaven at Richland", sport: "Baseball", round: "", start_at: "2026-04-09T13:00",
+        time_zone: "Central Time (US & Canada)", event_teams_attributes: { "0" => { team_id: richland.id } } }
+    end
+
+    def preview(**params)
+      post slug_preview_internal_events_path, params: params, as: :json
+      response.parsed_body["slug"]
+    end
+
+    it "previews the slug a new event would get" do
+      expect(preview(event: form)).to eq("2026-baseball-apr-09--richland")
+    end
+
+    it "does not count the event's own slug as taken, and saves nothing" do
+      event = create(:event, slug: "2026-baseball-apr-09--richland")
+
+      expect { expect(preview(event_id: event.id, event: form)).to eq(event.slug) }.not_to change { EventTeam.count }
+      expect(preview(event: form)).to eq("#{event.slug}-2")
+    end
+  end
+
   describe "GET /internal/events/archive" do
     it "shows embed readiness so it can be checked without opening Mux" do
       create(:event, :signed_replay, title: "Provisioned Game")

@@ -107,6 +107,14 @@ class Internal::EventsController < Internal::ApplicationController
     redirect_to edit_internal_event_path(@event), alert: "Could not resolve signed playback ID: #{e.message}"
   end
 
+  # The slug a blank field would save as, for the form's live preview. Takes the form's
+  # own params, so the preview follows exactly what a save would see.
+  def slug_preview
+    event = Event.find_by(id: params[:event_id]) || Event.new
+    event.assign_attributes(event_params.slice(:title, :sport, :round, :start_at, :time_zone, :event_teams_attributes))
+    render json: { slug: event.suggested_slug }
+  end
+
   private
 
   # Mints the replay's signed ID as soon as there's an asset to mint it from, so partner

@@ -73,6 +73,7 @@ Rails.application.routes.draw do
     resources :events do
       collection do
         get :archive
+        post :slug_preview
       end
       member do
         post :go_live

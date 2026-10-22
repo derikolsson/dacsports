@@ -1,4 +1,9 @@
-<%= form_with(model: [:internal, @event]) do |f| %>
+<%= form_with(model: [:internal, @event], data: {
+      controller: 'slug-preview',
+      action: 'input->slug-preview#refresh change->slug-preview#refresh',
+      slug_preview_url_value: slug_preview_internal_events_path(event_id: @event.id),
+      slug_preview_empty_placeholder_value: 'Fills in as you complete the form'
+    }) do |f| %>
   <% if @event.errors.any? %>
     <div class="alert alert-danger">
       <h4><%= pluralize(@event.errors.count, "error") %> prohibited this event from being saved:</h4>
@@ -13,15 +18,6 @@
   <div class="mb-3">
     <%= f.label :title, class: 'form-label' %>
     <%= f.text_field :title, class: 'form-control', required: true %>
-  </div>
-
-  <div class="mb-3">
-    <%= f.label :slug, class: 'form-label' %>
-    <%= f.text_field :slug, class: 'form-control', pattern: '[a-z0-9\-]+', placeholder: 'Leave blank to generate' %>
-    <small class="form-text text-muted">Leave blank to generate from the year, sport, round, date and teams. Lowercase letters, numbers, and hyphens only.</small>
-    <% if @event.persisted? && (suggested = @event.suggested_slug) != @event.slug_in_database %>
-      <small class="form-text text-muted d-block">Suggested: <code><%= suggested %></code> (clear the field to use it)</small>
-    <% end %>
   </div>
 
   <div class="mb-3">
@@ -75,6 +71,23 @@
       <%= f.hidden_field :time_zone, value: 'Central Time (US & Canada)' %>
       <%= f.text_field :time_zone, value: 'Central Time (US & Canada)', disabled: true, class: 'form-control' %>
     </div>
+  </div>
+
+  <%# Built from the fields above it, so it sits after them and previews as they change. %>
+  <% suggested = @event.suggested_slug %>
+  <div class="mb-3">
+    <%= f.label :slug, class: 'form-label' %>
+    <%= f.text_field :slug, class: 'form-control', pattern: '[a-z0-9\-]+',
+          placeholder: suggested.presence || 'Fills in as you complete the form',
+          data: { slug_preview_target: 'input' } %>
+    <% if @event.persisted? %>
+      <small class="form-text text-muted">Clear to regenerate from the sport, round, game date and teams.</small>
+      <div class="form-text" data-slug-preview-target="suggestion" <%= 'hidden' if suggested.blank? || suggested == @event.slug %>>
+        Suggested: <code data-slug-preview-target="suggestedSlug"><%= suggested %></code>
+      </div>
+    <% else %>
+      <small class="form-text text-muted">Generated from the sport, round, game date and teams. Type your own to override.</small>
+    <% end %>
   </div>
 
   <div class="mb-3">
