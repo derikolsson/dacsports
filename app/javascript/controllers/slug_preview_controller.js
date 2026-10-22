@@ -20,11 +20,21 @@ export default class extends Controller {
   async fetch() {
     const request = (this.request = (this.request || 0) + 1)
     const body = new FormData(this.element)
-    // Not the edit form's PATCH override, and no poster upload on every keystroke.
+    // Not the edit form's PATCH override, and no poster upload on every keystroke. The
+    // form's own token is per-form (bound to its create/update URL), so this request
+    // carries the page's token instead.
     body.delete("_method")
     body.delete("event[poster]")
+    body.delete("authenticity_token")
 
-    const response = await fetch(this.urlValue, { method: "POST", body, headers: { Accept: "application/json" } })
+    const response = await fetch(this.urlValue, {
+      method: "POST",
+      body,
+      headers: {
+        Accept: "application/json",
+        "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]')?.content
+      }
+    })
     if (!response.ok || request !== this.request) return
 
     const { slug } = await response.json()
