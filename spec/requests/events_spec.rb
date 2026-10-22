@@ -19,6 +19,24 @@ RSpec.describe "Events", type: :request do
       expect(response.body).not_to include("<mux-player")
       expect(response.body).to include("A replay of this broadcast will be available shortly")
     end
+
+    it "shows the poster behind the start time of an upcoming event" do
+      event = create(:event, poster_key: "posters/events/abc.png")
+
+      get event_path(event.slug)
+
+      expect(response.body).to include(%(class="watch-upcoming-poster" src="#{EventPoster.url("posters/events/abc.png")}"))
+      expect(response.body).to include("Stream begins")
+    end
+
+    it "shows the start time without a poster when there isn't one" do
+      event = create(:event)
+
+      get event_path(event.slug)
+
+      expect(response.body).not_to include("watch-upcoming-poster")
+      expect(response.body).to include("Stream begins")
+    end
   end
 
   describe "link previews" do

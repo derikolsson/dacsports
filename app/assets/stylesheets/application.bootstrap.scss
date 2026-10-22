@@ -765,6 +765,94 @@ small {
   }
 }
 
+// Upcoming: the poster fills the frame with the start time pinned to its bottom edge.
+// Without a poster, the time sits centered on the brand gradient.
+.watch-upcoming {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(135deg, rgba($dac-royal-blue, 0.9), rgba($dac-crimson-red, 0.7)), #000;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $dac-white;
+}
+
+.watch-upcoming--poster {
+  background: #000;
+  align-items: flex-end;
+  justify-content: flex-start;
+
+  // Scrim so the time stays legible over any poster.
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(#000, 0.75) 0%, rgba(#000, 0.35) 30%, transparent 55%);
+  }
+
+  .watch-upcoming-overlay {
+    align-items: flex-start;
+    text-align: left;
+    padding: 12px 16px;
+
+    @media (min-width: 768px) {
+      padding: 20px 28px;
+    }
+  }
+}
+
+.watch-upcoming-poster {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.watch-upcoming-overlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  padding: 16px;
+}
+
+.watch-upcoming-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba($dac-white, 0.8);
+
+  @media (min-width: 768px) {
+    font-size: 13px;
+  }
+}
+
+.watch-upcoming-time {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  line-height: 1.1;
+  text-shadow: 0 1px 8px rgba(#000, 0.4);
+
+  @media (min-width: 768px) {
+    font-size: 28px;
+  }
+
+  @media (min-width: 992px) {
+    font-size: 34px;
+  }
+}
+
 // Event Info Section
 .watch-event-info {
   display: flex;

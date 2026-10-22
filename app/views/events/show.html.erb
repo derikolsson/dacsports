@@ -16,8 +16,14 @@
             <%= mux_player(playback_id: @event.mux_live_playback_id, title: @event.title, video_id: @event.slug, live: true, poster: @event.poster_url, analytics: mux_analytics(@event, "live")) %>
           </div>
         <% else %>
-          <div class="watch-video-placeholder">
-            <p>This stream will begin <%= @event.stream_begins_at&.strftime('%A, %B %-d at %-I:%M %p %Z') || 'soon' %></p>
+          <div class="watch-upcoming<%= ' watch-upcoming--poster' if @event.poster_url %>">
+            <% if @event.poster_url %>
+              <img class="watch-upcoming-poster" src="<%= @event.poster_url %>" alt="<%= @event.title %> poster">
+            <% end %>
+            <div class="watch-upcoming-overlay">
+              <span class="watch-upcoming-label">Stream begins</span>
+              <span class="watch-upcoming-time"><%= @event.stream_begins_at&.strftime('%A, %B %-d · %-I:%M %p %Z') || 'Soon' %></span>
+            </div>
           </div>
         <% end %>
 
