@@ -25,7 +25,7 @@ RSpec.describe "Events", type: :request do
 
       get event_path(event.slug)
 
-      expect(response.body).to include(%(class="watch-upcoming-poster" src="#{EventPoster.url("posters/events/abc.png")}"))
+      expect(response.body).to include(%(class="upcoming-slate__poster" src="#{EventPoster.url("posters/events/abc.png")}"))
       expect(response.body).to include("Stream begins")
     end
 
@@ -34,7 +34,7 @@ RSpec.describe "Events", type: :request do
 
       get event_path(event.slug)
 
-      expect(response.body).not_to include("watch-upcoming-poster")
+      expect(response.body).not_to include("upcoming-slate__poster")
       expect(response.body).to include("Stream begins")
     end
   end

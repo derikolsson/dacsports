@@ -1,0 +1,13 @@
+<%# Shared by the watch page and partner embeds, so everything sizes off the frame
+    itself (see upcoming_slate.css) rather than the page around it. %>
+<div class="upcoming-slate">
+  <% if event.poster_url %>
+    <img class="upcoming-slate__poster" src="<%= event.poster_url %>" alt="<%= event.title %> poster">
+  <% else %>
+    <%= image_tag "logo.png", alt: "DAC Sports Network", class: "upcoming-slate__logo" %>
+  <% end %>
+  <div class="upcoming-slate__bar">
+    <span class="upcoming-slate__label">Stream begins</span>
+    <span class="upcoming-slate__time"><%= event.stream_begins_at&.strftime('%a, %b %-d · %-I:%M %p %Z') || 'Soon' %></span>
+  </div>
+</div>

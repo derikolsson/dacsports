@@ -91,9 +91,19 @@ RSpec.describe "Embeds", type: :request do
           expect(response).to have_http_status(:ok)
           expect(response.body).not_to include("playback-token=")
           expect(response.body).not_to include("<mux-player")
-          expect(response.body).to include("embed-slate")
+          expect(response.body).to include(state == :upcoming ? "upcoming-slate" : "embed-slate")
         end
       end
+    end
+
+    it "shows the poster and start time on an upcoming event" do
+      event = create(:event, :upcoming, poster_key: "posters/events/abc.png")
+
+      get embed_path(event.slug)
+
+      expect(response.body).to include(%(class="upcoming-slate__poster" src="#{EventPoster.url("posters/events/abc.png")}"))
+      expect(response.body).to include("Stream begins")
+      expect(response.body).to match(%r{<link rel="stylesheet" href="/assets/upcoming_slate-\h+\.css"})
     end
 
     it "issues no token when the event has no signed playback id" do
@@ -182,7 +192,7 @@ RSpec.describe "Embeds", type: :request do
         get embed_path(event.slug), params: { preview_token: EmbedPreviewPass.generate(other) }
 
         expect(response.body).not_to include("playback-token=")
-        expect(response.body).to include("embed-slate")
+        expect(response.body).to include("upcoming-slate")
       end
 
       it "ignores an expired pass" do

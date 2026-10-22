@@ -23,9 +23,6 @@ module EmbedsHelper
   # the on-site watch page says so a partner viewer sees the same story we do.
   def embed_slate_message(event)
     case event.status
-    when "upcoming"
-      starts = event.stream_begins_at&.strftime("%A, %B %-d at %-I:%M %p %Z")
-      starts.present? ? "This stream begins #{starts}." : "This stream hasn't started yet."
     when "ended"
       "This broadcast has concluded."
     # A published replay reaches here only when the embed has nothing signed to play yet,

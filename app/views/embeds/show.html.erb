@@ -10,6 +10,9 @@
         poster: @event.poster_url,
         analytics: mux_analytics(@event, @live ? "live" : "vod", source: @source)
       ) %>
+<% elsif @event.upcoming? %>
+  <% content_for :head, stylesheet_link_tag("upcoming_slate") %>
+  <%= render "events/upcoming_slate", event: @event %>
 <% else %>
   <%# No token is signed in these states. A reload that re-signed would just hand a
       fresh token to someone being cut off, so the denial state has to be real. %>
