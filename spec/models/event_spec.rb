@@ -386,6 +386,60 @@ RSpec.describe Event, type: :model do
       expect { event.update!(title: "Renamed") }.not_to(change { queued })
     end
   end
+
+  describe 'slug generation' do
+    let(:north_lake) { create(:team, name: "North Lake", slug: "north-lake") }
+    let(:cedar_valley) { create(:team, name: "Cedar Valley", slug: "cedar-valley") }
+    let(:start_at) { Time.find_zone("America/Chicago").local(2026, 10, 5, 18, 0) }
+
+    def generated(**attrs)
+      event = build(:event, slug: nil, sport: "Women's Volleyball", round: "Game of the Week", start_at: start_at, **attrs)
+      event.event_teams.build(team: north_lake)
+      event.event_teams.build(team: cedar_valley)
+      event.save!
+      event
+    end
+
+    it 'builds the slug from year, sport, round, date and teams in form order' do
+      expect(generated.slug).to eq("2026-womens-volleyball-game-of-the-week-oct-05--north-lake-cedar-valley")
+    end
+
+    it 'leaves out a blank round' do
+      expect(generated(round: "").slug).to eq("2026-womens-volleyball-oct-05--north-lake-cedar-valley")
+    end
+
+    it 'falls back to the title when there are no teams' do
+      event = create(:event, slug: nil, title: "Test Stream", sport: "Baseball", start_at: start_at)
+      expect(event.slug).to eq("2026-baseball-oct-05--test-stream")
+    end
+
+    it 'dates the slug in the event zone, not UTC' do
+      late = Time.find_zone("America/Chicago").local(2026, 10, 5, 21, 0) # Oct 6 in UTC
+      expect(generated(start_at: late).slug).to include("-oct-05--")
+    end
+
+    it 'adds a suffix when another event holds the slug, now or in its history' do
+      first = generated
+      expect(generated.slug).to eq("#{first.slug}-2")
+
+      first.update!(slug: "renamed")
+      expect(generated.slug).to eq("#{first.slug_previously_was}-3")
+    end
+
+    it 'leaves a hand-typed slug alone' do
+      event = create(:event, slug: "my-own-slug")
+      event.update!(round: "Semifinal")
+      expect(event.reload.slug).to eq("my-own-slug")
+    end
+
+    it 'regenerates a cleared slug and keeps the old one as history' do
+      event = create(:event, slug: "old-slug", title: "Test Stream", sport: "Baseball", start_at: start_at)
+      event.update!(slug: "")
+
+      expect(event.slug).to eq("2026-baseball-oct-05--test-stream")
+      expect(event.event_slugs.pluck(:slug)).to eq([ "old-slug" ])
+    end
+  end
 end
 
 RSpec.describe Event, 'posters' do

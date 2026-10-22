@@ -17,8 +17,11 @@
 
   <div class="mb-3">
     <%= f.label :slug, class: 'form-label' %>
-    <%= f.text_field :slug, class: 'form-control', required: true, pattern: '[a-z0-9\-]+', placeholder: 'example-slug-here' %>
-    <small class="form-text text-muted">URL-friendly slug (lowercase letters, numbers, and hyphens only)</small>
+    <%= f.text_field :slug, class: 'form-control', pattern: '[a-z0-9\-]+', placeholder: 'Leave blank to generate' %>
+    <small class="form-text text-muted">Leave blank to generate from the year, sport, round, date and teams. Lowercase letters, numbers, and hyphens only.</small>
+    <% if @event.persisted? && (suggested = @event.suggested_slug) != @event.slug_in_database %>
+      <small class="form-text text-muted d-block">Suggested: <code><%= suggested %></code> (clear the field to use it)</small>
+    <% end %>
   </div>
 
   <div class="mb-3">

@@ -76,6 +76,27 @@ class Event < ApplicationRecord
       .order(:start_at)
   }
 
+  # The slug this event would get if its slug were cleared, e.g.
+  # 2026-womens-volleyball-game-of-the-week-oct-05--north-lake-cedar-valley. Taken from
+  # the year, sport, round, date and teams (title when there are none), with -2, -3, …
+  # added when another event already holds it, now or in its history.
+  def suggested_slug
+    local_start = start_at&.in_time_zone(time_zone)
+    teams = event_teams.reject(&:marked_for_destruction?).filter_map(&:team)
+    matchup = teams.any? ? teams.map(&:slug).join("-") : title.to_s.parameterize
+    lead = [
+      local_start&.strftime("%Y"),
+      sport.to_s.delete("'").parameterize,
+      round.to_s.parameterize,
+      local_start&.strftime("%b-%d")&.downcase
+    ].compact_blank.join("-")
+    base = [ lead, matchup ].compact_blank.join("--")
+
+    candidate, n = base, 1
+    candidate = "#{base}-#{n += 1}" while slug_taken_elsewhere?(candidate)
+    candidate
+  end
+
   # Shown by the players before playback starts, in place of Mux's own thumbnail.
   def poster_url
     EventPoster.url(poster_key)
@@ -204,7 +225,8 @@ class Event < ApplicationRecord
   # Cache busting
   before_save :bump_force_reload_count
 
-  # Slug history tracking
+  # Slug history tracking. A blank slug is generated, on create or after it's cleared.
+  before_validation :generate_slug, if: -> { slug.blank? }
   before_update :archive_slug_if_changed
 
   # Posters go up before the row is saved, so a failed upload fails the save; the old
@@ -289,6 +311,15 @@ class Event < ApplicationRecord
     unless has_replay_video_source?
       errors.add(:base, "Replay video source required (embed code or Mux playback ID)")
     end
+  end
+
+  def generate_slug
+    self.slug = suggested_slug
+  end
+
+  def slug_taken_elsewhere?(candidate)
+    Event.where(slug: candidate).where.not(id: id).exists? ||
+      EventSlug.where(slug: candidate).where.not(event_id: id).exists?
   end
 
   def archive_slug_if_changed
