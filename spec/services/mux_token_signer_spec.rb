@@ -87,6 +87,30 @@ RSpec.describe MuxTokenSigner do
       expect(decode_mux_token(tokens[:thumbnail]).first["aud"]).to eq("t")
       expect(decode_mux_token(tokens[:storyboard]).first["aud"]).to eq("s")
     end
+
+    # Mux ignores the clip as URL params on signed playback; it only honours claims.
+    it 'signs the clip window into the playback and storyboard tokens' do
+      tokens = signer.tokens_for(playback_id, start_time: BigDecimal("12.5"), end_time: BigDecimal("90"))
+
+      [ tokens[:playback], tokens[:storyboard] ].each do |token|
+        payload, = decode_mux_token(token)
+        expect(payload["asset_start_time"]).to eq(12.5)
+        expect(payload["asset_end_time"]).to eq(90.0)
+      end
+      expect(decode_mux_token(tokens[:thumbnail]).first).not_to have_key("asset_start_time")
+    end
+
+    it 'signs only the bound that is set' do
+      payload, = decode_mux_token(signer.tokens_for(playback_id, start_time: 30)[:playback])
+
+      expect(payload["asset_start_time"]).to eq(30.0)
+      expect(payload).not_to have_key("asset_end_time")
+    end
+
+    it 'never clips live' do
+      payload, = decode_mux_token(signer.tokens_for(playback_id, live: true, start_time: 30)[:playback])
+      expect(payload).not_to have_key("asset_start_time")
+    end
   end
 
   describe '.configured?' do

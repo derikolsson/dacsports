@@ -156,7 +156,9 @@ class EmbedsController < ApplicationController
     return [ nil, nil ] unless MuxTokenSigner.configured?
 
     signer = MuxTokenSigner.new(playback_restriction_id: embed_restriction_id)
-    [ signer.tokens_for(playback_id, live: playback_mode == :live), playback_id ]
+    tokens = signer.tokens_for(playback_id, live: playback_mode == :live,
+                               start_time: @event.replay_start_time, end_time: @event.replay_end_time)
+    [ tokens, playback_id ]
   rescue MuxTokenSigner::MissingSigningKey => e
     Rails.logger.error("[embed] signing unavailable: #{e.message}")
     Sentry.capture_exception(e) if defined?(Sentry)

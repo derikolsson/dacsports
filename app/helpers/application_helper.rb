@@ -44,7 +44,10 @@ module ApplicationHelper
   # Pinned to the current major. Chromecast needs >= 2.3.0, but @2 resolves to 2.9.1,
   # which fires a stray relative fetch against our own origin on every load; @3 does not.
   # Pinned rather than bare so a future major cannot land here without us choosing it.
-  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, start_time: nil, end_time: nil, poster: nil, analytics: {})
+  #
+  # Takes no clip window: on signed playback Mux only honours one signed into the token
+  # (MuxTokenSigner#tokens_for), so asset-start-time here would silently do nothing.
+  def signed_mux_player(playback_id:, tokens:, title:, video_id:, stream_type:, poster: nil, analytics: {})
     attrs = {
       "playback-id" => playback_id,
       "stream-type" => stream_type,
@@ -64,8 +67,6 @@ module ApplicationHelper
     # Storyboards are on-demand only; Mux does not generate them for live.
     attrs["storyboard-token"] = tokens[:storyboard] if tokens[:storyboard].present?
     attrs["redundant-streams"] = "" if stream_type == "live"
-    attrs["asset-start-time"] = start_time.to_s if start_time.present?
-    attrs["asset-end-time"] = end_time.to_s if end_time.present?
 
     attr_string = attrs.compact.map { |k, v| v.to_s.empty? ? k : "#{k}=\"#{ERB::Util.html_escape(v)}\"" }.join("\n  ")
 

@@ -29,15 +29,21 @@ class MuxTokenSigner
 
   # Returns { playback:, thumbnail:, storyboard: } — storyboard is nil for live, since
   # Mux only generates storyboards for on-demand assets.
-  def tokens_for(playback_id, live: false)
+  #
+  # A clip window has to be signed in. Mux ignores asset_start_time/asset_end_time as
+  # URL params once a token is present, so mux-player's asset-start-time attribute does
+  # nothing on signed playback. The storyboard gets it too, so scrub previews line up
+  # with the clipped timeline.
+  def tokens_for(playback_id, live: false, start_time: nil, end_time: nil)
+    clip = live ? {} : clip_claims(start_time, end_time)
     {
-      playback: sign(playback_id, AUDIENCE_VIDEO),
+      playback: sign(playback_id, AUDIENCE_VIDEO, clip),
       thumbnail: sign(playback_id, AUDIENCE_THUMBNAIL),
-      storyboard: live ? nil : sign(playback_id, AUDIENCE_STORYBOARD)
+      storyboard: live ? nil : sign(playback_id, AUDIENCE_STORYBOARD, clip)
     }
   end
 
-  def sign(playback_id, audience)
+  def sign(playback_id, audience, extra_claims = {})
     raise ArgumentError, "playback_id is required" if playback_id.blank?
 
     claims = {
@@ -47,6 +53,7 @@ class MuxTokenSigner
       kid: signing_key_id
     }
     claims[:playback_restriction_id] = @playback_restriction_id if @playback_restriction_id.present?
+    claims.merge!(extra_claims)
 
     JWT.encode(claims, private_key, "RS256", { kid: signing_key_id })
   end
@@ -60,6 +67,11 @@ class MuxTokenSigner
   end
 
   private
+
+  # Floats, not the decimals they are stored as: a BigDecimal serialises to a JSON string.
+  def clip_claims(start_time, end_time)
+    { asset_start_time: start_time&.to_f, asset_end_time: end_time&.to_f }.compact
+  end
 
   def signing_key_id
     @signing_key_id ||= self.class.credentials[:signing_key_id].presence ||

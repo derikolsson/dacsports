@@ -5,8 +5,6 @@
         title: @event.title,
         video_id: @event.slug,
         stream_type: @stream_type,
-        start_time: (@event.replay_start_time unless @live),
-        end_time: (@event.replay_end_time unless @live),
         poster: @event.poster_url,
         analytics: mux_analytics(@event, @live ? "live" : "vod", source: @source)
       ) %>

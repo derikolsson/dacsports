@@ -31,6 +31,17 @@ RSpec.describe "Embeds", type: :request do
         expect(response.body).not_to include("@mux/mux-player@2")
       end
 
+      it "signs the replay's clip window into the playback token" do
+        event.update!(replay_start_time: 42.5, replay_end_time: 3600)
+
+        get embed_path(event.slug)
+
+        token = response.body[/playback-token="([^"]+)"/, 1]
+        payload, = decode_mux_token(token)
+        expect(payload["asset_start_time"]).to eq(42.5)
+        expect(payload["asset_end_time"]).to eq(3600.0)
+      end
+
       it "sets an explicit poster using the thumbnail token" do
         get embed_path(event.slug)
         expect(response.body).to match(%r{poster="https://image\.mux\.com/[^"]+token=})
